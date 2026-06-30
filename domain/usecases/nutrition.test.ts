@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { MAX_CALORIES, validateMeal } from '@/domain/usecases/nutrition';
+import { MAX_CALORIES, MAX_MACRO_G, validateMeal } from '@/domain/usecases/nutrition';
 
 describe('validateMeal (garde-fous ADR-0008)', () => {
   it('accepte un repas valide avec macros', () => {
@@ -26,5 +26,13 @@ describe('validateMeal (garde-fous ADR-0008)', () => {
   it('refuse une valeur calorique irréaliste', () => {
     const result = validateMeal({ label: 'Repas', caloriesKcal: MAX_CALORIES + 1 });
     expect(result.ok).toBe(false);
+  });
+
+  it('refuse Infinity sur une macro (pas seulement les calories)', () => {
+    expect(validateMeal({ label: 'Repas', proteinG: Infinity }).ok).toBe(false);
+  });
+
+  it('refuse une macro au-delà de la borne réaliste', () => {
+    expect(validateMeal({ label: 'Repas', carbsG: MAX_MACRO_G + 1 }).ok).toBe(false);
   });
 });

@@ -59,17 +59,22 @@ function reactionSummary(rows: FeedRow['reactions'], viewerId: string): Reaction
 }
 
 /**
- * Implémentation Supabase du FeedRepository (ADR-0002 / ADR-0004). Lit le feed
- * polymorphe d'un groupe (jointures auteur + détails + réactions) et logge les
- * différents types de goals. La RLS impose que seul un membre du groupe accède.
+ * Implémentation Supabase du FeedRepository (ADR-0002 / ADR-0004). Lecture du feed
+ * polymorphe (jointures auteur + détails + réactions) ; écriture via RPC atomiques
+ * (log_session/steps/meal). La RLS impose que seul un membre du groupe accède.
  * data/ est la seule couche autorisée à importer le SDK Supabase (ADR-0007).
  */
 export class SupabaseFeedRepository implements FeedRepository {
   constructor(private readonly client: SupabaseClient) {}
 
+  /** Id du viewer depuis la session LOCALE (pas de round-trip réseau). */
+  private async viewerId(): Promise<string> {
+    const { data } = await this.client.auth.getSession();
+    return data.session?.user.id ?? '';
+  }
+
   async listGroupFeed(groupId: string): Promise<FeedItem[]> {
-    const { data: userData } = await this.client.auth.getUser();
-    const viewerId = userData.user?.id ?? '';
+    const viewerId = await this.viewerId();
 
     const { data, error } = await this.client
       .from('feed_items')
@@ -99,61 +104,33 @@ export class SupabaseFeedRepository implements FeedRepository {
     }));
   }
 
-  /** Insère l'entrée de feed (colonne vertébrale, ADR-0002) et renvoie son id. */
-  private async insertFeedItem(groupId: string, type: FeedItemType): Promise<string> {
-    const { data: userData } = await this.client.auth.getUser();
-    const userId = userData.user?.id;
-    if (!userId) throw new Error('Non authentifié');
-
-    const { data, error } = await this.client
-      .from('feed_items')
-      .insert({ group_id: groupId, author_id: userId, type })
-      .select('id')
-      .single();
-    if (error) throw new Error(error.message);
-    return (data as { id: string }).id;
-  }
-
-  private async rollback(feedItemId: string): Promise<void> {
-    await this.client.from('feed_items').delete().eq('id', feedItemId);
-  }
-
   async logSession(groupId: string, activity: string, durationMin?: number): Promise<void> {
-    const feedItemId = await this.insertFeedItem(groupId, 'session');
-    const { error } = await this.client
-      .from('sessions')
-      .insert({ feed_item_id: feedItemId, activity, duration_min: durationMin ?? null });
-    if (error) {
-      await this.rollback(feedItemId);
-      throw new Error(error.message);
-    }
+    const { error } = await this.client.rpc('log_session', {
+      p_group_id: groupId,
+      p_activity: activity,
+      p_duration_min: durationMin ?? null,
+    });
+    if (error) throw new Error(error.message);
   }
 
   async logSteps(groupId: string, steps: number): Promise<void> {
-    const feedItemId = await this.insertFeedItem(groupId, 'steps');
-    const { error } = await this.client
-      .from('step_logs')
-      .insert({ feed_item_id: feedItemId, steps });
-    if (error) {
-      await this.rollback(feedItemId);
-      throw new Error(error.message);
-    }
+    const { error } = await this.client.rpc('log_steps', {
+      p_group_id: groupId,
+      p_steps: steps,
+    });
+    if (error) throw new Error(error.message);
   }
 
   async logMeal(groupId: string, meal: MealInput): Promise<void> {
-    const feedItemId = await this.insertFeedItem(groupId, 'meal');
-    const { error } = await this.client.from('meals').insert({
-      feed_item_id: feedItemId,
-      label: meal.label,
-      moment: meal.moment ?? null,
-      calories_kcal: meal.caloriesKcal ?? null,
-      protein_g: meal.proteinG ?? null,
-      carbs_g: meal.carbsG ?? null,
-      fat_g: meal.fatG ?? null,
+    const { error } = await this.client.rpc('log_meal', {
+      p_group_id: groupId,
+      p_label: meal.label,
+      p_moment: meal.moment ?? null,
+      p_calories_kcal: meal.caloriesKcal ?? null,
+      p_protein_g: meal.proteinG ?? null,
+      p_carbs_g: meal.carbsG ?? null,
+      p_fat_g: meal.fatG ?? null,
     });
-    if (error) {
-      await this.rollback(feedItemId);
-      throw new Error(error.message);
-    }
+    if (error) throw new Error(error.message);
   }
 }

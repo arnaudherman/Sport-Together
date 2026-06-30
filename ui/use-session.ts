@@ -10,12 +10,18 @@ export function useSession() {
 
   useEffect(() => {
     let active = true;
-    auth.getCurrentUserId().then((id) => {
-      if (active) {
-        setUserId(id);
-        setLoading(false);
-      }
-    });
+    auth
+      .getCurrentUserId()
+      .then((id) => {
+        if (active) {
+          setUserId(id);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        // Échec de lecture de session : on ne reste pas bloqué sur le loader.
+        if (active) setLoading(false);
+      });
     const unsubscribe = auth.onAuthChange((id) => {
       if (active) setUserId(id);
     });

@@ -70,6 +70,17 @@ describe('currentStreak', () => {
     const rest = new Set(['2026-06-29']);
     expect(currentStreak(satisfiedDays(logged, rest), today)).toBe(3);
   });
+
+  it('renvoie 0 (sans crasher) sur une clé du jour vide ou malformée', () => {
+    expect(currentStreak(new Set(), '')).toBe(0);
+    expect(currentStreak(new Set(['2026-06-30']), '')).toBe(0);
+    expect(currentStreak(new Set(['2026-06-30']), 'garbage')).toBe(0);
+  });
+
+  it('ignore les jours futurs et ne leur accorde pas la grâce', () => {
+    expect(currentStreak(new Set(['2026-07-01']), today)).toBe(0);
+    expect(currentStreak(new Set(['2026-07-01', '2026-06-30', '2026-06-29']), today)).toBe(2);
+  });
 });
 
 describe('loggedDaysFor', () => {

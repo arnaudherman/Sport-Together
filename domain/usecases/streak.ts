@@ -33,10 +33,15 @@ export function previousDayKey(dayKey: string): string {
  * Nombre de jours « satisfaits » consécutifs finissant aujourd'hui (ou hier si
  * aujourd'hui n'est pas encore satisfait). Non punitif.
  */
+const DAY_KEY = /^\d{4}-\d{2}-\d{2}$/;
+
 export function currentStreak(
   satisfiedDays: ReadonlySet<string>,
   todayKey: string,
 ): number {
+  // Dégradation non punitive (§8) : une clé invalide (horloge non prête, donnée
+  // manquante) renvoie 0 au lieu de faire crasher le widget de streak.
+  if (!DAY_KEY.test(todayKey)) return 0;
   let cursor = satisfiedDays.has(todayKey) ? todayKey : previousDayKey(todayKey);
   let streak = 0;
   while (satisfiedDays.has(cursor)) {

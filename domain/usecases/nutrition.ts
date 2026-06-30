@@ -7,6 +7,7 @@ import type { MealInput } from '@/domain/entities/meal';
  * reste positif (anti-TCA). C'est un complément applicatif aux CHECK de la base.
  */
 export const MAX_CALORIES = 20000;
+export const MAX_MACRO_G = 5000;
 
 export type MealValidation = { ok: true } | { ok: false; error: string };
 
@@ -15,20 +16,28 @@ export function validateMeal(input: MealInput): MealValidation {
   if (label.length === 0) return { ok: false, error: 'Donne un nom au repas.' };
   if (label.length > 80) return { ok: false, error: 'Nom trop long (80 caractères max).' };
 
-  const numbers: [string, number | undefined][] = [
-    ['calories', input.caloriesKcal],
+  const macros: [string, number | undefined][] = [
     ['protéines', input.proteinG],
     ['glucides', input.carbsG],
     ['lipides', input.fatG],
   ];
-  for (const [name, value] of numbers) {
-    if (value != null && (Number.isNaN(value) || value < 0)) {
+  const all: [string, number | undefined][] = [['calories', input.caloriesKcal], ...macros];
+
+  // Rejette NaN ET ±Infinity (Number.isFinite couvre les deux) et le négatif.
+  for (const [name, value] of all) {
+    if (value != null && (!Number.isFinite(value) || value < 0)) {
       return { ok: false, error: `Valeur de ${name} invalide.` };
     }
   }
 
+  // Bornes hautes réalistes (alignées sur le schéma), cadrage neutre (anti-TCA).
   if (input.caloriesKcal != null && input.caloriesKcal > MAX_CALORIES) {
     return { ok: false, error: 'Cette valeur calorique semble irréaliste.' };
+  }
+  for (const [name, value] of macros) {
+    if (value != null && value > MAX_MACRO_G) {
+      return { ok: false, error: `Cette valeur de ${name} semble irréaliste.` };
+    }
   }
 
   return { ok: true };

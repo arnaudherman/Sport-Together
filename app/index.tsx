@@ -14,6 +14,16 @@ import { useSession } from '@/ui/use-session';
 export default function HomeScreen() {
   const { userId, loading } = useSession();
   const [groupId, setGroupId] = useState<string | null>(null);
+  const [prevUserId, setPrevUserId] = useState(userId);
+
+  // Sécurité : le groupe sélectionné est lié à la session courante. Au moindre
+  // changement d'utilisateur (déconnexion, expiration, autre compte), on remet à
+  // zéro pour ne JAMAIS afficher le groupe d'une session précédente. Pattern React
+  // « ajuster l'état au changement de prop » (pendant le rendu, sans effet).
+  if (userId !== prevUserId) {
+    setPrevUserId(userId);
+    setGroupId(null);
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -26,7 +36,7 @@ export default function HomeScreen() {
       ) : !groupId ? (
         <GroupGate onReady={setGroupId} />
       ) : (
-        <FeedView groupId={groupId} />
+        <FeedView key={userId} groupId={groupId} />
       )}
     </SafeAreaView>
   );

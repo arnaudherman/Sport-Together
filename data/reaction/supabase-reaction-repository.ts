@@ -12,8 +12,10 @@ export class SupabaseReactionRepository implements ReactionRepository {
   constructor(private readonly client: SupabaseClient) {}
 
   private async userId(): Promise<string> {
-    const { data } = await this.client.auth.getUser();
-    const uid = data.user?.id;
+    // Session LOCALE (pas de round-trip réseau) ; l'identité réelle reste imposée
+    // par la RLS (author_id = auth.uid()) côté serveur.
+    const { data } = await this.client.auth.getSession();
+    const uid = data.session?.user.id;
     if (!uid) throw new Error('Non authentifié');
     return uid;
   }

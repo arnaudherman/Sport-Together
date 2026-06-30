@@ -55,9 +55,11 @@ export function LogGoal({ groupId, onLogged }: { groupId: string; onLogged: () =
         }
         await feed.logSteps(groupId, Math.round(n));
       } else {
+        const cal = toNumber(calories);
         const input = {
           label: mealLabel.trim(),
-          caloriesKcal: toNumber(calories),
+          // calories_kcal est un entier en base -> on arrondit (comme les pas).
+          caloriesKcal: cal != null ? Math.round(cal) : undefined,
           proteinG: toNumber(protein),
           carbsG: toNumber(carbs),
           fatG: toNumber(fat),

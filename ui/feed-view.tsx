@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 
 import { useFeedRepository, useReactionRepository } from '@/core/di/repositories-context';
@@ -12,12 +12,24 @@ export function FeedView({ groupId }: { groupId: string }) {
   const reactionRepo = useReactionRepository();
   const [items, setItems] = useState<FeedItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const mounted = useRef(true);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   const load = useCallback(async () => {
     try {
-      setItems(await feed.listGroupFeed(groupId));
+      const data = await feed.listGroupFeed(groupId);
+      if (mounted.current) {
+        setItems(data);
+        setError(null);
+      }
     } catch (e) {
-      setError((e as Error).message);
+      if (mounted.current) setError((e as Error).message);
     }
   }, [feed, groupId]);
 
@@ -32,7 +44,7 @@ export function FeedView({ groupId }: { groupId: string }) {
       else await reactionRepo.add(item.id, kind);
       await load();
     } catch (e) {
-      setError((e as Error).message);
+      if (mounted.current) setError((e as Error).message);
     }
   }
 
