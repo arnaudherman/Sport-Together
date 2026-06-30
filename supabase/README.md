@@ -29,6 +29,25 @@ supabase db push        # applique les migrations de supabase/migrations/
 Coller le contenu de chaque migration, dans l'ordre, dans le SQL Editor du
 dashboard Supabase.
 
+## Tests automatisés (isolation RLS / RPC)
+
+`supabase/tests/` contient une suite qui applique les migrations sur un PostgreSQL
+nu (via des *shims* `auth`/`storage`) et **exécute** des assertions d'isolation en
+simulant des utilisateurs authentifiés (rôle `authenticated` + claim JWT `sub`).
+
+```bash
+brew install postgresql@16   # une fois
+npm install
+npm run test:db              # monte une base jetable, applique tout, lance les tests
+```
+
+Couvre : isolation lecture/écriture inter-groupes, immuabilité du `group_id`,
+adhésion par RPC uniquement (INSERT direct refusé), `author_id` non forgeable,
+age-gating nutrition serveur, réactions réservées aux membres. Tourne aussi en CI
+(job `db-tests`, service Postgres). *Ces tests ont déjà détecté un vrai bug
+(`join_group_by_code` : collision de nom de colonne) que les revues par lecture
+avaient manqué — d'où leur intérêt.*
+
 ## Garanties à vérifier après application (rappel ADR-0004)
 
 - Un membre du groupe A ne lit/écrit **rien** du groupe B (feed, détails,
