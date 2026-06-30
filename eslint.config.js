@@ -1,32 +1,45 @@
 // https://docs.expo.dev/guides/using-eslint/
 const expoConfig = require('eslint-config-expo/flat');
 
-const SUPABASE_RESTRICTION = {
-  paths: [
-    {
-      name: '@supabase/supabase-js',
-      message:
-        "Le SDK Supabase est réservé à data/ et core/supabase/ (ADR-0007). La présentation dépend des interfaces de domain/, jamais de Supabase.",
-    },
-  ],
-};
+const SDK = '@supabase/supabase-js';
+const SDK_MSG =
+  "Le SDK Supabase est réservé à data/ et core/supabase/ (ADR-0007). La présentation dépend des interfaces de domain/ via le DI.";
+const WRAPPER_MSG =
+  "Le client Supabase configuré (core/supabase) est réservé à data/ et core/ ; la présentation passe par le DI (ADR-0007), jamais par le client directement.";
 
 module.exports = [
   ...(Array.isArray(expoConfig) ? expoConfig : [expoConfig]),
   {
     ignores: ['dist/*', 'node_modules/*', '.expo/*'],
   },
+  // 1) Global : SDK Supabase interdit, sous-chemins compris (correctif revue).
   {
-    // ADR-0007 : la présentation ne parle jamais à Supabase directement.
     rules: {
-      'no-restricted-imports': ['error', SUPABASE_RESTRICTION],
+      'no-restricted-imports': [
+        'error',
+        { patterns: [{ group: [SDK, `${SDK}/*`], message: SDK_MSG }] },
+      ],
     },
   },
+  // 2) Frontière backend autorisée : data/ et core/supabase/ peuvent importer le SDK.
   {
-    // Exception : data/ et core/supabase/ SONT la frontière backend autorisée.
     files: ['data/**/*.{ts,tsx}', 'core/supabase/**/*.{ts,tsx}'],
+    rules: { 'no-restricted-imports': 'off' },
+  },
+  // 3) Présentation & domaine : ni le SDK, ni le client wrapper core/supabase.
+  //    (core/di reste libre d'importer le wrapper pour câbler le DI.)
+  {
+    files: ['app/**/*.{ts,tsx}', 'ui/**/*.{ts,tsx}', 'domain/**/*.{ts,tsx}'],
     rules: {
-      'no-restricted-imports': 'off',
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            { group: [SDK, `${SDK}/*`], message: SDK_MSG },
+            { group: ['@/core/supabase', '@/core/supabase/*'], message: WRAPPER_MSG },
+          ],
+        },
+      ],
     },
   },
 ];
