@@ -1,0 +1,8 @@
+# macOS
+.DS_Store
+
+# Logs & env (à compléter au scaffold Expo)
+*.log
+.env
+.env.*
+!.env.example
