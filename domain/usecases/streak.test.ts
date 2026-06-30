@@ -8,7 +8,12 @@ import {
   perfectDays,
   previousDayKey,
   satisfiedDays,
+  streakFromFeed,
 } from '@/domain/usecases/streak';
+
+function feedItem(authorId: string, createdAt: string): FeedItem {
+  return { id: createdAt, groupId: 'g', authorId, authorName: authorId, type: 'session', createdAt, summary: 's' };
+}
 
 describe('localDayKey', () => {
   it('décale vers le jour suivant en UTC+2 près de minuit', () => {
@@ -96,6 +101,20 @@ describe('loggedDaysFor', () => {
     ];
     const days = loggedDaysFor(items, 'u1', 120);
     expect([...days].sort()).toEqual(['2026-06-30', '2026-07-01']);
+  });
+});
+
+describe('streakFromFeed', () => {
+  it('calcule le streak personnel depuis le feed', () => {
+    const now = '2026-06-30T12:00:00.000Z';
+    const items = [
+      feedItem('u1', '2026-06-30T08:00:00.000Z'),
+      feedItem('u1', '2026-06-29T08:00:00.000Z'),
+      feedItem('u2', '2026-06-30T08:00:00.000Z'),
+    ];
+    expect(streakFromFeed(items, 'u1', 0, now)).toBe(2);
+    expect(streakFromFeed(items, 'u2', 0, now)).toBe(1);
+    expect(streakFromFeed(items, 'inconnu', 0, now)).toBe(0);
   });
 });
 

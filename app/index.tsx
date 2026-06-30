@@ -36,7 +36,7 @@ export default function HomeScreen() {
       ) : !groupId ? (
         <GroupGate onReady={setGroupId} />
       ) : (
-        <FeedView key={userId} groupId={groupId} />
+        <FeedView key={userId} groupId={groupId} userId={userId} />
       )}
     </SafeAreaView>
   );

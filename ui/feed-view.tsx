@@ -5,9 +5,10 @@ import { useFeedRepository, useReactionRepository } from '@/core/di/repositories
 import type { FeedItem, ReactionKind } from '@/domain/entities/feed';
 import { FeedItemCard } from '@/ui/feed-item-card';
 import { LogGoal } from '@/ui/log-goal';
+import { StreakBadge } from '@/ui/streak-badge';
 
-/** Feed du groupe + log d'un goal + réactions (la boucle core, ADR-0002). */
-export function FeedView({ groupId }: { groupId: string }) {
+/** Feed du groupe + streak + log d'un goal + réactions (la boucle core, ADR-0002). */
+export function FeedView({ groupId, userId }: { groupId: string; userId: string }) {
   const feed = useFeedRepository();
   const reactionRepo = useReactionRepository();
   const [items, setItems] = useState<FeedItem[]>([]);
@@ -52,6 +53,7 @@ export function FeedView({ groupId }: { groupId: string }) {
     <View style={styles.container}>
       <Text style={styles.title}>Feed du groupe</Text>
 
+      <StreakBadge items={items} userId={userId} />
       <LogGoal groupId={groupId} onLogged={load} />
       {error ? <Text style={styles.error}>{error}</Text> : null}
 

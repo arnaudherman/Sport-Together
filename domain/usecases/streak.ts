@@ -75,6 +75,21 @@ export function satisfiedDays(
 }
 
 /**
+ * Streak personnel calculé directement depuis un feed : nombre de jours
+ * consécutifs (finissant aujourd'hui ou hier) où l'utilisateur a loggé un goal.
+ */
+export function streakFromFeed(
+  items: readonly FeedItem[],
+  userId: string,
+  tzOffsetMinutes: number,
+  nowIso: string,
+): number {
+  const todayKey = localDayKey(nowIso, tzOffsetMinutes);
+  const days = loggedDaysFor(items, userId, tzOffsetMinutes);
+  return currentStreak(days, todayKey);
+}
+
+/**
  * Jours « parfaits » du groupe : tous les membres ont participé ce jour-là.
  * `participationByDay` associe chaque jour à l'ensemble des userId ayant participé.
  * Un groupe vide n'a aucune journée parfaite.
