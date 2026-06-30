@@ -1,4 +1,9 @@
-import { EMPTY_REACTIONS, type FeedItem } from '@/domain/entities/feed';
+import {
+  EMPTY_REACTIONS,
+  type FeedItem,
+  type FeedItemType,
+} from '@/domain/entities/feed';
+import type { MealInput } from '@/domain/entities/meal';
 import type { FeedRepository } from '@/domain/repositories/feed-repository';
 
 import type { InMemoryReactionStore } from '@/data/reaction/in-memory-reaction-store';
@@ -31,16 +36,29 @@ export class InMemoryFeedRepository implements FeedRepository {
       }));
   }
 
-  async logSession(groupId: string, activity: string, durationMin?: number): Promise<void> {
+  private push(groupId: string, type: FeedItemType, summary: string): void {
     this.items.push({
       id: `local-${this.items.length + 1}`,
       groupId,
       authorId: this.viewerId,
       authorName: 'Moi',
-      type: 'session',
+      type,
       createdAt: new Date().toISOString(),
-      summary: durationMin ? `${activity} · ${durationMin} min` : activity,
+      summary,
     });
+  }
+
+  async logSession(groupId: string, activity: string, durationMin?: number): Promise<void> {
+    this.push(groupId, 'session', durationMin ? `${activity} · ${durationMin} min` : activity);
+  }
+
+  async logSteps(groupId: string, steps: number): Promise<void> {
+    this.push(groupId, 'steps', `${steps} pas`);
+  }
+
+  async logMeal(groupId: string, meal: MealInput): Promise<void> {
+    const calories = meal.caloriesKcal != null ? ` · ${meal.caloriesKcal} kcal` : '';
+    this.push(groupId, 'meal', `${meal.label}${calories}`);
   }
 }
 
