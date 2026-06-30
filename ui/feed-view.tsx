@@ -9,13 +9,14 @@ import {
   View,
 } from 'react-native';
 
-import { useFeedRepository } from '@/core/di/repositories-context';
-import type { FeedItem } from '@/domain/entities/feed';
+import { useFeedRepository, useReactionRepository } from '@/core/di/repositories-context';
+import type { FeedItem, ReactionKind } from '@/domain/entities/feed';
 import { FeedItemCard } from '@/ui/feed-item-card';
 
-/** Feed du groupe + log rapide d'une séance (la boucle core, ADR-0002). */
+/** Feed du groupe + log rapide d'une séance + réactions (la boucle core, ADR-0002). */
 export function FeedView({ groupId }: { groupId: string }) {
   const feed = useFeedRepository();
+  const reactionRepo = useReactionRepository();
   const [items, setItems] = useState<FeedItem[]>([]);
   const [activity, setActivity] = useState('');
   const [busy, setBusy] = useState(false);
@@ -47,6 +48,17 @@ export function FeedView({ groupId }: { groupId: string }) {
     }
   }
 
+  async function toggleReaction(item: FeedItem, kind: ReactionKind) {
+    const active = (item.reactions?.mine ?? []).includes(kind);
+    try {
+      if (active) await reactionRepo.remove(item.id, kind);
+      else await reactionRepo.add(item.id, kind);
+      await load();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Feed du groupe</Text>
@@ -65,7 +77,9 @@ export function FeedView({ groupId }: { groupId: string }) {
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <FeedItemCard item={item} />}
+        renderItem={({ item }) => (
+          <FeedItemCard item={item} onToggleReaction={(kind) => toggleReaction(item, kind)} />
+        )}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           busy ? <ActivityIndicator /> : <Text style={styles.empty}>Aucune séance pour l'instant.</Text>

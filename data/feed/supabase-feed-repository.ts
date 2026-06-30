@@ -1,6 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { FeedItem, FeedItemType } from '@/domain/entities/feed';
+import type {
+  FeedItem,
+  FeedItemType,
+  ReactionKind,
+  ReactionSummary,
+} from '@/domain/entities/feed';
 import type { FeedRepository } from '@/domain/repositories/feed-repository';
 
 type OneOrMany<T> = T | T[] | null;
@@ -15,6 +20,7 @@ interface FeedRow {
   sessions: OneOrMany<{ activity: string; duration_min: number | null }>;
   step_logs: OneOrMany<{ steps: number }>;
   meals: OneOrMany<{ label: string; calories_kcal: number | null }>;
+  reactions: { kind: ReactionKind; author_id: string | null }[] | null;
 }
 
 function pickOne<T>(value: OneOrMany<T>): T | null {
@@ -37,9 +43,26 @@ function summarize(row: FeedRow): string {
   return m.calories_kcal != null ? `${m.label} · ${m.calories_kcal} kcal` : m.label;
 }
 
+function reactionSummary(
+  rows: FeedRow['reactions'],
+  viewerId: string,
+): ReactionSummary {
+  const list = rows ?? [];
+  const mine: ReactionKind[] = [];
+  if (list.some((r) => r.kind === 'kudos' && r.author_id === viewerId)) mine.push('kudos');
+  if (list.some((r) => r.kind === 'encouragement' && r.author_id === viewerId)) {
+    mine.push('encouragement');
+  }
+  return {
+    kudos: list.filter((r) => r.kind === 'kudos').length,
+    encouragement: list.filter((r) => r.kind === 'encouragement').length,
+    mine,
+  };
+}
+
 /**
  * Implémentation Supabase du FeedRepository (ADR-0002 / ADR-0004). Lit le feed
- * polymorphe d'un groupe (jointures auteur + tables de détail), trié du plus
+ * polymorphe d'un groupe (jointures auteur + détails + réactions), trié du plus
  * récent au plus ancien. La RLS impose que seul un membre du groupe voie ces lignes.
  * data/ est la seule couche autorisée à importer le SDK Supabase (ADR-0007).
  */
@@ -47,6 +70,9 @@ export class SupabaseFeedRepository implements FeedRepository {
   constructor(private readonly client: SupabaseClient) {}
 
   async listGroupFeed(groupId: string): Promise<FeedItem[]> {
+    const { data: userData } = await this.client.auth.getUser();
+    const viewerId = userData.user?.id ?? '';
+
     const { data, error } = await this.client
       .from('feed_items')
       .select(
@@ -54,7 +80,8 @@ export class SupabaseFeedRepository implements FeedRepository {
           'author:profiles(pseudo), ' +
           'sessions(activity, duration_min), ' +
           'step_logs(steps), ' +
-          'meals(label, calories_kcal)',
+          'meals(label, calories_kcal), ' +
+          'reactions(kind, author_id)',
       )
       .eq('group_id', groupId)
       .order('created_at', { ascending: false });
@@ -70,6 +97,7 @@ export class SupabaseFeedRepository implements FeedRepository {
       type: row.type,
       createdAt: row.created_at,
       summary: summarize(row),
+      reactions: reactionSummary(row.reactions, viewerId),
     }));
   }
 

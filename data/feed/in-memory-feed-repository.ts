@@ -1,29 +1,41 @@
-import type { FeedItem } from '@/domain/entities/feed';
+import { EMPTY_REACTIONS, type FeedItem } from '@/domain/entities/feed';
 import type { FeedRepository } from '@/domain/repositories/feed-repository';
+
+import type { InMemoryReactionStore } from '@/data/reaction/in-memory-reaction-store';
 
 /**
  * Implémentation en mémoire du FeedRepository. Sert de mock dans les tests et de
  * mode hors-ligne (aucun projet Supabase configuré). Aucune dépendance à Supabase
- * (ADR-0007).
+ * (ADR-0007). Le store de réactions est partagé avec le ReactionRepository.
  */
 export class InMemoryFeedRepository implements FeedRepository {
   private items: FeedItem[];
 
-  constructor(seed: readonly FeedItem[] = DEMO_FEED) {
+  constructor(
+    seed: readonly FeedItem[] = DEMO_FEED,
+    private readonly reactions?: InMemoryReactionStore,
+    private readonly viewerId = 'local-user',
+  ) {
     this.items = [...seed];
   }
 
   async listGroupFeed(groupId: string): Promise<FeedItem[]> {
     return this.items
       .filter((item) => item.groupId === groupId)
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .map((item) => ({
+        ...item,
+        reactions: this.reactions
+          ? this.reactions.summaryFor(item.id, this.viewerId)
+          : EMPTY_REACTIONS,
+      }));
   }
 
   async logSession(groupId: string, activity: string, durationMin?: number): Promise<void> {
     this.items.push({
       id: `local-${this.items.length + 1}`,
       groupId,
-      authorId: 'local-user',
+      authorId: this.viewerId,
       authorName: 'Moi',
       type: 'session',
       createdAt: new Date().toISOString(),

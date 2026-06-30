@@ -8,9 +8,13 @@ import { InMemoryFeedRepository } from '@/data/feed/in-memory-feed-repository';
 import { SupabaseFeedRepository } from '@/data/feed/supabase-feed-repository';
 import { InMemoryGroupRepository } from '@/data/group/in-memory-group-repository';
 import { SupabaseGroupRepository } from '@/data/group/supabase-group-repository';
+import { InMemoryReactionRepository } from '@/data/reaction/in-memory-reaction-repository';
+import { InMemoryReactionStore } from '@/data/reaction/in-memory-reaction-store';
+import { SupabaseReactionRepository } from '@/data/reaction/supabase-reaction-repository';
 import type { AuthRepository } from '@/domain/repositories/auth-repository';
 import type { FeedRepository } from '@/domain/repositories/feed-repository';
 import type { GroupRepository } from '@/domain/repositories/group-repository';
+import type { ReactionRepository } from '@/domain/repositories/reaction-repository';
 
 /**
  * Conteneur d'injection de dépendances (ADR-0007). La présentation consomme les
@@ -21,6 +25,7 @@ export interface Repositories {
   auth: AuthRepository;
   group: GroupRepository;
   feed: FeedRepository;
+  reaction: ReactionRepository;
 }
 
 const RepositoriesContext = createContext<Repositories | null>(null);
@@ -32,12 +37,16 @@ function createDefaultRepositories(): Repositories {
       auth: new SupabaseAuthRepository(client),
       group: new SupabaseGroupRepository(client),
       feed: new SupabaseFeedRepository(client),
+      reaction: new SupabaseReactionRepository(client),
     };
   }
+  // Mode hors-ligne : feed et réactions partagent le même store en mémoire.
+  const reactionStore = new InMemoryReactionStore();
   return {
     auth: new InMemoryAuthRepository(),
     group: new InMemoryGroupRepository(),
-    feed: new InMemoryFeedRepository(),
+    feed: new InMemoryFeedRepository(undefined, reactionStore),
+    reaction: new InMemoryReactionRepository(reactionStore),
   };
 }
 
@@ -74,4 +83,8 @@ export function useGroupRepository(): GroupRepository {
 
 export function useFeedRepository(): FeedRepository {
   return useRepositories().feed;
+}
+
+export function useReactionRepository(): ReactionRepository {
+  return useRepositories().reaction;
 }
