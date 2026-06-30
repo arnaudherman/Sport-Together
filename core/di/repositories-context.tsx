@@ -8,12 +8,15 @@ import { InMemoryFeedRepository } from '@/data/feed/in-memory-feed-repository';
 import { SupabaseFeedRepository } from '@/data/feed/supabase-feed-repository';
 import { InMemoryGroupRepository } from '@/data/group/in-memory-group-repository';
 import { SupabaseGroupRepository } from '@/data/group/supabase-group-repository';
+import { InMemoryProfileRepository } from '@/data/profile/in-memory-profile-repository';
+import { SupabaseProfileRepository } from '@/data/profile/supabase-profile-repository';
 import { InMemoryReactionRepository } from '@/data/reaction/in-memory-reaction-repository';
 import { InMemoryReactionStore } from '@/data/reaction/in-memory-reaction-store';
 import { SupabaseReactionRepository } from '@/data/reaction/supabase-reaction-repository';
 import type { AuthRepository } from '@/domain/repositories/auth-repository';
 import type { FeedRepository } from '@/domain/repositories/feed-repository';
 import type { GroupRepository } from '@/domain/repositories/group-repository';
+import type { ProfileRepository } from '@/domain/repositories/profile-repository';
 import type { ReactionRepository } from '@/domain/repositories/reaction-repository';
 
 /**
@@ -23,6 +26,7 @@ import type { ReactionRepository } from '@/domain/repositories/reaction-reposito
  */
 export interface Repositories {
   auth: AuthRepository;
+  profile: ProfileRepository;
   group: GroupRepository;
   feed: FeedRepository;
   reaction: ReactionRepository;
@@ -35,6 +39,7 @@ function createDefaultRepositories(): Repositories {
     const client = getSupabaseClient();
     return {
       auth: new SupabaseAuthRepository(client),
+      profile: new SupabaseProfileRepository(client),
       group: new SupabaseGroupRepository(client),
       feed: new SupabaseFeedRepository(client),
       reaction: new SupabaseReactionRepository(client),
@@ -44,6 +49,7 @@ function createDefaultRepositories(): Repositories {
   const reactionStore = new InMemoryReactionStore();
   return {
     auth: new InMemoryAuthRepository(),
+    profile: new InMemoryProfileRepository(),
     group: new InMemoryGroupRepository(),
     feed: new InMemoryFeedRepository(undefined, reactionStore),
     reaction: new InMemoryReactionRepository(reactionStore),
@@ -75,6 +81,10 @@ export function useRepositories(): Repositories {
 
 export function useAuthRepository(): AuthRepository {
   return useRepositories().auth;
+}
+
+export function useProfileRepository(): ProfileRepository {
+  return useRepositories().profile;
 }
 
 export function useGroupRepository(): GroupRepository {
