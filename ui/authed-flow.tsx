@@ -31,7 +31,9 @@ export function AuthedFlow({ userId }: { userId: string }) {
     return <GroupGate onReady={setGroupId} />;
   }
 
-  return <FeedView groupId={groupId} userId={userId} />;
+  return (
+    <FeedView groupId={groupId} userId={userId} onChangeGroup={() => setGroupId(null)} />
+  );
 }
 
 const styles = StyleSheet.create({

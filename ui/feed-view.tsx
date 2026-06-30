@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useFeedRepository, useReactionRepository } from '@/core/di/repositories-context';
 import type { FeedItem, ReactionKind } from '@/domain/entities/feed';
@@ -8,7 +8,15 @@ import { LogGoal } from '@/ui/log-goal';
 import { StreakBadge } from '@/ui/streak-badge';
 
 /** Feed du groupe + streak + log d'un goal + réactions (la boucle core, ADR-0002). */
-export function FeedView({ groupId, userId }: { groupId: string; userId: string }) {
+export function FeedView({
+  groupId,
+  userId,
+  onChangeGroup,
+}: {
+  groupId: string;
+  userId: string;
+  onChangeGroup: () => void;
+}) {
   const feed = useFeedRepository();
   const reactionRepo = useReactionRepository();
   const [items, setItems] = useState<FeedItem[]>([]);
@@ -51,7 +59,12 @@ export function FeedView({ groupId, userId }: { groupId: string; userId: string 
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Feed du groupe</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>Feed du groupe</Text>
+        <Pressable onPress={onChangeGroup} hitSlop={8}>
+          <Text style={styles.link}>Changer</Text>
+        </Pressable>
+      </View>
 
       <StreakBadge items={items} userId={userId} />
       <LogGoal groupId={groupId} onLogged={load} />
@@ -72,7 +85,14 @@ export function FeedView({ groupId, userId }: { groupId: string; userId: string 
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 16, paddingTop: 8 },
-  title: { fontSize: 22, fontWeight: '700', paddingVertical: 12 },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  title: { fontSize: 22, fontWeight: '700' },
+  link: { fontSize: 15, color: '#1D4ED8', fontWeight: '600' },
   list: { gap: 12, paddingBottom: 24 },
   empty: { color: '#6B7280', textAlign: 'center', marginTop: 24 },
   error: { color: '#DC2626', fontSize: 14, marginBottom: 8 },
