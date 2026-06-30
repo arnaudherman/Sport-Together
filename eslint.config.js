@@ -10,7 +10,7 @@ const WRAPPER_MSG =
 module.exports = [
   ...(Array.isArray(expoConfig) ? expoConfig : [expoConfig]),
   {
-    ignores: ['dist/*', 'node_modules/*', '.expo/*'],
+    ignores: ['dist/*', 'node_modules/*', '.expo/*', 'supabase/**'],
   },
   // 1) Global : SDK Supabase interdit, sous-chemins compris (correctif revue).
   {

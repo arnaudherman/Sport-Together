@@ -8,6 +8,8 @@ import { InMemoryFeedRepository } from '@/data/feed/in-memory-feed-repository';
 import { SupabaseFeedRepository } from '@/data/feed/supabase-feed-repository';
 import { InMemoryGroupRepository } from '@/data/group/in-memory-group-repository';
 import { SupabaseGroupRepository } from '@/data/group/supabase-group-repository';
+import { InMemoryNotificationRepository } from '@/data/notification/in-memory-notification-repository';
+import { SupabaseNotificationRepository } from '@/data/notification/supabase-notification-repository';
 import { InMemoryProfileRepository } from '@/data/profile/in-memory-profile-repository';
 import { SupabaseProfileRepository } from '@/data/profile/supabase-profile-repository';
 import { InMemoryReactionRepository } from '@/data/reaction/in-memory-reaction-repository';
@@ -16,6 +18,7 @@ import { SupabaseReactionRepository } from '@/data/reaction/supabase-reaction-re
 import type { AuthRepository } from '@/domain/repositories/auth-repository';
 import type { FeedRepository } from '@/domain/repositories/feed-repository';
 import type { GroupRepository } from '@/domain/repositories/group-repository';
+import type { NotificationRepository } from '@/domain/repositories/notification-repository';
 import type { ProfileRepository } from '@/domain/repositories/profile-repository';
 import type { ReactionRepository } from '@/domain/repositories/reaction-repository';
 
@@ -30,6 +33,7 @@ export interface Repositories {
   group: GroupRepository;
   feed: FeedRepository;
   reaction: ReactionRepository;
+  notification: NotificationRepository;
 }
 
 const RepositoriesContext = createContext<Repositories | null>(null);
@@ -43,6 +47,7 @@ function createDefaultRepositories(): Repositories {
       group: new SupabaseGroupRepository(client),
       feed: new SupabaseFeedRepository(client),
       reaction: new SupabaseReactionRepository(client),
+      notification: new SupabaseNotificationRepository(client),
     };
   }
   // Mode hors-ligne : feed et réactions partagent le même store en mémoire.
@@ -53,6 +58,7 @@ function createDefaultRepositories(): Repositories {
     group: new InMemoryGroupRepository(),
     feed: new InMemoryFeedRepository(undefined, reactionStore),
     reaction: new InMemoryReactionRepository(reactionStore),
+    notification: new InMemoryNotificationRepository(),
   };
 }
 
@@ -97,4 +103,8 @@ export function useFeedRepository(): FeedRepository {
 
 export function useReactionRepository(): ReactionRepository {
   return useRepositories().reaction;
+}
+
+export function useNotificationRepository(): NotificationRepository {
+  return useRepositories().notification;
 }

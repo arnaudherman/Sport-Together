@@ -40,4 +40,12 @@ export class SupabaseAuthRepository implements AuthRepository {
   async signOut(): Promise<void> {
     await this.client.auth.signOut();
   }
+
+  async deleteAccount(): Promise<void> {
+    // L'Edge Function delete_account supprime auth.users (cascade -> anonymisation
+    // du feed, retrait des memberships). On déconnecte ensuite localement.
+    const { error } = await this.client.functions.invoke('delete_account');
+    if (error) throw new Error(error.message);
+    await this.client.auth.signOut();
+  }
 }

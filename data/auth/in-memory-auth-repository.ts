@@ -31,6 +31,10 @@ export class InMemoryAuthRepository implements AuthRepository {
     this.emit();
   }
 
+  async deleteAccount(): Promise<void> {
+    await this.signOut();
+  }
+
   private emit(): void {
     this.listeners.forEach((listener) => listener(this.userId));
   }

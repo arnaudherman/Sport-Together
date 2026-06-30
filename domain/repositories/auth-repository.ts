@@ -13,4 +13,6 @@ export interface AuthRepository {
   /** S'abonne aux changements d'état d'auth ; renvoie une fonction de désabonnement. */
   onAuthChange(listener: (userId: string | null) => void): () => void;
   signOut(): Promise<void>;
+  /** Supprime le compte (ADR-0005). Le contenu est anonymisé côté serveur. */
+  deleteAccount(): Promise<void>;
 }
