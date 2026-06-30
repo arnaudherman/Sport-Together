@@ -23,6 +23,12 @@ related:
 
 # ADR-0005 — Authentification & identité
 
+> **Statut d'implémentation (2026-07-01) : partiel.** Le **magic link e-mail (OTP)**
+> est implémenté de bout en bout (AuthRepository + écran de connexion). **Sign in
+> with Apple n'est PAS encore implémenté** (ni dépendance `expo-apple-authentication`,
+> ni provider Apple) — c'est un report assumé, à câbler avant le lancement iOS. Le
+> stockage de session est désormais chiffré via expo-secure-store (conforme).
+
 ## Contexte et énoncé du problème
 
 L'authentification est gérée par **Supabase Auth** (ADR-0001) : le porteur ne code

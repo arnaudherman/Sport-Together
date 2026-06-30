@@ -55,3 +55,18 @@ jobs:
           psql -h localhost -U postgres -d st_test -v ON_ERROR_STOP=1 -q -f supabase/tests/_grants.sql
       - name: Tests d'isolation RLS / RPC
         run: node supabase/tests/rls.test.mjs
+
+  edge-functions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Deno lint
+        run: deno lint supabase/functions
+      - name: Deno check (type-check des Edge Functions service_role)
+        run: |
+          for f in supabase/functions/*/index.ts; do
+            deno check "$f"
+          done

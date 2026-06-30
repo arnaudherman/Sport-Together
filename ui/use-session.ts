@@ -10,21 +10,26 @@ export function useSession() {
 
   useEffect(() => {
     let active = true;
+    let gotEvent = false;
+    // S'abonner D'ABORD : si un événement d'auth arrive (session restaurée,
+    // SIGNED_IN…), il fait foi et la résolution tardive de getCurrentUserId ne
+    // doit pas l'écraser avec une valeur périmée (correctif race de l'analyse).
+    const unsubscribe = auth.onAuthChange((id) => {
+      if (active) {
+        gotEvent = true;
+        setUserId(id);
+        setLoading(false);
+      }
+    });
     auth
       .getCurrentUserId()
       .then((id) => {
-        if (active) {
-          setUserId(id);
-          setLoading(false);
-        }
+        if (active && !gotEvent) setUserId(id);
       })
-      .catch(() => {
-        // Échec de lecture de session : on ne reste pas bloqué sur le loader.
+      .catch(() => {})
+      .finally(() => {
         if (active) setLoading(false);
       });
-    const unsubscribe = auth.onAuthChange((id) => {
-      if (active) setUserId(id);
-    });
     return () => {
       active = false;
       unsubscribe();

@@ -1,0 +1,15 @@
+# Config Supabase versionnée — la vérification JWT par fonction est ICI (et non
+# dans un flag CLI non tracé). Fusionner project_id avec la sortie de `supabase init`.
+project_id = "sport-together"
+
+# notify_group : appelée par le trigger/webhook (pas un user) -> pas de JWT user,
+# mais protégée par un SECRET partagé vérifié DANS la fonction (NOTIFY_HOOK_SECRET).
+[functions.notify_group]
+verify_jwt = false
+
+# nudge / delete_account : appelées par le client authentifié -> JWT requis.
+[functions.nudge]
+verify_jwt = true
+
+[functions.delete_account]
+verify_jwt = true

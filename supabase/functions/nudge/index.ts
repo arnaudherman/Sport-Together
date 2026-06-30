@@ -1,11 +1,13 @@
 // Edge Function (Deno) — relance bienveillante ciblée (ADR-0006). Un membre
 // encourage un autre membre du MÊME groupe. L'appartenance commune est vérifiée
-// côté serveur. Cadrage positif uniquement (vision §8).
+// côté serveur. Cadrage positif uniquement (vision §8), avec un THROTTLE
+// anti-harcèlement : au plus 1 relance par couple (émetteur, cible) / 12h.
 //
 // Déploiement : supabase functions deploy nudge
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const EXPO_PUSH = 'https://exp.host/--/api/v2/push/send';
+const THROTTLE_HOURS = 12;
 
 Deno.serve(async (req: Request) => {
   const jwt = (req.headers.get('Authorization') ?? '').replace('Bearer ', '');
@@ -22,6 +24,7 @@ Deno.serve(async (req: Request) => {
   const { data: auth, error } = await admin.auth.getUser(jwt);
   const sender = auth?.user;
   if (error || !sender) return new Response('unauthorized', { status: 401 });
+  if (sender.id === target_user_id) return new Response('cannot nudge self', { status: 400 });
 
   // L'émetteur ET la cible doivent appartenir au groupe.
   const { data: members } = await admin
@@ -34,11 +37,28 @@ Deno.serve(async (req: Request) => {
     return new Response('forbidden', { status: 403 });
   }
 
+  // Throttle anti-harcèlement.
+  const since = new Date(Date.now() - THROTTLE_HOURS * 3600 * 1000).toISOString();
+  const { count } = await admin
+    .from('nudges')
+    .select('*', { count: 'exact', head: true })
+    .eq('sender_id', sender.id)
+    .eq('target_id', target_user_id)
+    .gt('created_at', since);
+  if ((count ?? 0) > 0) {
+    return new Response('déjà relancé récemment', { status: 429 });
+  }
+  await admin.from('nudges').insert({
+    sender_id: sender.id,
+    target_id: target_user_id,
+    group_id,
+  });
+
   const { data: tokens } = await admin
     .from('device_tokens')
     .select('token')
     .eq('user_id', target_user_id);
-  if (!tokens || tokens.length === 0) return new Response('no tokens');
+  if (!tokens || tokens.length === 0) return new Response('ok');
 
   const { data: profile } = await admin
     .from('profiles')
@@ -59,5 +79,5 @@ Deno.serve(async (req: Request) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(messages),
   });
-  return new Response(await res.text(), { status: res.ok ? 200 : 502 });
+  return new Response(res.ok ? 'ok' : 'push error', { status: res.ok ? 200 : 502 });
 });

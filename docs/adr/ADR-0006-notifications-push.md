@@ -24,6 +24,14 @@ related:
 
 # ADR-0006 — Notifications push
 
+> **Statut d'implémentation (2026-07-01) : serveur prêt, client non câblé.** Côté
+> serveur tout est en place : table `device_tokens` + RLS, trigger de notification,
+> Edge Functions `notify_group` (avec secret partagé) et `nudge` (avec throttle
+> anti-harcèlement). Côté **client il manque** : `expo-notifications`, l'obtention
+> et l'enregistrement du token (`NotificationRepository.registerToken` n'est appelé
+> nulle part), le deep link et le bouton de relance. Sans cela, aucune notification
+> n'est reçue — à finir lors de la tranche d'intégration client.
+
 ## Contexte et énoncé du problème
 
 Les notifications push sont le **moteur d'engagement social** du produit (vision,

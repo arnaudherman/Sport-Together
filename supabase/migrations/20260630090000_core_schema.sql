@@ -20,7 +20,10 @@ create table public.profiles (
   id         uuid primary key references auth.users (id) on delete cascade,
   pseudo     text not null check (char_length(pseudo) between 1 and 40),
   avatar_url text,
-  -- Age-gating : l'app inclut la nutrition, réservée aux adultes (ADR-0008).
+  -- Age-gating AUTO-DÉCLARATIF (ADR-0008) : simple attestation, pas une
+  -- vérification d'âge. Re-vérifié côté serveur pour la nutrition (log_meal),
+  -- mais le titulaire peut le passer à true via profiles_update. Une vraie
+  -- vérification (date de naissance immuable, etc.) reste un TODO produit.
   is_adult   boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
