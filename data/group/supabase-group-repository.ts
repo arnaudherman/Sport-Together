@@ -38,9 +38,9 @@ export class SupabaseGroupRepository implements GroupRepository {
     });
     if (error) throw new Error(error.message);
     const row = (Array.isArray(data) ? data[0] : data) as
-      | { id: string; name: string }
+      | { joined_id: string; joined_name: string }
       | undefined;
     if (!row) throw new Error('Groupe introuvable');
-    return { id: row.id, name: row.name };
+    return { id: row.joined_id, name: row.joined_name };
   }
 }

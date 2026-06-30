@@ -50,8 +50,11 @@ $$;
 -- Rejoint un groupe via son code d'invitation. Valide le code côté serveur ;
 -- l'utilisateur ne peut jamais choisir un group_id arbitraire. Ne renvoie QUE
 -- (id, name) : le invite_code n'est jamais exposé à celui qui rejoint.
+-- Colonnes de sortie nommées joined_* : ne PAS les appeler id/name, sinon elles
+-- entrent en collision (paramètres OUT) avec le `on conflict (id)` du upsert profil
+-- ci-dessous -> « column reference id is ambiguous » (bug détecté par les tests réels).
 create or replace function public.join_group_by_code(code text)
-returns table (id uuid, name text)
+returns table (joined_id uuid, joined_name text)
 language plpgsql
 security definer
 set search_path = pg_catalog, public
