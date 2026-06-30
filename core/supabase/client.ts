@@ -1,17 +1,29 @@
+import 'react-native-url-polyfill/auto';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
+import { env } from '@/core/env';
+
 /**
- * Fabrique du client Supabase (ADR-0001 / ADR-0007). Le client vit dans `core/`
- * et est injecté dans les implémentations de repository de `data/` ; la
- * présentation ne le touche jamais. L'adaptateur de stockage sécurisé du token
- * (expo-secure-store) et la config Auth seront câblés ici (ADR-0005).
+ * Client Supabase unique (ADR-0001 / ADR-0007). Vit dans core/, injecté dans les
+ * repositories de data/ ; la présentation ne le touche jamais.
+ *
+ * TODO(ADR-0005): remplacer AsyncStorage par un adaptateur chiffré adossé à
+ * expo-secure-store (pattern « LargeSecureStore ») avant la production.
  */
-export function createSupabaseClient(url: string, anonKey: string): SupabaseClient {
-  return createClient(url, anonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      // storage: secureStorageAdapter, // TODO(ADR-0005): expo-secure-store
-    },
-  });
+let client: SupabaseClient | null = null;
+
+export function getSupabaseClient(): SupabaseClient {
+  if (!client) {
+    client = createClient(env.supabaseUrl, env.supabaseAnonKey, {
+      auth: {
+        storage: AsyncStorage,
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false,
+      },
+    });
+  }
+  return client;
 }

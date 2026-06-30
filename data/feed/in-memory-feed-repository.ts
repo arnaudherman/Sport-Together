@@ -3,20 +3,36 @@ import type { FeedRepository } from '@/domain/repositories/feed-repository';
 
 /**
  * Implémentation en mémoire du FeedRepository. Sert de mock dans les tests et de
- * valeur par défaut du provider tant que l'implémentation Supabase n'est pas
- * câblée. Aucune dépendance à Supabase (ADR-0007).
+ * mode hors-ligne (aucun projet Supabase configuré). Aucune dépendance à Supabase
+ * (ADR-0007).
  */
 export class InMemoryFeedRepository implements FeedRepository {
-  constructor(private readonly items: readonly FeedItem[] = DEMO_FEED) {}
+  private items: FeedItem[];
+
+  constructor(seed: readonly FeedItem[] = DEMO_FEED) {
+    this.items = [...seed];
+  }
 
   async listGroupFeed(groupId: string): Promise<FeedItem[]> {
     return this.items
       .filter((item) => item.groupId === groupId)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
+
+  async logSession(groupId: string, activity: string, durationMin?: number): Promise<void> {
+    this.items.push({
+      id: `local-${this.items.length + 1}`,
+      groupId,
+      authorId: 'local-user',
+      authorName: 'Moi',
+      type: 'session',
+      createdAt: new Date().toISOString(),
+      summary: durationMin ? `${activity} · ${durationMin} min` : activity,
+    });
+  }
 }
 
-/** Données de démonstration pour le scaffold (un seul groupe). */
+/** Données de démonstration pour le mode hors-ligne (un seul groupe). */
 export const DEMO_FEED: readonly FeedItem[] = [
   {
     id: 'f1',

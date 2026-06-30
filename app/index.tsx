@@ -1,40 +1,38 @@
-import { useEffect, useState } from 'react';
-import { FlatList, StyleSheet, Text } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useFeedRepository } from '@/core/di/repositories-context';
-import type { FeedItem } from '@/domain/entities/feed';
-import { FeedItemCard } from '@/ui/feed-item-card';
+import { FeedView } from '@/ui/feed-view';
+import { GroupGate } from '@/ui/group-gate';
+import { SignInForm } from '@/ui/sign-in-form';
+import { useSession } from '@/ui/use-session';
 
+/**
+ * Orchestrateur de la slice verticale : connexion -> choix du groupe -> feed.
+ * Chaque état est une vue présentationnelle qui consomme un repository via le DI.
+ */
 export default function HomeScreen() {
-  const feedRepository = useFeedRepository();
-  const [items, setItems] = useState<FeedItem[]>([]);
-
-  useEffect(() => {
-    let active = true;
-    feedRepository.listGroupFeed('demo-group').then((feed) => {
-      if (active) setItems(feed);
-    });
-    return () => {
-      active = false;
-    };
-  }, [feedRepository]);
+  const { userId, loading } = useSession();
+  const [groupId, setGroupId] = useState<string | null>(null);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <Text style={styles.title}>Feed du groupe</Text>
-      <FlatList
-        data={items}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <FeedItemCard item={item} />}
-        contentContainerStyle={styles.list}
-      />
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      {loading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator />
+        </View>
+      ) : !userId ? (
+        <SignInForm />
+      ) : !groupId ? (
+        <GroupGate onReady={setGroupId} />
+      ) : (
+        <FeedView groupId={groupId} />
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 16 },
-  title: { fontSize: 22, fontWeight: '700', paddingVertical: 16 },
-  list: { gap: 12, paddingBottom: 24 },
+  safe: { flex: 1 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });
