@@ -10,9 +10,10 @@ import {
 } from 'react-native';
 
 import { useProfileRepository } from '@/core/di/repositories-context';
+import type { Profile } from '@/domain/entities/profile';
 
 /** Onboarding minimal : pseudo + age-gating adulte (ADR-0005 / ADR-0008). */
-export function ProfileOnboarding({ onDone }: { onDone: () => void }) {
+export function ProfileOnboarding({ onDone }: { onDone: (profile: Profile) => void }) {
   const repo = useProfileRepository();
   const [pseudo, setPseudo] = useState('');
   const [isAdult, setIsAdult] = useState(false);
@@ -32,8 +33,8 @@ export function ProfileOnboarding({ onDone }: { onDone: () => void }) {
     setBusy(true);
     setError(null);
     try {
-      await repo.updateMyProfile({ pseudo: value, isAdult: true });
-      onDone();
+      const updated = await repo.updateMyProfile({ pseudo: value, isAdult: true });
+      onDone(updated);
     } catch (e) {
       setError((e as Error).message);
     } finally {

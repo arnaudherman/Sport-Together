@@ -80,6 +80,13 @@ export function GroupGate({ onReady }: { onReady: (groupId: string) => void }) {
         ) : null}
         <Text style={styles.hint}>Partage ce code à tes amis pour qu'ils rejoignent.</Text>
         <Button title="Continuer" onPress={() => onReady(created.id)} />
+        <Button
+          title="Retour aux groupes"
+          onPress={() => {
+            setCreated(null);
+            loadMine();
+          }}
+        />
       </View>
     );
   }

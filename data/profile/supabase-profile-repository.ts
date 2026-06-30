@@ -41,16 +41,31 @@ export class SupabaseProfileRepository implements ProfileRepository {
     };
   }
 
-  async updateMyProfile(input: ProfileInput): Promise<void> {
+  async updateMyProfile(input: ProfileInput): Promise<Profile> {
     const id = await this.uid();
     if (!id) throw new Error('Non authentifié');
-    // upsert : robuste même si le trigger handle_new_user n'a pas (encore) créé la ligne.
-    const { error } = await this.client.from('profiles').upsert({
+    // upsert : robuste même si le trigger handle_new_user n'a pas (encore) créé la
+    // ligne. On n'inclut avatar_url que s'il est fourni (sinon on n'écrase pas un
+    // avatar existant). On renvoie la ligne persistée (pas de read-after-write).
+    const payload: Record<string, unknown> = {
       id,
       pseudo: input.pseudo,
-      avatar_url: input.avatarUrl ?? null,
       is_adult: input.isAdult,
-    });
+    };
+    if (input.avatarUrl !== undefined) payload.avatar_url = input.avatarUrl;
+
+    const { data, error } = await this.client
+      .from('profiles')
+      .upsert(payload)
+      .select('id, pseudo, avatar_url, is_adult')
+      .single();
     if (error) throw new Error(error.message);
+    const row = data as ProfileRow;
+    return {
+      id: row.id,
+      pseudo: row.pseudo,
+      avatarUrl: row.avatar_url ?? undefined,
+      isAdult: row.is_adult,
+    };
   }
 }

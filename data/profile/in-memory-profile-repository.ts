@@ -9,12 +9,13 @@ export class InMemoryProfileRepository implements ProfileRepository {
     return this.profile;
   }
 
-  async updateMyProfile(input: ProfileInput): Promise<void> {
+  async updateMyProfile(input: ProfileInput): Promise<Profile> {
     this.profile = {
       ...this.profile,
       pseudo: input.pseudo,
-      avatarUrl: input.avatarUrl,
+      avatarUrl: input.avatarUrl ?? this.profile.avatarUrl,
       isAdult: input.isAdult,
     };
+    return this.profile;
   }
 }

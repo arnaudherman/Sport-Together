@@ -83,6 +83,10 @@ begin
   if not public.is_group_member(p_group_id) then
     raise exception 'Non membre du groupe';
   end if;
+  -- Age-gating serveur (ADR-0008) : la nutrition est réservée aux adultes.
+  if not coalesce((select is_adult from public.profiles where id = auth.uid()), false) then
+    raise exception 'Le suivi nutritionnel est réservé aux adultes';
+  end if;
 
   insert into public.feed_items (group_id, author_id, type)
   values (p_group_id, auth.uid(), 'meal')
