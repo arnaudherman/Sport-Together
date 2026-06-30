@@ -192,6 +192,21 @@ async function main() {
     assert.equal(groups.length, 0);
   });
 
+  await step('invitation : rotation réservée au créateur + code expiré refusé', async () => {
+    // bob (non-créateur) ne peut pas faire tourner le code de A
+    await expectReject(asUser(BOB, `select public.rotate_invite_code($1)`, [A.id]), 'rotation par un non-créateur');
+    // alice (créatrice) régénère avec une expiration DANS LE PASSÉ
+    const expired = (await asUser(ALICE, `select public.rotate_invite_code($1, '2000-01-01T00:00:00Z'::timestamptz) as code`, [A.id])).rows[0].code;
+    assert.ok(expired && expired !== A.invite_code, 'un nouveau code est généré');
+    // un code expiré est refusé
+    await expectReject(asUser(DAVE, `select * from public.join_group_by_code($1)`, [expired]), 'join avec un code expiré');
+    // régénération sans expiration -> dave peut rejoindre
+    const fresh = (await asUser(ALICE, `select public.rotate_invite_code($1) as code`, [A.id])).rows[0].code;
+    await asUser(DAVE, `select * from public.join_group_by_code($1)`, [fresh]);
+    const daveInA = (await asUser(DAVE, `select id from public.groups where id=$1`, [A.id])).rows;
+    assert.equal(daveInA.length, 1, 'dave a rejoint A avec le code frais');
+  });
+
   await step('suppression de compte : anonymise le feed, retire les memberships (ADR-0005)', async () => {
     const carolItems = (await admin(`select id from public.feed_items where author_id=$1`, [CAROL])).rows;
     assert.ok(carolItems.length >= 1, 'carol a au moins un item loggé');
