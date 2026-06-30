@@ -155,11 +155,54 @@ async function main() {
     );
   });
 
+  await step('storage : membre écrit/lit ses photos, non-membre & autre-uid REFUSÉS', async () => {
+    const obj = (gid, uid) => `${gid}/${uid}/00000000-0000-0000-0000-000000000000/p.jpg`;
+    // alice (membre A) écrit sous son propre uid -> OK
+    await asUser(ALICE, `insert into storage.objects (bucket_id,name,owner) values ('feed-photos',$1,$2)`, [obj(A.id, ALICE), ALICE]);
+    // alice écrit sous l'uid de bob -> REFUSÉ (binding auteur)
+    await expectReject(
+      asUser(ALICE, `insert into storage.objects (bucket_id,name,owner) values ('feed-photos',$1,$2)`, [obj(A.id, BOB), ALICE]),
+      'photo sous l\'uid d\'autrui',
+    );
+    // alice écrit dans le groupe B (non-membre) -> REFUSÉ
+    await expectReject(
+      asUser(ALICE, `insert into storage.objects (bucket_id,name,owner) values ('feed-photos',$1,$2)`, [obj(B.id, ALICE), ALICE]),
+      'photo dans un groupe non-membre',
+    );
+    // dave (non-membre) ne voit pas les photos de A ; bob (membre) oui
+    const daveSees = (await asUser(DAVE, `select id from storage.objects where bucket_id='feed-photos' and name like $1`, [`${A.id}/%`])).rows;
+    assert.equal(daveSees.length, 0, 'dave ne voit pas les photos de A');
+    const bobSees = (await asUser(BOB, `select id from storage.objects where bucket_id='feed-photos' and name like $1`, [`${A.id}/%`])).rows;
+    assert.equal(bobSees.length, 1, 'bob voit les photos de A');
+  });
+
+  await step('profils : visibles des co-membres seulement, modifiables seulement par soi', async () => {
+    const visible = (await asUser(ALICE, `select id from public.profiles`)).rows.map((r) => r.id).sort();
+    assert.deepEqual(visible, [ALICE, BOB, CAROL].sort(), 'alice voit ses co-membres, pas dave');
+    const other = await asUser(ALICE, `update public.profiles set pseudo='hack' where id=$1`, [BOB]);
+    assert.equal(other.rowCount, 0, 'modifier le profil d\'autrui = 0 ligne');
+    const self = await asUser(ALICE, `update public.profiles set pseudo='Alice' where id=$1`, [ALICE]);
+    assert.equal(self.rowCount, 1, 'modifier son propre profil OK');
+  });
+
   await step('isolation totale : dave (aucun groupe) ne voit rien de A', async () => {
     const feed = (await asUser(DAVE, `select id from public.feed_items where group_id=$1`, [A.id])).rows;
     assert.equal(feed.length, 0);
     const groups = (await asUser(DAVE, `select id from public.groups`)).rows;
     assert.equal(groups.length, 0);
+  });
+
+  await step('suppression de compte : anonymise le feed, retire les memberships (ADR-0005)', async () => {
+    const carolItems = (await admin(`select id from public.feed_items where author_id=$1`, [CAROL])).rows;
+    assert.ok(carolItems.length >= 1, 'carol a au moins un item loggé');
+    await admin(`delete from auth.users where id=$1`, [CAROL]);
+    const prof = (await admin(`select id from public.profiles where id=$1`, [CAROL])).rows;
+    assert.equal(prof.length, 0, 'profil supprimé en cascade');
+    const mem = (await admin(`select 1 from public.memberships where user_id=$1`, [CAROL])).rows;
+    assert.equal(mem.length, 0, 'memberships retirés');
+    const item = (await admin(`select author_id from public.feed_items where id=$1`, [carolItems[0].id])).rows;
+    assert.equal(item.length, 1, 'item conservé (pas supprimé)');
+    assert.equal(item[0].author_id, null, 'auteur anonymisé (author_id null)');
   });
 
   await client.end();
