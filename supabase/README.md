@@ -13,6 +13,7 @@ garde-fous structurels (ADR-0008).
 | `20260630090100_rls_policies.sql` | Row Level Security : une politique testée par table de groupe |
 | `20260630090200_rpc_groups.sql` | `create_group`, `join_group_by_code` (seuls chemins d'écriture sur `memberships`) |
 | `20260630090300_storage_photos.sql` | Bucket privé `feed-photos` + politiques par `group_id` et auteur (chemin `<group_id>/<uid>/<feed_item_id>/<fichier>`) |
+| `20260630090400_rpc_log_goals.sql` | RPC atomiques `log_session` / `log_steps` / `log_meal` (entrée de feed + détail en une transaction, avec re-check d'appartenance) |
 
 ## Appliquer
 
