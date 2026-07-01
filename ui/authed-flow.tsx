@@ -4,18 +4,20 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { ErrorRetry } from '@/ui/error-retry';
 import { FeedView } from '@/ui/feed-view';
 import { GroupGate } from '@/ui/group-gate';
+import { GroupScreen } from '@/ui/group-screen';
 import { ProfileOnboarding } from '@/ui/profile-onboarding';
 import { colors } from '@/ui/theme';
 import { useProfile } from '@/ui/use-profile';
 
 /**
- * Flux applicatif une fois connecté : onboarding profil -> choix du groupe -> feed.
- * Monté avec `key={userId}` par l'écran racine : tout l'état (profil, groupe) est
- * remis à zéro à chaque changement de compte — pas de fuite inter-comptes.
+ * Flux applicatif une fois connecté : onboarding profil -> choix du groupe ->
+ * feed <-> écran groupe. Monté avec `key={userId}` par l'écran racine : tout
+ * l'état est remis à zéro au changement de compte (pas de fuite inter-comptes).
  */
 export function AuthedFlow({ userId }: { userId: string }) {
   const { profile, loading, error, reload, applyProfile } = useProfile();
   const [groupId, setGroupId] = useState<string | null>(null);
+  const [view, setView] = useState<'feed' | 'group'>('feed');
 
   if (loading) {
     return (
@@ -34,7 +36,22 @@ export function AuthedFlow({ userId }: { userId: string }) {
   }
 
   if (!groupId) {
-    return <GroupGate onReady={setGroupId} />;
+    return <GroupGate onReady={(id) => { setGroupId(id); setView('feed'); }} />;
+  }
+
+  if (view === 'group') {
+    return (
+      <GroupScreen
+        key={groupId}
+        groupId={groupId}
+        userId={userId}
+        onBack={() => setView('feed')}
+        onChangeGroup={() => {
+          setGroupId(null);
+          setView('feed');
+        }}
+      />
+    );
   }
 
   return (
@@ -43,7 +60,7 @@ export function AuthedFlow({ userId }: { userId: string }) {
       groupId={groupId}
       userId={userId}
       pseudo={profile.pseudo}
-      onChangeGroup={() => setGroupId(null)}
+      onOpenGroup={() => setView('group')}
     />
   );
 }

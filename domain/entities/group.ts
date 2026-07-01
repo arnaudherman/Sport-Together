@@ -4,3 +4,9 @@ export interface Group {
   name: string;
   inviteCode?: string;
 }
+
+/** Membre d'un groupe (vue légère pour l'écran groupe / présence). */
+export interface GroupMember {
+  id: string;
+  pseudo: string;
+}

@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { Group } from '@/domain/entities/group';
+import type { Group, GroupMember } from '@/domain/entities/group';
 import type { GroupRepository } from '@/domain/repositories/group-repository';
 
 /**
@@ -19,6 +19,22 @@ export class SupabaseGroupRepository implements GroupRepository {
     if (error) throw new Error(error.message);
     const rows = (data ?? []) as { id: string; name: string }[];
     return rows.map((row) => ({ id: row.id, name: row.name }));
+  }
+
+  async listMembers(groupId: string): Promise<GroupMember[]> {
+    const { data, error } = await this.client
+      .from('memberships')
+      .select('user_id, profiles(pseudo)')
+      .eq('group_id', groupId);
+    if (error) throw new Error(error.message);
+    const rows = (data ?? []) as {
+      user_id: string;
+      profiles: { pseudo: string } | { pseudo: string }[] | null;
+    }[];
+    return rows.map((row) => {
+      const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+      return { id: row.user_id, pseudo: profile?.pseudo ?? 'Membre' };
+    });
   }
 
   async createGroup(name: string): Promise<Group> {

@@ -17,12 +17,12 @@ export function FeedView({
   groupId,
   userId,
   pseudo,
-  onChangeGroup,
+  onOpenGroup,
 }: {
   groupId: string;
   userId: string;
   pseudo: string;
-  onChangeGroup: () => void;
+  onOpenGroup: () => void;
 }) {
   const feed = useFeedRepository();
   const reactionRepo = useReactionRepository();
@@ -93,8 +93,8 @@ export function FeedView({
     <View style={styles.container}>
       <View style={styles.topRow}>
         <Text style={styles.title}>Accueil</Text>
-        <Pressable onPress={onChangeGroup} hitSlop={8}>
-          <Text style={styles.link}>Changer de groupe</Text>
+        <Pressable onPress={onOpenGroup} hitSlop={8}>
+          <Text style={styles.link}>👥 Groupe</Text>
         </Pressable>
       </View>
 

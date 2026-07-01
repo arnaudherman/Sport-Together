@@ -1,4 +1,4 @@
-import type { Group } from '@/domain/entities/group';
+import type { Group, GroupMember } from '@/domain/entities/group';
 import type { GroupRepository } from '@/domain/repositories/group-repository';
 
 /** Mock de GroupRepository (hors-ligne / tests). Garde les groupes en mémoire. */
@@ -7,6 +7,16 @@ export class InMemoryGroupRepository implements GroupRepository {
 
   async listMyGroups(): Promise<Group[]> {
     return this.groups.map((g) => ({ id: g.id, name: g.name }));
+  }
+
+  async listMembers(_groupId: string): Promise<GroupMember[]> {
+    // Membres de démo (les mêmes auteurs que DEMO_FEED) + toi.
+    return [
+      { id: 'local-user', pseudo: 'Moi' },
+      { id: 'u-lea', pseudo: 'Léa' },
+      { id: 'u-sam', pseudo: 'Sam' },
+      { id: 'u-noa', pseudo: 'Noa' },
+    ];
   }
 
   async createGroup(name: string): Promise<Group> {
