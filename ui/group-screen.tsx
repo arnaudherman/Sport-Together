@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import {
@@ -15,6 +15,7 @@ import { currentStreak, localDayKey } from '@/domain/usecases/streak';
 import { avatarColor, initial, timeAgo } from '@/ui/format';
 import { ScreenState } from '@/ui/screen-state';
 import { colors, font, radius } from '@/ui/theme';
+import { useAsyncData } from '@/ui/use-async-data';
 
 /** Écran Groupe : présence du jour vivante + entraide + streak collectif. */
 export function GroupScreen({
@@ -31,41 +32,20 @@ export function GroupScreen({
   const groupRepo = useGroupRepository();
   const feedRepo = useFeedRepository();
   const notif = useNotificationRepository();
-  const [members, setMembers] = useState<GroupMember[]>([]);
-  const [items, setItems] = useState<FeedItem[]>([]);
   const [nudged, setNudged] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const mounted = useRef(true);
 
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
-
-  const load = useCallback(async () => {
-    try {
-      const [m, f] = await Promise.all([
-        groupRepo.listMembers(groupId),
-        feedRepo.listGroupFeed(groupId),
-      ]);
-      if (mounted.current) {
-        setMembers(m);
-        setItems(f);
-        setError(null);
-      }
-    } catch (e) {
-      if (mounted.current) setError((e as Error).message);
-    } finally {
-      if (mounted.current) setLoading(false);
-    }
+  const loader = useCallback(async () => {
+    const [members, items] = await Promise.all([
+      groupRepo.listMembers(groupId),
+      feedRepo.listGroupFeed(groupId),
+    ]);
+    return { members, items };
   }, [groupRepo, feedRepo, groupId]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+  const { data, loading, error, setError, reload, mounted } = useAsyncData(loader, {
+    members: [] as GroupMember[],
+    items: [] as FeedItem[],
+  });
+  const { members, items } = data;
 
   const tz = -new Date().getTimezoneOffset();
   const todayKey = localDayKey(new Date().toISOString(), tz);
@@ -115,7 +95,7 @@ export function GroupScreen({
         <View style={styles.backRow} />
       </View>
 
-      <ScreenState loading={loading} error={error} hasData={members.length > 0} onRetry={load}>
+      <ScreenState loading={loading} error={error} hasData={members.length > 0} onRetry={reload}>
         <ScrollView contentContainerStyle={styles.scroll}>
           <LinearGradient
             colors={['#2c1d12', '#191411']}

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -16,6 +16,7 @@ import { LevelHeader } from '@/ui/level-header';
 import { QuestsStrip } from '@/ui/quests-strip';
 import { ScreenState } from '@/ui/screen-state';
 import { colors, font, gradients, radius } from '@/ui/theme';
+import { useAsyncData } from '@/ui/use-async-data';
 
 const TABS: { key: FeedTab; label: string }[] = [
   { key: 'tout', label: 'Tout' },
@@ -47,38 +48,12 @@ export function FeedView({
   const reactionRepo = useReactionRepository();
   const followRepo = useFollowRepository();
   const insets = useSafeAreaInsets();
-  const [items, setItems] = useState<FeedItem[]>([]);
   const [following, setFollowing] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [tab, setTab] = useState<FeedTab>('tout');
-  const mounted = useRef(true);
 
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
-
-  const load = useCallback(async () => {
-    try {
-      const data = await feed.listHomeFeed();
-      if (mounted.current) {
-        setItems(data);
-        setError(null);
-      }
-    } catch (e) {
-      if (mounted.current) setError((e as Error).message);
-    } finally {
-      if (mounted.current) setLoading(false);
-    }
-  }, [feed]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+  const loader = useCallback(() => feed.listHomeFeed(), [feed]);
+  const { data: items, setData: setItems, loading, error, setError, reload, mounted } = useAsyncData<FeedItem[]>(loader, []);
 
   useEffect(() => {
     followRepo
@@ -87,11 +62,11 @@ export function FeedView({
         if (mounted.current) setFollowing(f);
       })
       .catch(() => {});
-  }, [followRepo]);
+  }, [followRepo, mounted]);
 
   async function refresh() {
     setRefreshing(true);
-    await load();
+    await reload();
     if (mounted.current) setRefreshing(false);
   }
 
@@ -166,7 +141,7 @@ export function FeedView({
         ))}
       </View>
 
-      <ScreenState loading={loading} error={error} hasData={items.length > 0} onRetry={load}>
+      <ScreenState loading={loading} error={error} hasData={items.length > 0} onRetry={reload}>
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.id}

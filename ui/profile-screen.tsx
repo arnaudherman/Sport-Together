@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { useFeedRepository, useFollowRepository, useProfileRepository } from '@/core/di/repositories-context';
+import { useFeedRepository, useProfileRepository } from '@/core/di/repositories-context';
 import { EMPTY_REACTIONS, type FeedItem } from '@/domain/entities/feed';
 import type { Profile } from '@/domain/entities/profile';
 import { levelForXp, xpFromFeed } from '@/domain/usecases/gamification';
@@ -11,9 +11,11 @@ import { MUSCU_GRAPH, sessionsUnlocked } from '@/domain/usecases/skill-graph';
 import { streakFromFeed } from '@/domain/usecases/streak';
 import { avatarColor, handle, initial } from '@/ui/format';
 import { FeedItemCard } from '@/ui/feed-item-card';
+import { FollowButton } from '@/ui/follow-button';
 import { HolyGraph } from '@/ui/holy-graph';
 import { ScreenState } from '@/ui/screen-state';
 import { colors, font, radius } from '@/ui/theme';
+import { useAsyncData } from '@/ui/use-async-data';
 
 type Tab = 'publications' | 'competences' | 'medias';
 
@@ -40,50 +42,12 @@ export function ProfileScreen({
   onOpenComments: (item: FeedItem) => void;
 }) {
   const feedRepo = useFeedRepository();
-  const followRepo = useFollowRepository();
   const profileRepo = useProfileRepository();
-  const [items, setItems] = useState<FeedItem[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [following, setFollowing] = useState(false);
   const [tab, setTab] = useState<Tab>('publications');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const mounted = useRef(true);
 
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
-
-  const load = useCallback(async () => {
-    try {
-      const data = await feedRepo.listUserFeed(targetUserId);
-      if (mounted.current) {
-        setItems(data);
-        setError(null);
-      }
-    } catch (e) {
-      if (mounted.current) setError((e as Error).message);
-    } finally {
-      if (mounted.current) setLoading(false);
-    }
-  }, [feedRepo, targetUserId]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  useEffect(() => {
-    if (targetUserId === currentUserId) return;
-    followRepo
-      .isFollowing(targetUserId)
-      .then((f) => {
-        if (mounted.current) setFollowing(f);
-      })
-      .catch(() => {});
-  }, [targetUserId, currentUserId, followRepo]);
+  const loader = useCallback(() => feedRepo.listUserFeed(targetUserId), [feedRepo, targetUserId]);
+  const { data: items, setData: setItems, loading, error, setError, reload, mounted } = useAsyncData<FeedItem[]>(loader, []);
 
   useEffect(() => {
     profileRepo
@@ -92,7 +56,7 @@ export function ProfileScreen({
         if (mounted.current) setProfile(p);
       })
       .catch(() => {});
-  }, [profileRepo, targetUserId]);
+  }, [profileRepo, targetUserId, mounted]);
 
   const tz = -new Date().getTimezoneOffset();
   const xp = useMemo(() => xpFromFeed(items, targetUserId), [items, targetUserId]);
@@ -154,7 +118,7 @@ export function ProfileScreen({
         <View style={styles.spacer} />
       </View>
 
-      <ScreenState loading={loading} error={error} hasData={items.length > 0} onRetry={load}>
+      <ScreenState loading={loading} error={error} hasData={items.length > 0} onRetry={reload}>
         <ScrollView contentContainerStyle={styles.scroll}>
           <LinearGradient
             colors={['#1a2733', '#3b4a3a', '#6b4a2a', '#241a12']}
@@ -167,27 +131,7 @@ export function ProfileScreen({
               <Text style={[styles.avatarText, { color: av.fg }]}>{initial(name)}</Text>
             </View>
             {!isMe ? (
-              <Pressable
-                style={({ pressed }) => [styles.follow, following && styles.followOn, pressed && styles.pressed]}
-                onPress={async () => {
-                  const next = !following;
-                  setFollowing(next);
-                  try {
-                    if (next) await followRepo.follow(targetUserId);
-                    else await followRepo.unfollow(targetUserId);
-                  } catch {
-                    if (mounted.current) setFollowing(!next);
-                  }
-                }}
-                accessibilityRole="button"
-                accessibilityState={{ selected: following }}
-                accessibilityLabel={following ? `Ne plus suivre ${name}` : `Suivre ${name}`}
-              >
-                <Ionicons name={following ? 'checkmark' : 'add'} size={16} color={following ? colors.text : colors.onAccent} />
-                <Text style={[styles.followText, following && styles.followTextOn]}>
-                  {following ? 'Suivi' : 'Suivre'}
-                </Text>
-              </Pressable>
+              <FollowButton targetId={targetUserId} targetName={name} onError={setError} />
             ) : (
               <Pressable style={styles.settings} onPress={onOpenAccount} accessibilityRole="button" accessibilityLabel="Compte">
                 <Ionicons name="settings-outline" size={16} color={colors.text} />
@@ -297,11 +241,6 @@ const styles = StyleSheet.create({
   headRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: -32, paddingHorizontal: 4 },
   avatar: { width: 72, height: 72, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: colors.bg },
   avatarText: { fontSize: 27, fontWeight: '800' },
-  follow: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: 20, paddingVertical: 11, minHeight: 44, justifyContent: 'center', marginBottom: 4 },
-  followOn: { backgroundColor: colors.surfaceElevated },
-  followText: { color: colors.onAccent, fontWeight: '800' },
-  followTextOn: { color: colors.text },
-  pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
   settings: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 10, minHeight: 44, marginBottom: 4 },
   settingsText: { color: colors.text, fontWeight: '700', fontSize: 14 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, paddingHorizontal: 4 },
