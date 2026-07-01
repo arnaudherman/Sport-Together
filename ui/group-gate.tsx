@@ -1,9 +1,11 @@
+import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { useGroupRepository } from '@/core/di/repositories-context';
 import type { Group } from '@/domain/entities/group';
-import { PrimaryButton } from '@/ui/button';
+import { GhostButton, PrimaryButton } from '@/ui/button';
 import { colors, font, radius } from '@/ui/theme';
 
 /** Rejoindre / créer un groupe (add-on solo-first, ADR-0004). */
@@ -21,6 +23,22 @@ export function GroupGate({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<{ id: string; inviteCode?: string } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function copyCode() {
+    if (!created?.inviteCode) return;
+    await Clipboard.setStringAsync(created.inviteCode);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  function shareCode() {
+    if (!created?.inviteCode) return;
+    Share.share({
+      message: `Rejoins mon groupe sur Sport Together avec le code ${created.inviteCode} 💪`,
+    }).catch(() => {});
+  }
 
   const loadMine = useCallback(async () => {
     try {
@@ -74,8 +92,22 @@ export function GroupGate({
     return (
       <View style={styles.centered}>
         <Text style={styles.title}>Groupe créé 🎉</Text>
-        {created.inviteCode ? <Text style={styles.code}>{created.inviteCode}</Text> : null}
-        <Text style={styles.hint}>Partage ce code à tes amis pour qu'ils rejoignent.</Text>
+        {created.inviteCode ? (
+          <>
+            <Pressable onPress={copyCode} accessibilityRole="button" accessibilityLabel="Copier le code d'invitation">
+              <Text style={styles.code}>{created.inviteCode}</Text>
+            </Pressable>
+            <Text style={styles.hint}>Partage ce code à tes amis pour qu'ils rejoignent.</Text>
+            <View style={styles.shareRow}>
+              <View style={styles.shareBtn}>
+                <GhostButton title={copied ? 'Copié ✓' : 'Copier le code'} onPress={copyCode} />
+              </View>
+              <View style={styles.shareBtn}>
+                <GhostButton title="Partager" onPress={shareCode} />
+              </View>
+            </View>
+          </>
+        ) : null}
         <PrimaryButton title="Continuer" onPress={() => onReady(created.id)} />
         <Pressable
           onPress={() => {
@@ -141,6 +173,8 @@ const styles = StyleSheet.create({
   title: { ...font.h1, textAlign: 'center', marginBottom: 8 },
   section: { ...font.label, marginTop: 16, textAlign: 'center' },
   code: { ...font.display, color: colors.accent, textAlign: 'center', letterSpacing: 2 },
+  shareRow: { flexDirection: 'row', gap: 10 },
+  shareBtn: { flex: 1 },
   hint: { ...font.body, color: colors.textMuted, textAlign: 'center' },
   link: { fontSize: 15, color: colors.accent, fontWeight: '700', textAlign: 'center' },
   backRow: { alignSelf: 'flex-start', marginBottom: 4 },

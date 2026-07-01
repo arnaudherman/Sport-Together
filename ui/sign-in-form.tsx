@@ -1,5 +1,6 @@
+import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { useAuthRepository } from '@/core/di/repositories-context';
 import { PrimaryButton } from '@/ui/button';
@@ -19,6 +20,7 @@ export function SignInForm() {
     setError(null);
     try {
       await auth.requestEmailOtp(email);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       setStep('code');
     } catch (e) {
       setError((e as Error).message);
@@ -60,16 +62,35 @@ export function SignInForm() {
         </>
       ) : (
         <>
-          <Text style={styles.hint}>Code envoyé à {email}</Text>
+          <Text style={styles.hint}>On t&apos;a envoyé un code à 6 chiffres à {email}</Text>
           <TextInput
             style={styles.input}
             placeholder="123456"
             placeholderTextColor={colors.textFaint}
             keyboardType="number-pad"
+            maxLength={6}
+            autoFocus
             value={code}
             onChangeText={setCode}
           />
           <PrimaryButton title="Valider" onPress={verify} disabled={!code} busy={busy} />
+          <View style={styles.linkRow}>
+            <Pressable
+              onPress={() => {
+                setCode('');
+                setError(null);
+                setStep('email');
+              }}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Modifier l'email"
+            >
+              <Text style={styles.link}>Modifier l&apos;email</Text>
+            </Pressable>
+            <Pressable onPress={sendCode} disabled={busy} hitSlop={8} accessibilityRole="button" accessibilityLabel="Renvoyer le code">
+              <Text style={[styles.link, busy && styles.linkDim]}>Renvoyer le code</Text>
+            </Pressable>
+          </View>
         </>
       )}
 
@@ -84,6 +105,9 @@ const styles = StyleSheet.create({
   title: { ...font.display, textAlign: 'center' },
   subtitle: { ...font.body, color: colors.textMuted, textAlign: 'center', marginBottom: 12 },
   hint: { ...font.body, color: colors.textMuted },
+  linkRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
+  link: { color: colors.accent, fontWeight: '700', fontSize: 14 },
+  linkDim: { opacity: 0.5 },
   input: {
     backgroundColor: colors.surface,
     borderWidth: 1,

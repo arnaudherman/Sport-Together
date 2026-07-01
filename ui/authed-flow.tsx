@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native';
 
 import { useGroupRepository } from '@/core/di/repositories-context';
 import type { FeedItem } from '@/domain/entities/feed';
@@ -28,15 +28,21 @@ type Screen =
   | { comments: { item: FeedItem } };
 
 /**
- * Flux applicatif (solo-first) : onboarding -> accueil (fil social). Les groupes
- * sont un add-on optionnel (rejoindre/créer, écran d'entraide), accessibles depuis
- * le profil. Plus de gate groupe obligatoire. Monté avec `key={userId}`.
+ * Flux applicatif (solo-first). Navigation par PILE : chaque écran empile, Retour
+ * dépile (le contexte est préservé — profil > post > Retour revient au profil), et
+ * le bouton retour matériel Android recule d'un cran. L'onboarding enchaîne
+ * directement sur la 1re publication. Monté avec `key={userId}`.
  */
 export function AuthedFlow({ userId }: { userId: string }) {
   const { profile, loading, error, reload, applyProfile } = useProfile();
   const groupRepo = useGroupRepository();
   const [groups, setGroups] = useState<Group[]>([]);
-  const [view, setView] = useState<Screen>('home');
+  const [stack, setStack] = useState<Screen[]>(['home']);
+  const view = stack[stack.length - 1];
+
+  const push = useCallback((s: Screen) => setStack((st) => [...st, s]), []);
+  const pop = useCallback(() => setStack((st) => (st.length > 1 ? st.slice(0, -1) : st)), []);
+  const replaceTop = useCallback((s: Screen) => setStack((st) => [...st.slice(0, -1), s]), []);
 
   const loadGroups = useCallback(async () => {
     try {
@@ -49,6 +55,18 @@ export function AuthedFlow({ userId }: { userId: string }) {
   useEffect(() => {
     loadGroups();
   }, [loadGroups]);
+
+  // Bouton retour matériel (Android) : recule dans la pile, sinon comportement natif.
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (stack.length > 1) {
+        pop();
+        return true;
+      }
+      return false;
+    });
+    return () => sub.remove();
+  }, [stack.length, pop]);
 
   if (loading) {
     return (
@@ -63,11 +81,18 @@ export function AuthedFlow({ userId }: { userId: string }) {
   }
 
   if (!profile || !profile.isAdult) {
-    return <ProfileOnboarding onDone={applyProfile} />;
+    // Fin d'onboarding : on amorce directement la 1re publication (pic d'intention).
+    return (
+      <ProfileOnboarding
+        onDone={(p) => {
+          applyProfile(p);
+          setStack(['home', 'log']);
+        }}
+      />
+    );
   }
 
   const groupList = groups.map((g) => ({ id: g.id, name: g.name }));
-  const postingGroupId = groups[0]?.id ?? null;
 
   if (typeof view === 'object' && 'profile' in view) {
     return (
@@ -76,17 +101,17 @@ export function AuthedFlow({ userId }: { userId: string }) {
         targetName={view.profile.name}
         currentUserId={userId}
         groups={groupList}
-        onBack={() => setView('home')}
-        onOpenGroup={(id) => setView({ group: { id } })}
-        onJoinGroup={() => setView('groups')}
-        onOpenAccount={() => setView('account')}
-        onOpenComments={(item) => setView({ comments: { item } })}
+        onBack={pop}
+        onOpenGroup={(id) => push({ group: { id } })}
+        onJoinGroup={() => push('groups')}
+        onOpenAccount={() => push('account')}
+        onOpenComments={(item) => push({ comments: { item } })}
       />
     );
   }
 
   if (typeof view === 'object' && 'comments' in view) {
-    return <CommentsScreen item={view.comments.item} onBack={() => setView('home')} />;
+    return <CommentsScreen item={view.comments.item} onBack={pop} />;
   }
 
   if (view === 'account') {
@@ -96,7 +121,7 @@ export function AuthedFlow({ userId }: { userId: string }) {
         bio={profile.bio ?? ''}
         isAdult={profile.isAdult}
         onSaved={applyProfile}
-        onBack={() => setView('home')}
+        onBack={pop}
       />
     );
   }
@@ -105,8 +130,9 @@ export function AuthedFlow({ userId }: { userId: string }) {
     return (
       <DiscoverScreen
         userId={userId}
-        onBack={() => setView('home')}
-        onOpenProfile={(id, name) => setView({ profile: { id, name } })}
+        onBack={pop}
+        onOpenProfile={(id, name) => push({ profile: { id, name } })}
+        onJoinGroup={() => push('groups')}
       />
     );
   }
@@ -117,8 +143,8 @@ export function AuthedFlow({ userId }: { userId: string }) {
         key={view.group.id}
         groupId={view.group.id}
         userId={userId}
-        onBack={() => setView('home')}
-        onOpenProfile={(id, name) => setView({ profile: { id, name } })}
+        onBack={pop}
+        onOpenProfile={(id, name) => push({ profile: { id, name } })}
       />
     );
   }
@@ -126,19 +152,25 @@ export function AuthedFlow({ userId }: { userId: string }) {
   if (view === 'groups') {
     return (
       <GroupGate
-        onBack={() => setView('home')}
+        onBack={pop}
         onReady={(id) => {
           loadGroups();
-          setView({ group: { id } });
+          replaceTop({ group: { id } }); // Retour depuis le groupe -> écran précédent
         }}
       />
     );
   }
 
   if (view === 'log') {
-    // Solo-first (ADR-0010) : on publie toujours, même sans groupe (post solo).
+    // Solo-first (ADR-0010) : destination « Mon fil » par défaut, un groupe au choix.
     return (
-      <LogScreen groupId={postingGroupId} userId={userId} onDone={() => setView('home')} onCancel={() => setView('home')} />
+      <LogScreen
+        groups={groupList}
+        userId={userId}
+        pseudo={profile.pseudo}
+        onDone={pop}
+        onCancel={pop}
+      />
     );
   }
 
@@ -146,10 +178,12 @@ export function AuthedFlow({ userId }: { userId: string }) {
     <FeedView
       userId={userId}
       pseudo={profile.pseudo}
-      onOpenProfile={(id, name) => setView({ profile: { id, name } })}
-      onOpenLog={() => setView('log')}
-      onOpenComments={(item) => setView({ comments: { item } })}
-      onOpenDiscover={() => setView('discover')}
+      onOpenProfile={(id, name) => push({ profile: { id, name } })}
+      onOpenLog={() => push('log')}
+      onOpenComments={(item) => push({ comments: { item } })}
+      onOpenDiscover={() => push('discover')}
+      onOpenGroup={(id) => push({ group: { id } })}
+      onOpenGroups={() => push('groups')}
     />
   );
 }

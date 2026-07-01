@@ -43,7 +43,7 @@ export function ProfileOnboarding({ onDone }: { onDone: (profile: Profile) => vo
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <Text style={styles.title}>Bienvenue 👋</Text>
-      <Text style={styles.subtitle}>Voici comment tes amis te verront.</Text>
+      <Text style={styles.subtitle}>Suis ta progression, gagne de l&apos;XP, garde ton streak.</Text>
 
       <View style={styles.preview}>
         <View style={styles.avatar}>

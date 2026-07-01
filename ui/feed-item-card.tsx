@@ -23,12 +23,14 @@ export function FeedItemCard({
   onToggleReaction,
   onPressAuthor,
   onOpenComments,
+  onOpenGroup,
   onDelete,
 }: {
   item: FeedItem;
   onToggleReaction?: (kind: ReactionKind) => void;
   onPressAuthor?: () => void;
   onOpenComments?: () => void;
+  onOpenGroup?: () => void;
   onDelete?: () => void;
 }) {
   const reactions = item.reactions ?? EMPTY_REACTIONS;
@@ -51,9 +53,21 @@ export function FeedItemCard({
                 {handle(item.authorName)} · {timeAgo(item.createdAt)}
               </Text>
               {item.groupName ? (
-                <View style={styles.gbadge}>
-                  <Text style={styles.gbadgeText}>🔒 {item.groupName}</Text>
-                </View>
+                onOpenGroup ? (
+                  <Pressable
+                    onPress={onOpenGroup}
+                    hitSlop={6}
+                    style={styles.gbadge}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Ouvrir le groupe ${item.groupName}`}
+                  >
+                    <Text style={styles.gbadgeText}>🔒 {item.groupName}</Text>
+                  </Pressable>
+                ) : (
+                  <View style={styles.gbadge}>
+                    <Text style={styles.gbadgeText}>🔒 {item.groupName}</Text>
+                  </View>
+                )
               ) : null}
             </View>
           </Pressable>
@@ -67,15 +81,17 @@ export function FeedItemCard({
                 hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
                 style={styles.menu}
                 accessibilityRole="button"
-                accessibilityLabel="Options du post"
+                accessibilityLabel="Supprimer la publication"
               >
-                <Ionicons name="ellipsis-horizontal" size={18} color={colors.textMuted} />
+                <Ionicons name="trash-outline" size={17} color={colors.textMuted} />
               </Pressable>
             ) : null}
           </View>
         </View>
 
-        <Text style={styles.text}>{item.summary}</Text>
+        <Pressable onPress={onOpenComments} accessibilityRole="button" accessibilityLabel="Voir la publication et les réponses">
+          <Text style={styles.text}>{item.summary}</Text>
+        </Pressable>
 
         <View style={styles.eng}>
           <Pressable

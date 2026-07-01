@@ -11,6 +11,7 @@ import { xpForType, xpFromFeed } from '@/domain/usecases/gamification';
 import { validateMeal } from '@/domain/usecases/nutrition';
 import { sessionsUnlocked } from '@/domain/usecases/skill-graph';
 import { CelebrationOverlay } from '@/ui/celebration-overlay';
+import { avatarColor, initial } from '@/ui/format';
 import { colors, font, radius } from '@/ui/theme';
 
 const TABS: { type: FeedItemType; label: string; icon: string }[] = [
@@ -34,18 +35,21 @@ function toNumber(value: string): number | undefined {
 
 /** Composer type Twitter : publier une séance / des pas / un repas (ADR-0002 / 0008). */
 export function LogScreen({
-  groupId,
+  groups,
   userId,
+  pseudo,
   onDone,
   onCancel,
 }: {
-  groupId: string | null;
+  groups: { id: string; name: string }[];
   userId: string;
+  pseudo: string;
   onDone: () => void;
   onCancel: () => void;
 }) {
   const feed = useFeedRepository();
   const [type, setType] = useState<FeedItemType>('session');
+  const [destGroupId, setDestGroupId] = useState<string | null>(null); // null = Mon fil (solo)
   const [activity, setActivity] = useState('');
   const [duration, setDuration] = useState(45);
   const [steps, setSteps] = useState('');
@@ -91,14 +95,14 @@ export function LogScreen({
     setBusy(true);
     try {
       if (type === 'session') {
-        await feed.logSession(groupId, activity.trim() || 'Séance', duration);
+        await feed.logSession(destGroupId, activity.trim() || 'Séance', duration);
       } else if (type === 'steps') {
         const n = toNumber(steps);
         if (n == null || n < 0) {
           setError('Nombre de pas invalide.');
           return;
         }
-        await feed.logSteps(groupId, Math.round(n));
+        await feed.logSteps(destGroupId, Math.round(n));
       } else {
         const cal = toNumber(calories);
         const input = {
@@ -113,7 +117,7 @@ export function LogScreen({
           setError(validation.error);
           return;
         }
-        await feed.logMeal(groupId, input);
+        await feed.logMeal(destGroupId, input);
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       const c = await computeCelebration();
@@ -129,6 +133,20 @@ export function LogScreen({
     }
   }
 
+  // Publier n'est actif que si l'entrée requise du type est renseignée (guide vs erreur).
+  const canPublish =
+    type === 'session'
+      ? true
+      : type === 'steps'
+        ? (() => {
+            const n = toNumber(steps);
+            return n != null && n > 0;
+          })()
+        : mealLabel.trim().length > 0;
+  const off = busy || !canPublish;
+  const av = avatarColor(userId);
+  const destName = destGroupId ? groups.find((g) => g.id === destGroupId)?.name ?? 'ton groupe' : null;
+
   return (
     <View style={styles.container}>
       <View style={styles.bar}>
@@ -137,18 +155,47 @@ export function LogScreen({
         </Pressable>
         <Text style={styles.barTitle}>Nouvelle publication</Text>
         <Pressable
-          style={({ pressed }) => [styles.publish, busy && styles.dim, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.publish, off && styles.dim, pressed && styles.pressed]}
           onPress={submit}
-          disabled={busy}
+          disabled={off}
           accessibilityRole="button"
           accessibilityLabel="Publier"
-          accessibilityState={{ disabled: busy, busy }}
+          accessibilityState={{ disabled: off, busy }}
         >
           {busy ? <ActivityIndicator color={colors.onAccent} size="small" /> : <Text style={styles.publishText}>Publier</Text>}
         </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
+        {groups.length > 0 ? (
+          <View style={styles.dest}>
+            <Text style={styles.destLabel}>Publier dans</Text>
+            <View style={styles.destChips}>
+              <Pressable
+                onPress={() => setDestGroupId(null)}
+                style={[styles.destChip, destGroupId === null && styles.destChipOn]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: destGroupId === null }}
+                accessibilityLabel="Mon fil"
+              >
+                <Text style={[styles.destChipText, destGroupId === null && styles.destChipTextOn]}>Mon fil</Text>
+              </Pressable>
+              {groups.map((g) => (
+                <Pressable
+                  key={g.id}
+                  onPress={() => setDestGroupId(g.id)}
+                  style={[styles.destChip, destGroupId === g.id && styles.destChipOn]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: destGroupId === g.id }}
+                  accessibilityLabel={g.name}
+                >
+                  <Text style={[styles.destChipText, destGroupId === g.id && styles.destChipTextOn]}>🔒 {g.name}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
         <View style={styles.chips}>
           {TABS.map((t) => {
             const on = type === t.type;
@@ -169,8 +216,8 @@ export function LogScreen({
         </View>
 
         <View style={styles.composeRow}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>T</Text>
+          <View style={[styles.avatar, { backgroundColor: av.bg }]}>
+            <Text style={[styles.avatarText, { color: av.fg }]}>{initial(pseudo || 'T')}</Text>
           </View>
           {type === 'session' ? (
             <TextInput
@@ -252,7 +299,7 @@ export function LogScreen({
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <Text style={styles.foot}>
-          {groupId ? 'Ta publication apparaîtra dans le fil de ton groupe.' : 'Ta publication apparaîtra dans ton fil.'}
+          {destGroupId ? `Ta publication apparaîtra dans le fil de ${destName}.` : 'Ta publication apparaîtra dans ton fil.'}
         </Text>
       </ScrollView>
 
@@ -280,6 +327,13 @@ const styles = StyleSheet.create({
   publishText: { color: colors.onAccent, fontWeight: '800', fontSize: 14 },
   pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
   scroll: { padding: 16, gap: 14 },
+  dest: { gap: 8 },
+  destLabel: { ...font.label },
+  destChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  destChip: { paddingHorizontal: 14, paddingVertical: 9, minHeight: 40, justifyContent: 'center', borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  destChipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
+  destChipText: { color: colors.textMuted, fontWeight: '700', fontSize: 13 },
+  destChipTextOn: { color: colors.accent },
   chips: { flexDirection: 'row', gap: 8 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 10, minHeight: 44, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   chipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },

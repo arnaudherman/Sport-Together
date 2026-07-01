@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFeedRepository, useFollowRepository, useReactionRepository } from '@/core/di/repositories-context';
 import { type FeedItem, type ReactionKind } from '@/domain/entities/feed';
 import { withToggledReaction } from '@/domain/usecases/reaction-toggle';
+import { PrimaryButton } from '@/ui/button';
 import { avatarColor, initial } from '@/ui/format';
 import { FeedItemCard } from '@/ui/feed-item-card';
 import { filterFeed, type FeedTab } from '@/ui/feed-filter';
@@ -30,6 +31,8 @@ export function FeedView({
   onOpenLog,
   onOpenComments,
   onOpenDiscover,
+  onOpenGroup,
+  onOpenGroups,
 }: {
   userId: string;
   pseudo: string;
@@ -37,6 +40,8 @@ export function FeedView({
   onOpenLog: () => void;
   onOpenComments: (item: FeedItem) => void;
   onOpenDiscover: () => void;
+  onOpenGroup: (groupId: string) => void;
+  onOpenGroups: () => void;
 }) {
   const feed = useFeedRepository();
   const reactionRepo = useReactionRepository();
@@ -168,12 +173,25 @@ export function FeedView({
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.accent} />}
           ListHeaderComponent={
             tab === 'tout' ? (
-              <View style={styles.headerCard}>
-                <Pressable onPress={() => onOpenProfile(userId, pseudo)}>
-                  <LevelHeader pseudo={pseudo} userId={userId} items={items} />
-                </Pressable>
-                <QuestsStrip items={items} userId={userId} />
-              </View>
+              items.length === 0 ? (
+                <LinearGradient colors={['#2c1d12', '#191411']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.welcome}>
+                  <Text style={styles.welcomeTitle}>Bienvenue, {pseudo || 'toi'} 👋</Text>
+                  <Text style={styles.welcomeSub}>Publie ta première séance pour lancer ta progression.</Text>
+                  <View style={styles.welcomeBullets}>
+                    <Text style={styles.welcomeBullet}>⚡  Gagne de l&apos;XP à chaque publication</Text>
+                    <Text style={styles.welcomeBullet}>🔥  Démarre ton streak</Text>
+                    <Text style={styles.welcomeBullet}>🌳  Débloque un palier de ton arbre</Text>
+                  </View>
+                  <PrimaryButton title="Publier ma première séance" onPress={onOpenLog} />
+                </LinearGradient>
+              ) : (
+                <View style={styles.headerCard}>
+                  <Pressable onPress={() => onOpenProfile(userId, pseudo)}>
+                    <LevelHeader pseudo={pseudo} userId={userId} items={items} />
+                  </Pressable>
+                  <QuestsStrip items={items} userId={userId} />
+                </View>
+              )
             ) : tab === 'abonnements' ? (
               <Pressable
                 onPress={onOpenDiscover}
@@ -193,18 +211,25 @@ export function FeedView({
               onToggleReaction={(kind) => toggleReaction(item, kind)}
               onPressAuthor={() => onOpenProfile(item.authorId, item.authorName)}
               onOpenComments={() => onOpenComments(item)}
+              onOpenGroup={item.groupName ? () => onOpenGroup(item.groupId) : undefined}
               onDelete={item.authorId === userId ? () => confirmDelete(item) : undefined}
             />
           )}
           contentContainerStyle={[styles.list, { paddingBottom: 120 + insets.bottom }]}
           ListEmptyComponent={
-            <Text style={styles.empty}>
-              {tab === 'abonnements'
-                ? 'Suis des gens pour voir leurs publications ici.'
-                : tab === 'groupes'
-                  ? "Rejoins un groupe pour voir son activité ici."
-                  : 'Rien pour l\'instant — publie ta première séance 💪'}
-            </Text>
+            tab === 'abonnements' ? (
+              <Pressable style={styles.emptyCta} onPress={onOpenDiscover} accessibilityRole="button" accessibilityLabel="Découvrir des gens à suivre">
+                <Ionicons name="person-add-outline" size={22} color={colors.accent} />
+                <Text style={styles.emptyCtaText}>Suis des gens pour voir leurs publications ici.</Text>
+                <Text style={styles.emptyCtaLink}>Découvrir des gens →</Text>
+              </Pressable>
+            ) : tab === 'groupes' ? (
+              <Pressable style={styles.emptyCta} onPress={onOpenGroups} accessibilityRole="button" accessibilityLabel="Rejoindre ou créer un groupe">
+                <Ionicons name="people-outline" size={22} color={colors.accent} />
+                <Text style={styles.emptyCtaText}>Rejoins un groupe d&apos;entraide pour voir son activité ici.</Text>
+                <Text style={styles.emptyCtaLink}>Rejoindre un groupe →</Text>
+              </Pressable>
+            ) : null
           }
         />
       </ScreenState>
@@ -257,6 +282,24 @@ const styles = StyleSheet.create({
   schipText: { color: colors.textMuted, fontWeight: '700', fontSize: 14 },
   schipTextOn: { color: colors.onAccent },
   headerCard: { marginBottom: 12 },
+  welcome: { borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, padding: 22, gap: 12, marginBottom: 12, marginTop: 4 },
+  welcomeTitle: { ...font.h1 },
+  welcomeSub: { ...font.body, color: colors.textMuted },
+  welcomeBullets: { gap: 8, marginVertical: 4 },
+  welcomeBullet: { ...font.body },
+  emptyCta: {
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 28,
+    marginHorizontal: 8,
+    padding: 20,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  emptyCtaText: { color: colors.textMuted, textAlign: 'center', fontSize: 14 },
+  emptyCtaLink: { color: colors.accent, fontWeight: '800', fontSize: 15 },
   discover: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -6,6 +6,24 @@ pas encore versionné (pré-MVP) ; entrées par date. Détail des décisions dan
 
 ## [Non publié]
 
+### 2026-07-01 — Améliorations UX (parcours & premier lancement)
+
+- **Navigation par pile** : Retour revient à l'écran précédent (profil → post → Retour
+  = profil, plus l'accueil) ; **bouton retour Android** recule d'un cran (`BackHandler`).
+- **Premier lancement** : l'onboarding enchaîne directement sur la **1re publication** ;
+  l'accueil vide devient une **carte de bienvenue** (payoff + « Publier ma première
+  séance ») au lieu d'un mur de zéros ; copie d'onboarding réalignée solo-first.
+- **Cartes du fil cliquables** : taper le corps d'un post ouvre le **thread** ; le **badge
+  🔒 groupe** ouvre le groupe ; l'icône de suppression devient une **poubelle** explicite.
+- **Composer** : **sélecteur de destination** (Mon fil / un groupe, défaut = Mon fil) au
+  lieu d'un groupe silencieux ; **Publier désactivé** tant que le champ requis est vide ;
+  avatar au vrai pseudo.
+- **États vides = CTA** : Abonnements → « Découvrir des gens », Groupes → « Rejoindre un
+  groupe », Découvrir sans groupe → « Rejoindre un groupe ».
+- **Invitation** : **Copier / Partager** le code de groupe (expo-clipboard + Share).
+- **Connexion** : « Modifier l'email » + « Renvoyer le code » sur l'étape code (plus de
+  blocage sur une faute de frappe) + retour haptique.
+
 ### 2026-07-01 — Améliorations (chasse aux améliorations : produit + correction + tests)
 
 **Produit (profondeur / rétention)**

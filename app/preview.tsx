@@ -32,7 +32,7 @@ const DEMO_POST: FeedItem = {
 const SCREENS: { label: string; node: ReactNode }[] = [
   {
     label: 'Accueil',
-    node: <FeedView userId="local-user" pseudo="Toi" onOpenProfile={noop} onOpenLog={noop} onOpenComments={noop} onOpenDiscover={noop} />,
+    node: <FeedView userId="local-user" pseudo="Toi" onOpenProfile={noop} onOpenLog={noop} onOpenComments={noop} onOpenDiscover={noop} onOpenGroup={noop} onOpenGroups={noop} />,
   },
   {
     label: 'Groupe',
@@ -66,7 +66,7 @@ const SCREENS: { label: string; node: ReactNode }[] = [
   },
   {
     label: 'Découvrir',
-    node: <DiscoverScreen userId="local-user" onBack={noop} onOpenProfile={noop} />,
+    node: <DiscoverScreen userId="local-user" onBack={noop} onOpenProfile={noop} onJoinGroup={noop} />,
   },
   {
     label: 'Réponses',
@@ -74,7 +74,7 @@ const SCREENS: { label: string; node: ReactNode }[] = [
   },
   {
     label: 'Publier',
-    node: <LogScreen groupId="demo-group" userId="local-user" onDone={noop} onCancel={noop} />,
+    node: <LogScreen groups={[{ id: 'demo-group', name: 'The Crew' }]} userId="local-user" pseudo="Toi" onDone={noop} onCancel={noop} />,
   },
 ];
 

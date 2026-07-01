@@ -16,10 +16,12 @@ export function DiscoverScreen({
   userId,
   onBack,
   onOpenProfile,
+  onJoinGroup,
 }: {
   userId: string;
   onBack: () => void;
   onOpenProfile: (id: string, name: string) => void;
+  onJoinGroup: () => void;
 }) {
   const groupRepo = useGroupRepository();
   const followRepo = useFollowRepository();
@@ -98,7 +100,12 @@ export function DiscoverScreen({
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={styles.hint}>Des membres de tes groupes à suivre pour enrichir ton fil.</Text>
           {people.length === 0 ? (
-            <Text style={styles.empty}>Personne à suggérer pour l'instant.</Text>
+            <Pressable style={styles.emptyCta} onPress={onJoinGroup} accessibilityRole="button" accessibilityLabel="Rejoindre un groupe">
+              <Ionicons name="people-outline" size={26} color={colors.accent} />
+              <Text style={styles.emptyTitle}>Personne à suggérer</Text>
+              <Text style={styles.empty}>Les suggestions viennent des membres de tes groupes. Rejoins-en un pour découvrir des gens à suivre.</Text>
+              <Text style={styles.emptyLink}>Rejoindre un groupe →</Text>
+            </Pressable>
           ) : (
             people.map((p, i) => {
               const av = avatarColor(p.id);
@@ -144,7 +151,10 @@ const styles = StyleSheet.create({
   spacer: { width: 90 },
   scroll: { paddingBottom: 32 },
   hint: { color: colors.textMuted, fontSize: 14, marginVertical: 12 },
-  empty: { color: colors.textMuted, textAlign: 'center', marginTop: 24 },
+  empty: { color: colors.textMuted, textAlign: 'center', lineHeight: 20 },
+  emptyCta: { alignItems: 'center', gap: 8, marginTop: 32, padding: 22, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  emptyTitle: { ...font.title },
+  emptyLink: { color: colors.accent, fontWeight: '800', fontSize: 15, marginTop: 2 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
