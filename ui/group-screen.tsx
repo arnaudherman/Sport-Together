@@ -1,3 +1,5 @@
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -108,8 +110,9 @@ export function GroupScreen({
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
-        <Pressable onPress={onBack} hitSlop={{ top: 12, bottom: 12, left: 8, right: 16 }}>
-          <Text style={styles.back}>‹ Retour</Text>
+        <Pressable onPress={onBack} hitSlop={{ top: 12, bottom: 12, left: 8, right: 16 }} style={styles.backRow}>
+          <Ionicons name="chevron-back" size={20} color={colors.accent} />
+          <Text style={styles.back}>Retour</Text>
         </Pressable>
         <Text style={styles.title}>Ton groupe</Text>
         <Pressable onPress={onChangeGroup} hitSlop={{ top: 12, bottom: 12, left: 16, right: 8 }}>
@@ -119,12 +122,18 @@ export function GroupScreen({
 
       <ScreenState loading={loading} error={error} hasData={members.length > 0} onRetry={load}>
         <ScrollView contentContainerStyle={styles.scroll}>
-          <View style={styles.card}>
+          <LinearGradient
+            colors={['#2c1d12', '#191411']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.heroCard}
+          >
             <View style={styles.between}>
               <View>
-                <Text style={styles.bigStat}>
-                  <Text style={styles.flame}>🔥 {groupStreak}</Text>
-                </Text>
+                <View style={styles.streakRow}>
+                  <Ionicons name="flame" size={26} color={colors.accent} />
+                  <Text style={styles.bigStat}>{groupStreak}</Text>
+                </View>
                 <Text style={styles.label}>Jours de streak groupe</Text>
               </View>
               <View style={styles.alignEnd}>
@@ -135,7 +144,7 @@ export function GroupScreen({
                 <Text style={styles.label}>Journée parfaite</Text>
               </View>
             </View>
-          </View>
+          </LinearGradient>
 
           <View style={styles.quest}>
             <View style={styles.questHead}>
@@ -178,7 +187,7 @@ export function GroupScreen({
                     )}
                   </View>
                   {done ? (
-                    <Text style={styles.done}>✓</Text>
+                    <Ionicons name="checkmark-circle" size={24} color={colors.success} />
                   ) : isMe ? null : nudged.has(m.id) ? (
                     <Text style={styles.sent}>✨ envoyé</Text>
                   ) : (
@@ -205,16 +214,18 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 8,
   },
-  back: { fontSize: 15, color: colors.accent, fontWeight: '700', width: 70 },
+  backRow: { flexDirection: 'row', alignItems: 'center', width: 70 },
+  back: { fontSize: 15, color: colors.accent, fontWeight: '700' },
   title: { ...font.h1 },
   link: { fontSize: 14, color: colors.textMuted, fontWeight: '700', width: 70, textAlign: 'right' },
   scroll: { paddingBottom: 32, gap: 12 },
   card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16 },
+  heroCard: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 18 },
+  streakRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   between: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   alignEnd: { alignItems: 'flex-end' },
   label: { ...font.label, marginTop: 4 },
   bigStat: { fontSize: 30, fontWeight: '800', color: colors.text },
-  flame: { color: colors.accent },
   muted: { color: colors.textMuted, fontSize: 18, fontWeight: '700' },
   quest: {
     backgroundColor: colors.surface,
@@ -247,7 +258,6 @@ const styles = StyleSheet.create({
   memberName: { ...font.title },
   memberSub: { fontSize: 13, color: colors.textMuted },
   memberSubFaint: { fontSize: 13, color: colors.textFaint },
-  done: { color: colors.success, fontSize: 18, fontWeight: '800' },
   sent: { color: colors.textMuted, fontSize: 13, fontWeight: '700' },
   miniCta: { backgroundColor: colors.accentSoft, borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 11, minHeight: 44, justifyContent: 'center' },
   miniCtaText: { color: colors.accent, fontWeight: '700', fontSize: 13 },

@@ -1,3 +1,5 @@
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, RefreshControl, SectionList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -111,8 +113,13 @@ export function FeedView({
     <View style={styles.container}>
       <View style={styles.topRow}>
         <Text style={styles.title}>Accueil</Text>
-        <Pressable onPress={onOpenGroup} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-          <Text style={styles.link}>👥 Groupe</Text>
+        <Pressable
+          onPress={onOpenGroup}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={styles.linkRow}
+        >
+          <Ionicons name="people" size={16} color={colors.textMuted} />
+          <Text style={styles.link}>Groupe</Text>
         </Pressable>
       </View>
 
@@ -181,8 +188,16 @@ export function FeedView({
         </ScreenState>
       )}
 
-      <Pressable style={[styles.fab, { bottom: 20 + insets.bottom }]} onPress={onOpenLog}>
-        <Text style={styles.fabText}>＋  Logger</Text>
+      <Pressable style={[styles.fabWrap, { bottom: 20 + insets.bottom }]} onPress={onOpenLog}>
+        <LinearGradient
+          colors={['#F58A4C', '#F0652F']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.fab}
+        >
+          <Ionicons name="add" size={22} color="#0B0B0D" />
+          <Text style={styles.fabText}>Logger</Text>
+        </LinearGradient>
       </Pressable>
     </View>
   );
@@ -192,6 +207,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 16 },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8 },
   title: { ...font.h1 },
+  linkRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   link: { fontSize: 14, color: colors.textMuted, fontWeight: '700' },
   tabs: { flexDirection: 'row', gap: 8, marginTop: 12, marginBottom: 4 },
   tab: {
@@ -221,18 +237,23 @@ const styles = StyleSheet.create({
   friendsEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32 },
   friendsEmojiG: { fontSize: 40 },
   friendsText: { color: colors.textMuted, textAlign: 'center', fontSize: 15, lineHeight: 22 },
-  fab: {
+  fabWrap: {
     position: 'absolute',
     left: 16,
     right: 16,
-    backgroundColor: colors.accent,
+    borderRadius: radius.pill,
+    shadowColor: colors.accent,
+    shadowOpacity: 0.45,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+  },
+  fab: {
+    flexDirection: 'row',
+    gap: 8,
     borderRadius: radius.pill,
     paddingVertical: 16,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
+    justifyContent: 'center',
   },
   fabText: { ...font.title, color: '#0B0B0D' },
 });

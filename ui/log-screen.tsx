@@ -1,3 +1,5 @@
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -89,8 +91,8 @@ export function LogScreen({
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
-        <Pressable onPress={onCancel} hitSlop={8}>
-          <Text style={styles.back}>‹ Annuler</Text>
+        <Pressable onPress={onCancel} hitSlop={{ top: 12, bottom: 12, left: 8, right: 16 }} style={styles.backRow}>
+          <Ionicons name="close" size={22} color={colors.textMuted} />
         </Pressable>
         <Text style={styles.title}>Logger</Text>
         <View style={styles.spacer} />
@@ -154,22 +156,42 @@ export function LogScreen({
         ) : null}
 
         <View style={styles.photo}>
-          <Text style={styles.photoText}>📷 Ajouter une photo-preuve (bientôt)</Text>
+          <Ionicons name="camera-outline" size={20} color={colors.textMuted} />
+          <Text style={styles.photoText}>Ajouter une photo-preuve (bientôt)</Text>
         </View>
 
-        <View style={styles.reward}>
+        <LinearGradient
+          colors={['rgba(240,101,47,0.22)', 'rgba(240,101,47,0.05)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.reward}
+        >
           <View style={styles.rewardRow}>
-            <Text style={styles.rewardLabel}>Récompense</Text>
+            <View style={styles.rewardLabelRow}>
+              <Ionicons name="flash" size={16} color={colors.accent} />
+              <Text style={styles.rewardLabel}>Récompense</Text>
+            </View>
             <Text style={styles.rewardXp}>+{xpForType(type)} XP</Text>
           </View>
           <Text style={styles.rewardHint}>{REWARD_HINT[type]}</Text>
-        </View>
+        </LinearGradient>
       </ScrollView>
 
       <View style={styles.footer}>
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        <Pressable style={[styles.cta, busy && styles.ctaBusy]} onPress={submit} disabled={busy}>
-          {busy ? <ActivityIndicator color="#0B0B0D" /> : <Text style={styles.ctaText}>Logger  ·  +{xpForType(type)} XP</Text>}
+        <Pressable style={[styles.ctaWrap, busy && styles.ctaBusy]} onPress={submit} disabled={busy}>
+          <LinearGradient
+            colors={['#F58A4C', '#F0652F']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.cta}
+          >
+            {busy ? (
+              <ActivityIndicator color="#0B0B0D" />
+            ) : (
+              <Text style={styles.ctaText}>Logger  ·  +{xpForType(type)} XP</Text>
+            )}
+          </LinearGradient>
         </Pressable>
       </View>
     </View>
@@ -179,7 +201,7 @@ export function LogScreen({
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 16 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingBottom: 8 },
-  back: { fontSize: 15, color: colors.accent, fontWeight: '700', width: 80 },
+  backRow: { width: 80 },
   title: { ...font.h1 },
   spacer: { width: 80 },
   scroll: { paddingBottom: 20, gap: 12 },
@@ -197,16 +219,18 @@ const styles = StyleSheet.create({
   chipTextOn: { color: colors.accent },
   row: { flexDirection: 'row', gap: 8 },
   flex: { flex: 1 },
-  photo: { backgroundColor: colors.surface, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.border, borderRadius: radius.md, padding: 24, alignItems: 'center' },
+  photo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.surface, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.border, borderRadius: radius.md, padding: 22 },
   photoText: { color: colors.textMuted, fontSize: 14 },
-  reward: { backgroundColor: colors.accentSoft, borderRadius: radius.md, padding: 16, gap: 6 },
+  reward: { borderRadius: radius.md, padding: 16, gap: 6, borderWidth: 1, borderColor: 'rgba(240,101,47,0.25)' },
   rewardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  rewardLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   rewardLabel: { ...font.label },
   rewardXp: { color: colors.accent, fontWeight: '800', fontSize: 24 },
   rewardHint: { color: colors.textFaint, fontSize: 13, lineHeight: 18 },
   error: { color: colors.danger, fontSize: 14, marginBottom: 8 },
   footer: { paddingVertical: 12 },
-  cta: { backgroundColor: colors.accent, borderRadius: radius.pill, paddingVertical: 15, alignItems: 'center' },
+  ctaWrap: { borderRadius: radius.pill },
+  cta: { borderRadius: radius.pill, paddingVertical: 16, alignItems: 'center' },
   ctaBusy: { opacity: 0.7 },
   ctaText: { ...font.title, color: '#0B0B0D' },
 });

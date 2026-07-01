@@ -1,3 +1,5 @@
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type DimensionValue, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -61,8 +63,9 @@ export function SkillTreeScreen({
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
-        <Pressable onPress={onBack} hitSlop={{ top: 12, bottom: 12, left: 8, right: 16 }}>
-          <Text style={styles.back}>‹ Retour</Text>
+        <Pressable onPress={onBack} hitSlop={{ top: 12, bottom: 12, left: 8, right: 16 }} style={styles.backRow}>
+          <Ionicons name="chevron-back" size={20} color={colors.accent} />
+          <Text style={styles.back}>Retour</Text>
         </Pressable>
         <Text style={styles.title}>Progression</Text>
         <View style={styles.spacer} />
@@ -70,7 +73,12 @@ export function SkillTreeScreen({
 
       <ScreenState loading={loading} error={error} hasData={items.length > 0} onRetry={load}>
         <ScrollView contentContainerStyle={styles.scroll}>
-          <View style={styles.card}>
+          <LinearGradient
+            colors={['#2c1d12', '#191411']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.card}
+          >
             <Text style={styles.treeName}>{MUSCU_TREE.name}</Text>
             <View style={styles.heroRow}>
               <View>
@@ -92,7 +100,7 @@ export function SkillTreeScreen({
               Chaque séance loggée débloque le palier suivant. Prochains arbres : Souffle,
               Hygiène de vie, Esprit.
             </Text>
-          </View>
+          </LinearGradient>
 
           <View style={styles.path}>
             {states.map(({ node, state }, i) => (
@@ -105,8 +113,9 @@ export function SkillTreeScreen({
                       state === 'available' && styles.dotAvailable,
                     ]}
                   >
-                    {state === 'done' ? <Text style={styles.dotCheck}>✓</Text> : null}
+                    {state === 'done' ? <Ionicons name="checkmark" size={16} color="#0B0B0D" /> : null}
                     {state === 'available' ? <View style={styles.dotPulse} /> : null}
+                    {state === 'locked' ? <Ionicons name="lock-closed" size={12} color={colors.textFaint} /> : null}
                   </View>
                   {i < states.length - 1 ? (
                     <View style={[styles.lineDown, state === 'done' && styles.lineDone]} />
@@ -142,7 +151,8 @@ const DOT = 30;
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 16 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingBottom: 8 },
-  back: { fontSize: 15, color: colors.accent, fontWeight: '700', width: 70 },
+  backRow: { flexDirection: 'row', alignItems: 'center', width: 70 },
+  back: { fontSize: 15, color: colors.accent, fontWeight: '700' },
   title: { ...font.h1 },
   spacer: { width: 70 },
   scroll: { paddingBottom: 32 },

@@ -1,3 +1,5 @@
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -95,8 +97,9 @@ export function ProfileScreen({
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
-        <Pressable onPress={onBack} hitSlop={8}>
-          <Text style={styles.back}>‹ Retour</Text>
+        <Pressable onPress={onBack} hitSlop={{ top: 12, bottom: 12, left: 8, right: 16 }} style={styles.backRow}>
+          <Ionicons name="chevron-back" size={20} color={colors.accent} />
+          <Text style={styles.back}>Retour</Text>
         </Pressable>
         <Text style={styles.title}>Profil</Text>
         <View style={styles.spacer} />
@@ -104,7 +107,12 @@ export function ProfileScreen({
 
       <ScreenState loading={loading} error={error} hasData={items.length > 0} onRetry={load}>
         <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.cover} />
+        <LinearGradient
+          colors={['#1a2733', '#3b4a3a', '#6b4a2a', '#241a12']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.cover}
+        />
         <View style={styles.headRow}>
           <View style={[styles.avatar, { backgroundColor: av.bg }]}>
             <Text style={[styles.avatarText, { color: av.fg }]}>{initial(targetName)}</Text>
@@ -114,8 +122,13 @@ export function ProfileScreen({
               style={[styles.follow, following && styles.followOn]}
               onPress={() => setFollowing((f) => !f)}
             >
+              <Ionicons
+                name={following ? 'checkmark' : 'add'}
+                size={16}
+                color={following ? colors.text : '#0B0B0D'}
+              />
               <Text style={[styles.followText, following && styles.followTextOn]}>
-                {following ? '✓ Suivi' : '＋ Suivre'}
+                {following ? 'Suivi' : 'Suivre'}
               </Text>
             </Pressable>
           ) : null}
@@ -178,15 +191,16 @@ export function ProfileScreen({
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 16 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingBottom: 8 },
-  back: { fontSize: 15, color: colors.accent, fontWeight: '700', width: 70 },
+  backRow: { flexDirection: 'row', alignItems: 'center', width: 80 },
+  back: { fontSize: 15, color: colors.accent, fontWeight: '700' },
   title: { ...font.h1 },
-  spacer: { width: 70 },
+  spacer: { width: 80 },
   scroll: { paddingBottom: 32 },
   cover: { height: 110, borderRadius: radius.lg, backgroundColor: '#241a12' },
   headRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: -28, paddingHorizontal: 4 },
   avatar: { width: 64, height: 64, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: colors.bg },
   avatarText: { fontSize: 24, fontWeight: '800' },
-  follow: { backgroundColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: 22, paddingVertical: 12, minHeight: 44, justifyContent: 'center', marginBottom: 4 },
+  follow: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: 20, paddingVertical: 12, minHeight: 44, justifyContent: 'center', marginBottom: 4 },
   followOn: { backgroundColor: colors.surfaceElevated },
   followText: { color: '#0B0B0D', fontWeight: '800' },
   followTextOn: { color: colors.text },
