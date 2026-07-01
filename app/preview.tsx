@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { FeedItem } from '@/domain/entities/feed';
 import { MUSCU_GRAPH } from '@/domain/usecases/skill-graph';
 import { CommentsScreen } from '@/ui/comments-screen';
+import { DiscoverScreen } from '@/ui/discover-screen';
 import { FeedView } from '@/ui/feed-view';
 import { GroupScreen } from '@/ui/group-screen';
 import { HolyGraph } from '@/ui/holy-graph';
@@ -31,7 +32,7 @@ const DEMO_POST: FeedItem = {
 const SCREENS: { label: string; node: ReactNode }[] = [
   {
     label: 'Accueil',
-    node: <FeedView userId="local-user" pseudo="Toi" onOpenProfile={noop} onOpenLog={noop} onOpenComments={noop} />,
+    node: <FeedView userId="local-user" pseudo="Toi" onOpenProfile={noop} onOpenLog={noop} onOpenComments={noop} onOpenDiscover={noop} />,
   },
   {
     label: 'Groupe',
@@ -62,6 +63,10 @@ const SCREENS: { label: string; node: ReactNode }[] = [
         </ScrollView>
       </View>
     ),
+  },
+  {
+    label: 'Découvrir',
+    node: <DiscoverScreen userId="local-user" onBack={noop} onOpenProfile={noop} />,
   },
   {
     label: 'Réponses',

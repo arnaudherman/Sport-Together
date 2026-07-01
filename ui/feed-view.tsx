@@ -41,12 +41,14 @@ export function FeedView({
   onOpenProfile,
   onOpenLog,
   onOpenComments,
+  onOpenDiscover,
 }: {
   userId: string;
   pseudo: string;
   onOpenProfile: (id: string, name: string) => void;
   onOpenLog: () => void;
   onOpenComments: (item: FeedItem) => void;
+  onOpenDiscover: () => void;
 }) {
   const feed = useFeedRepository();
   const reactionRepo = useReactionRepository();
@@ -185,6 +187,17 @@ export function FeedView({
               <Pressable onPress={() => onOpenProfile(userId, pseudo)} style={styles.headerCard}>
                 <LevelHeader pseudo={pseudo} userId={userId} items={items} />
               </Pressable>
+            ) : tab === 'abonnements' ? (
+              <Pressable
+                onPress={onOpenDiscover}
+                style={styles.discover}
+                accessibilityRole="button"
+                accessibilityLabel="Découvrir des gens à suivre"
+              >
+                <Ionicons name="search" size={18} color={colors.accent} />
+                <Text style={styles.discoverText}>Découvrir des gens à suivre</Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+              </Pressable>
             ) : null
           }
           renderItem={({ item }) => (
@@ -245,6 +258,19 @@ const styles = StyleSheet.create({
   schipText: { color: colors.textMuted, fontWeight: '700', fontSize: 14 },
   schipTextOn: { color: '#0B0B0D' },
   headerCard: { marginBottom: 12 },
+  discover: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    marginBottom: 12,
+  },
+  discoverText: { ...font.title, flex: 1 },
   list: { gap: 12, paddingTop: 4 },
   empty: { color: colors.textMuted, textAlign: 'center', marginTop: 30 },
   fabWrap: {

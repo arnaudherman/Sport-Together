@@ -5,7 +5,8 @@ import { InMemoryFollowRepository } from '@/data/follow/in-memory-follow-reposit
 describe('InMemoryFollowRepository', () => {
   it('pré-seede des abonnements de démo', async () => {
     const repo = new InMemoryFollowRepository();
-    expect(await repo.isFollowing('u-lea')).toBe(true);
+    expect(await repo.isFollowing('u-sam')).toBe(true);
+    expect(await repo.isFollowing('u-lea')).toBe(false); // à découvrir
     expect(await repo.isFollowing('inconnu')).toBe(false);
   });
 

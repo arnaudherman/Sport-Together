@@ -5,7 +5,9 @@ import type { FollowRepository } from '@/domain/repositories/follow-repository';
  * « Abonnements » de l'accueil ait du contenu en démo (on suit Léa, Sam, Noa).
  */
 export class InMemoryFollowRepository implements FollowRepository {
-  private readonly following = new Set<string>(['u-lea', 'u-sam', 'u-noa']);
+  // On suit Sam au départ (l'onglet Abonnements a du contenu) ; Léa & Noa restent
+  // « à découvrir » dans l'écran Découvrir (membres de groupe non suivis).
+  private readonly following = new Set<string>(['u-sam']);
 
   async listFollowing(): Promise<string[]> {
     return [...this.following];

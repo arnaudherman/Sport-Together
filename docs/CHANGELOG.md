@@ -6,6 +6,18 @@ pas encore versionné (pré-MVP) ; entrées par date. Détail des décisions dan
 
 ## [Non publié]
 
+### 2026-07-01 — Auto-critique (revue adversariale) + améliorations
+
+- **14 findings corrigés** : **publier en SOLO** (plus de gate groupe obligatoire — vraie
+  régression solo-first), **stats profil correctes** (`listUserFeed` au lieu d'un feed
+  partiel), onglet **Abonnements** inclut tes posts, **optimistic** réactions/suppression,
+  **LevelHeader** remonté sur l'accueil (rétention solo), **streak groupe** basé sur
+  l'activité (plus collé à 0), commentaires (catch + message d'erreur), **a11y** (rôles,
+  labels, cibles ≥ 44px), holy graph labels lisibles, composer copie solo, retrait de
+  **code mort** (radar) + sentinelle mock `local-user`.
+- **Découvrir** : nouvel écran de suggestions à suivre (membres de tes groupes non suivis)
+  pour alimenter l'onglet Abonnements.
+
 ### 2026-07-01 — Pivot solo-first + couche sociale (Twitter-like)
 
 - **Pivot solo-first** (ADR-0010, vision v2) : plus de groupe obligatoire ; l'**accueil**

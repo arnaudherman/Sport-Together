@@ -6,6 +6,7 @@ import type { FeedItem } from '@/domain/entities/feed';
 import type { Group } from '@/domain/entities/group';
 import { AccountScreen } from '@/ui/account-screen';
 import { CommentsScreen } from '@/ui/comments-screen';
+import { DiscoverScreen } from '@/ui/discover-screen';
 import { ErrorRetry } from '@/ui/error-retry';
 import { FeedView } from '@/ui/feed-view';
 import { GroupGate } from '@/ui/group-gate';
@@ -21,6 +22,7 @@ type Screen =
   | 'log'
   | 'groups'
   | 'account'
+  | 'discover'
   | { profile: { id: string; name: string } }
   | { group: { id: string } }
   | { comments: { item: FeedItem } };
@@ -91,6 +93,16 @@ export function AuthedFlow({ userId }: { userId: string }) {
     return <AccountScreen pseudo={profile.pseudo} onBack={() => setView('home')} />;
   }
 
+  if (view === 'discover') {
+    return (
+      <DiscoverScreen
+        userId={userId}
+        onBack={() => setView('home')}
+        onOpenProfile={(id, name) => setView({ profile: { id, name } })}
+      />
+    );
+  }
+
   if (typeof view === 'object' && 'group' in view) {
     return (
       <GroupScreen
@@ -129,6 +141,7 @@ export function AuthedFlow({ userId }: { userId: string }) {
       onOpenProfile={(id, name) => setView({ profile: { id, name } })}
       onOpenLog={() => setView('log')}
       onOpenComments={(item) => setView({ comments: { item } })}
+      onOpenDiscover={() => setView('discover')}
     />
   );
 }
