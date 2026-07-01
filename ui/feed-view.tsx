@@ -7,7 +7,6 @@ import { localDayKey } from '@/domain/usecases/streak';
 import { avatarColor, dayBucketLabel, initial } from '@/ui/format';
 import { FeedItemCard } from '@/ui/feed-item-card';
 import { LevelHeader } from '@/ui/level-header';
-import { LogGoal } from '@/ui/log-goal';
 import { colors, font, radius } from '@/ui/theme';
 
 type Tab = 'groupe' | 'amis';
@@ -19,12 +18,16 @@ export function FeedView({
   pseudo,
   onOpenGroup,
   onOpenProfile,
+  onOpenLog,
+  onOpenSkills,
 }: {
   groupId: string;
   userId: string;
   pseudo: string;
   onOpenGroup: () => void;
   onOpenProfile: (id: string, name: string) => void;
+  onOpenLog: () => void;
+  onOpenSkills: () => void;
 }) {
   const feed = useFeedRepository();
   const reactionRepo = useReactionRepository();
@@ -132,7 +135,10 @@ export function FeedView({
           contentContainerStyle={styles.list}
           ListHeaderComponent={
             <View style={styles.head}>
-              <LevelHeader pseudo={pseudo} userId={userId} items={items} />
+              <Pressable onPress={onOpenSkills}>
+                <LevelHeader pseudo={pseudo} userId={userId} items={items} />
+                <Text style={styles.progressLink}>Voir ma progression ›</Text>
+              </Pressable>
               {presence.length > 0 ? (
                 <View>
                   <Text style={styles.presenceLabel}>Dernières activités</Text>
@@ -140,25 +146,28 @@ export function FeedView({
                     {presence.map((p) => {
                       const av = avatarColor(p.id);
                       return (
-                        <View key={p.id} style={styles.presenceItem}>
+                        <Pressable key={p.id} style={styles.presenceItem} onPress={() => onOpenProfile(p.id, p.name)}>
                           <View style={[styles.presenceAvatar, { backgroundColor: av.bg }]}>
                             <Text style={[styles.presenceInitial, { color: av.fg }]}>{initial(p.name)}</Text>
                             <View style={styles.presenceDot} />
                           </View>
                           <Text style={styles.presenceName} numberOfLines={1}>{p.name}</Text>
-                        </View>
+                        </Pressable>
                       );
                     })}
                   </View>
                 </View>
               ) : null}
-              <LogGoal groupId={groupId} onLogged={load} />
               {error ? <Text style={styles.error}>{error}</Text> : null}
             </View>
           }
           ListEmptyComponent={<Text style={styles.empty}>Aucun goal pour l'instant — logge le premier 💪</Text>}
         />
       )}
+
+      <Pressable style={styles.fab} onPress={onOpenLog}>
+        <Text style={styles.fabText}>＋  Logger</Text>
+      </Pressable>
     </View>
   );
 }
@@ -181,6 +190,7 @@ const styles = StyleSheet.create({
   tabText: { color: colors.textMuted, fontWeight: '700', fontSize: 14 },
   tabTextOn: { color: '#0B0B0D' },
   head: { gap: 14, paddingTop: 10, paddingBottom: 6 },
+  progressLink: { fontSize: 13, color: colors.accent, fontWeight: '700', textAlign: 'right', marginTop: 8 },
   presenceLabel: { ...font.label, marginBottom: 10 },
   presenceRow: { flexDirection: 'row', gap: 16 },
   presenceItem: { alignItems: 'center', width: 52 },
@@ -199,10 +209,25 @@ const styles = StyleSheet.create({
   },
   presenceName: { fontSize: 11, color: colors.textFaint, marginTop: 4 },
   section: { ...font.label, marginTop: 18, marginBottom: 10 },
-  list: { paddingBottom: 32, gap: 12 },
+  list: { paddingBottom: 96, gap: 12 },
   empty: { color: colors.textMuted, textAlign: 'center', marginTop: 24 },
   error: { color: '#FCA5A5', fontSize: 14 },
   friendsEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32 },
   friendsEmojiG: { fontSize: 40 },
   friendsText: { color: colors.textMuted, textAlign: 'center', fontSize: 15, lineHeight: 22 },
+  fab: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 20,
+    backgroundColor: colors.accent,
+    borderRadius: radius.pill,
+    paddingVertical: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  fabText: { ...font.title, color: '#0B0B0D' },
 });
