@@ -4,7 +4,9 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useFollowRepository, useGroupRepository } from '@/core/di/repositories-context';
 import type { GroupMember } from '@/domain/entities/group';
-import { avatarColor, handle, initial } from '@/ui/format';
+import { Avatar } from '@/ui/avatar';
+import { handle } from '@/ui/format';
+import { ScreenHeader } from '@/ui/screen-header';
 import { ScreenState } from '@/ui/screen-state';
 import { colors, font, radius } from '@/ui/theme';
 
@@ -87,14 +89,7 @@ export function DiscoverScreen({
 
   return (
     <View style={styles.container}>
-      <View style={styles.topRow}>
-        <Pressable onPress={onBack} hitSlop={{ top: 12, bottom: 12, left: 8, right: 16 }} style={styles.backRow} accessibilityRole="button" accessibilityLabel="Retour">
-          <Ionicons name="chevron-back" size={20} color={colors.accent} />
-          <Text style={styles.back}>Retour</Text>
-        </Pressable>
-        <Text style={styles.title}>Découvrir</Text>
-        <View style={styles.spacer} />
-      </View>
+      <ScreenHeader title="Découvrir" onBack={onBack} />
 
       <ScreenState loading={loading} error={error} hasData={people.length > 0} onRetry={load}>
         <ScrollView contentContainerStyle={styles.scroll}>
@@ -108,14 +103,11 @@ export function DiscoverScreen({
             </Pressable>
           ) : (
             people.map((p, i) => {
-              const av = avatarColor(p.id);
               const isFollowed = followed.has(p.id);
               return (
                 <View key={p.id} style={[styles.row, i === people.length - 1 && styles.rowLast]}>
                   <Pressable style={styles.who} onPress={() => onOpenProfile(p.id, p.pseudo)}>
-                    <View style={[styles.avatar, { backgroundColor: av.bg }]}>
-                      <Text style={[styles.avatarText, { color: av.fg }]}>{initial(p.pseudo)}</Text>
-                    </View>
+                    <Avatar name={p.pseudo} seed={p.id} size={44} />
                     <View>
                       <Text style={styles.name}>{p.pseudo}</Text>
                       <Text style={styles.handle}>{handle(p.pseudo)}</Text>
@@ -144,11 +136,6 @@ export function DiscoverScreen({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 16 },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingBottom: 8 },
-  backRow: { flexDirection: 'row', alignItems: 'center', width: 90 },
-  back: { fontSize: 15, color: colors.accent, fontWeight: '700' },
-  title: { ...font.h1 },
-  spacer: { width: 90 },
   scroll: { paddingBottom: 32 },
   hint: { color: colors.textMuted, fontSize: 14, marginVertical: 12 },
   empty: { color: colors.textMuted, textAlign: 'center', lineHeight: 20 },
@@ -165,8 +152,6 @@ const styles = StyleSheet.create({
   },
   rowLast: { borderBottomWidth: 0 },
   who: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  avatar: { width: 44, height: 44, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 17, fontWeight: '800' },
   name: { ...font.title, fontWeight: '800' },
   handle: { fontSize: 13, color: colors.textMuted },
   follow: { backgroundColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: 20, paddingVertical: 10, minHeight: 40, justifyContent: 'center' },

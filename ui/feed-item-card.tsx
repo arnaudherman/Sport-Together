@@ -3,7 +3,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { EMPTY_REACTIONS, type FeedItem, type ReactionKind } from '@/domain/entities/feed';
 import { xpForType } from '@/domain/usecases/gamification';
-import { avatarColor, handle, initial, timeAgo } from '@/ui/format';
+import { Avatar } from '@/ui/avatar';
+import { handle, timeAgo } from '@/ui/format';
 import { colors, font, radius } from '@/ui/theme';
 
 const TYPE_LABEL: Record<FeedItem['type'], string> = {
@@ -34,14 +35,11 @@ export function FeedItemCard({
   onDelete?: () => void;
 }) {
   const reactions = item.reactions ?? EMPTY_REACTIONS;
-  const av = avatarColor(item.authorId || item.authorName);
 
   return (
     <View style={styles.card}>
       <Pressable onPress={onPressAuthor} hitSlop={6}>
-        <View style={[styles.avatar, { backgroundColor: av.bg }]}>
-          <Text style={[styles.avatarText, { color: av.fg }]}>{initial(item.authorName)}</Text>
-        </View>
+        <Avatar name={item.authorName} seed={item.authorId || item.authorName} size={42} />
       </Pressable>
 
       <View style={styles.body}>
@@ -142,8 +140,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: 14,
   },
-  avatar: { width: 42, height: 42, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 17, fontWeight: '800' },
   body: { flex: 1, gap: 4 },
   head: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 },
   headRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },

@@ -6,6 +6,7 @@ import { useAuthRepository, useProfileRepository } from '@/core/di/repositories-
 import type { Profile } from '@/domain/entities/profile';
 import { GhostButton, PrimaryButton } from '@/ui/button';
 import { handle, initial } from '@/ui/format';
+import { ScreenHeader } from '@/ui/screen-header';
 import { colors, font, radius } from '@/ui/theme';
 
 /** Écran Compte : éditer son profil (pseudo/bio) + déconnexion + suppression. */
@@ -93,14 +94,7 @@ export function AccountScreen({
 
   return (
     <View style={styles.container}>
-      <View style={styles.topRow}>
-        <Pressable onPress={onBack} hitSlop={{ top: 12, bottom: 12, left: 8, right: 16 }} style={styles.backRow} accessibilityRole="button" accessibilityLabel="Retour">
-          <Ionicons name="chevron-back" size={20} color={colors.accent} />
-          <Text style={styles.back}>Retour</Text>
-        </Pressable>
-        <Text style={styles.title}>Compte</Text>
-        <View style={styles.spacer} />
-      </View>
+      <ScreenHeader title="Compte" onBack={onBack} />
 
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.card}>
@@ -159,11 +153,6 @@ export function AccountScreen({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 16 },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingBottom: 8 },
-  backRow: { flexDirection: 'row', alignItems: 'center', width: 90 },
-  back: { fontSize: 15, color: colors.accent, fontWeight: '700' },
-  title: { ...font.h1 },
-  spacer: { width: 90 },
   scroll: { paddingBottom: 32, gap: 10 },
   card: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16, marginTop: 4, marginBottom: 6 },
   avatar: { width: 52, height: 52, borderRadius: radius.pill, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },

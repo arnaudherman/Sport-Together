@@ -14,7 +14,9 @@ import {
 import { useCommentRepository } from '@/core/di/repositories-context';
 import type { Comment } from '@/domain/entities/comment';
 import type { FeedItem } from '@/domain/entities/feed';
-import { avatarColor, handle, initial, timeAgo } from '@/ui/format';
+import { Avatar } from '@/ui/avatar';
+import { handle, timeAgo } from '@/ui/format';
+import { ScreenHeader } from '@/ui/screen-header';
 import { colors, font, radius } from '@/ui/theme';
 
 /** Fil de réponses d'un post (commentaires) + composer (ADR-0010). */
@@ -69,21 +71,12 @@ export function CommentsScreen({ item, onBack }: { item: FeedItem; onBack: () =>
     }
   }
 
-  const postAv = avatarColor(item.authorId || item.authorName);
-
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.topRow}>
-        <Pressable onPress={onBack} hitSlop={{ top: 12, bottom: 12, left: 8, right: 16 }} style={styles.backRow}>
-          <Ionicons name="chevron-back" size={20} color={colors.accent} />
-          <Text style={styles.back}>Retour</Text>
-        </Pressable>
-        <Text style={styles.title}>Réponses</Text>
-        <View style={styles.spacer} />
-      </View>
+      <ScreenHeader title="Réponses" onBack={onBack} />
 
       <FlatList
         data={comments}
@@ -91,9 +84,7 @@ export function CommentsScreen({ item, onBack }: { item: FeedItem; onBack: () =>
         contentContainerStyle={styles.list}
         ListHeaderComponent={
           <View style={styles.post}>
-            <View style={[styles.avatar, { backgroundColor: postAv.bg }]}>
-              <Text style={[styles.avatarText, { color: postAv.fg }]}>{initial(item.authorName)}</Text>
-            </View>
+            <Avatar name={item.authorName} seed={item.authorId || item.authorName} size={42} />
             <View style={styles.body}>
               <Text style={styles.name}>
                 {item.authorName} <Text style={styles.h}>{handle(item.authorName)}</Text>
@@ -102,22 +93,17 @@ export function CommentsScreen({ item, onBack }: { item: FeedItem; onBack: () =>
             </View>
           </View>
         }
-        renderItem={({ item: c }) => {
-          const av = avatarColor(c.authorId || c.authorName);
-          return (
-            <View style={styles.comment}>
-              <View style={[styles.avatarSm, { backgroundColor: av.bg }]}>
-                <Text style={[styles.avatarSmText, { color: av.fg }]}>{initial(c.authorName)}</Text>
-              </View>
-              <View style={styles.body}>
-                <Text style={styles.name}>
-                  {c.authorName} <Text style={styles.h}>· {timeAgo(c.createdAt)}</Text>
-                </Text>
-                <Text style={styles.commentText}>{c.text}</Text>
-              </View>
+        renderItem={({ item: c }) => (
+          <View style={styles.comment}>
+            <Avatar name={c.authorName} seed={c.authorId || c.authorName} size={34} />
+            <View style={styles.body}>
+              <Text style={styles.name}>
+                {c.authorName} <Text style={styles.h}>· {timeAgo(c.createdAt)}</Text>
+              </Text>
+              <Text style={styles.commentText}>{c.text}</Text>
             </View>
-          );
-        }}
+          </View>
+        )}
         ListEmptyComponent={
           loading ? (
             <Text style={styles.empty}>Chargement…</Text>
@@ -166,17 +152,8 @@ export function CommentsScreen({ item, onBack }: { item: FeedItem; onBack: () =>
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 16 },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingBottom: 8 },
-  backRow: { flexDirection: 'row', alignItems: 'center', width: 90 },
-  back: { fontSize: 15, color: colors.accent, fontWeight: '700' },
-  title: { ...font.h1 },
-  spacer: { width: 90 },
   list: { paddingBottom: 12 },
   post: { flexDirection: 'row', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, marginBottom: 6 },
-  avatar: { width: 42, height: 42, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 17, fontWeight: '800' },
-  avatarSm: { width: 34, height: 34, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
-  avatarSmText: { fontSize: 14, fontWeight: '800' },
   body: { flex: 1, gap: 2 },
   name: { ...font.title, fontWeight: '800' },
   h: { color: colors.textMuted, fontWeight: '400', fontSize: 13 },
