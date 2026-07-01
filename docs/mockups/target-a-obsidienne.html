@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="fr">
+<!-- DIRECTION A — « OBSIDIENNE » : Whoop nocturne. Near-black bleuté, surfaces en
+     dégradé (pas de bordures dures), anneaux de données, chiffres ultra-light,
+     orange rare et précieux. -->
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --bg: #0a0c10;
+    --panel1: #141821;
+    --panel2: #10131a;
+    --ink: #f2f4f8;
+    --mut: #8b93a3;
+    --faint: #565e6e;
+    --acc: #ff5a1f;
+    --acc2: #ffa26b;
+    --good: #3ddc97;
+    --hair: rgba(255, 255, 255, 0.06);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #05060a;
+    font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', system-ui, sans-serif;
+    display: flex; gap: 42px; padding: 40px; align-items: flex-start;
+    -webkit-font-smoothing: antialiased;
+  }
+  .phone {
+    width: 390px; height: 844px; border-radius: 48px; overflow: hidden; position: relative;
+    background:
+      radial-gradient(120% 60% at 50% -8%, #182032 0%, transparent 55%),
+      var(--bg);
+    box-shadow: 0 0 0 10px #17181c, 0 30px 80px rgba(0,0,0,0.8);
+    color: var(--ink); flex-shrink: 0;
+  }
+  .label { position: absolute; top: -30px; left: 12px; color: #6b7280; font-size: 13px; font-weight: 700; letter-spacing: 2px; }
+  .wrap { position: relative; }
+  .status { display: flex; justify-content: space-between; padding: 16px 28px 6px; font-size: 14px; font-weight: 600; }
+  .card {
+    background: linear-gradient(160deg, var(--panel1), var(--panel2));
+    border-radius: 22px;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .tabbar {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 86px;
+    background: rgba(13,15,21,0.86); backdrop-filter: blur(20px);
+    border-top: 1px solid var(--hair);
+    display: flex; align-items: flex-start; justify-content: space-around; padding-top: 12px;
+  }
+  .tab { text-align: center; color: var(--faint); font-size: 10px; font-weight: 600; width: 56px; }
+  .tab .ic { font-size: 21px; display: block; margin-bottom: 3px; filter: grayscale(1) brightness(1.6); }
+  .tab.on { color: var(--ink); } .tab.on .ic { filter: none; }
+  .tab.plus .ic {
+    width: 46px; height: 46px; margin: -8px auto 0; border-radius: 23px; line-height: 46px;
+    background: linear-gradient(140deg, var(--acc2), var(--acc)); color: #0a0c10;
+    font-size: 26px; font-weight: 700; filter: none;
+    box-shadow: 0 8px 22px rgba(255,90,31,0.4);
+  }
+  .h-num { font-weight: 200; letter-spacing: -1px; }
+  .seg { display: flex; gap: 22px; padding: 14px 24px 10px; font-size: 14px; font-weight: 600; color: var(--faint); }
+  .seg .on { color: var(--ink); position: relative; }
+  .seg .on::after { content: ''; position: absolute; left: 0; right: 0; bottom: -8px; height: 3px; border-radius: 2px; background: var(--acc); }
+  .photo { width: 100%; border-radius: 16px; object-fit: cover; display: block; }
+</style>
+</head>
+<body>
+
+<!-- ============================== ACCUEIL ============================== -->
+<div class="wrap"><div class="label">A · ACCUEIL</div>
+<div class="phone">
+  <div class="status"><span>9:41</span><span>􀙇 􀖀 􀋦</span></div>
+
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 24px 0;">
+    <div style="font-size:28px; font-weight:800; letter-spacing:-0.5px;">Aujourd&rsquo;hui</div>
+    <img class="photo" src="https://i.pravatar.cc/72?img=12" style="width:36px; height:36px; border-radius:18px;" />
+  </div>
+
+  <!-- Bandeau « toi » : anneau + niveau, compact (feed-first) -->
+  <div class="card" style="margin:14px 20px 0; padding:16px 18px; display:flex; align-items:center; gap:16px;">
+    <svg width="74" height="74" viewBox="0 0 74 74">
+      <defs><linearGradient id="ga" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#ffa26b"/><stop offset="1" stop-color="#ff5a1f"/>
+      </linearGradient></defs>
+      <circle cx="37" cy="37" r="31" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="7"/>
+      <circle cx="37" cy="37" r="31" fill="none" stroke="url(#ga)" stroke-width="7"
+              stroke-linecap="round" stroke-dasharray="146 195" transform="rotate(-90 37 37)"/>
+      <text x="37" y="34" text-anchor="middle" fill="#f2f4f8" font-size="17" font-weight="300">12</text>
+      <text x="37" y="48" text-anchor="middle" fill="#8b93a3" font-size="8" font-weight="600" letter-spacing="1">JOURS</text>
+    </svg>
+    <div style="flex:1;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline;">
+        <div style="font-size:15px; font-weight:700;">Niveau 7</div>
+        <div style="font-size:12px; color:var(--mut);">1 240 <span style="color:var(--faint)">/ 1 600 XP</span></div>
+      </div>
+      <div style="height:5px; border-radius:3px; background:rgba(255,255,255,0.08); margin-top:8px;">
+        <div style="width:64%; height:5px; border-radius:3px; background:linear-gradient(90deg,var(--acc2),var(--acc));"></div>
+      </div>
+      <div style="display:flex; gap:14px; margin-top:9px; font-size:11.5px; color:var(--mut);">
+        <span>Série <b style="color:var(--ink); font-weight:600;">protégée 😴</b></span>
+        <span>Quêtes <b style="color:var(--ink); font-weight:600;">2/3</b></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="seg"><span class="on">Tout</span><span>Abonnements</span><span>Groupes</span></div>
+
+  <!-- Post photo -->
+  <div class="card" style="margin:10px 20px 0; padding:14px 16px;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <img class="photo" src="https://i.pravatar.cc/64?img=47" style="width:34px;height:34px;border-radius:17px;" />
+      <div style="flex:1;"><b style="font-size:14.5px;">Léa</b> <span style="color:var(--faint); font-size:12.5px;">@lea · 12 min</span></div>
+      <span style="font-size:11px; color:var(--mut); background:rgba(255,255,255,0.06); padding:3px 9px; border-radius:9px;">Séance</span>
+    </div>
+    <img class="photo" src="https://picsum.photos/id/1011/680/360" style="height:150px; margin-top:12px;" />
+    <div style="margin-top:11px; font-size:15px;">Course matinale au bord du lac — 5,2 km 🏃‍♀️</div>
+    <div style="display:flex; gap:12px; margin-top:10px; font-size:12px; color:var(--mut);">
+      <span style="letter-spacing:0.5px;"><span class="h-num" style="font-size:19px; color:var(--ink);">31:04</span> temps</span>
+      <span style="letter-spacing:0.5px;"><span class="h-num" style="font-size:19px; color:var(--ink);">5:58</span> /km</span>
+      <span style="letter-spacing:0.5px;"><span class="h-num" style="font-size:19px; color:var(--acc);">+50</span> XP</span>
+      <span style="margin-left:auto; align-self:flex-end;">💬 2 &nbsp; 👏 5</span>
+    </div>
+  </div>
+
+  <!-- Post repos -->
+  <div class="card" style="margin:12px 20px 0; padding:14px 16px; display:flex; gap:10px; align-items:center;">
+    <img class="photo" src="https://i.pravatar.cc/64?img=68" style="width:34px;height:34px;border-radius:17px;" />
+    <div style="flex:1;">
+      <b style="font-size:14.5px;">Noa</b> <span style="color:var(--faint); font-size:12.5px;">@noa · 1 h</span>
+      <div style="font-size:14px; color:var(--mut); margin-top:2px;">Jour de repos — série protégée 😴</div>
+    </div>
+    <span style="font-size:11px; color:var(--good);">●&nbsp;Récup</span>
+  </div>
+
+  <!-- Post pas + sparkline -->
+  <div class="card" style="margin:12px 20px 0; padding:14px 16px;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <img class="photo" src="https://i.pravatar.cc/64?img=33" style="width:34px;height:34px;border-radius:17px;" />
+      <div style="flex:1;"><b style="font-size:14.5px;">Sam</b> <span style="color:var(--faint); font-size:12.5px;">@sam · 3 h</span></div>
+      <span style="font-size:11px; color:var(--mut); background:rgba(255,255,255,0.06); padding:3px 9px; border-radius:9px;">Pas</span>
+    </div>
+    <div style="display:flex; align-items:flex-end; gap:14px; margin-top:10px;">
+      <div><span class="h-num" style="font-size:34px;">10 248</span> <span style="color:var(--mut); font-size:12px;">pas</span></div>
+      <svg width="150" height="34" style="margin-left:auto;"><polyline points="0,28 20,24 40,26 60,16 80,20 100,8 120,14 150,4"
+        fill="none" stroke="url(#ga2)" stroke-width="2.5" stroke-linecap="round"/>
+        <defs><linearGradient id="ga2" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#565e6e"/><stop offset="1" stop-color="#ff5a1f"/>
+        </linearGradient></defs></svg>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <div class="tab on"><span class="ic">⌂</span>Accueil</div>
+    <div class="tab"><span class="ic">◎</span>Découvrir</div>
+    <div class="tab plus"><span class="ic">＋</span></div>
+    <div class="tab"><span class="ic">◔</span>Groupes</div>
+    <div class="tab"><span class="ic">◉</span>Profil</div>
+  </div>
+</div></div>
+
+<!-- ============================== PROFIL ============================== -->
+<div class="wrap"><div class="label">A · PROFIL</div>
+<div class="phone">
+  <img class="photo" src="https://picsum.photos/id/1015/780/440" style="height:190px; border-radius:0; opacity:0.85;" />
+  <div style="position:absolute; top:0; left:0; right:0; height:190px; background:linear-gradient(180deg, rgba(10,12,16,0.15), rgba(10,12,16,0.92));"></div>
+  <div class="status" style="position:absolute; top:0; left:0; right:0;"><span>9:41</span><span>􀙇 􀖀 􀋦</span></div>
+
+  <div style="position:relative; margin-top:-52px; padding:0 24px;">
+    <div style="display:flex; align-items:flex-end; justify-content:space-between;">
+      <img class="photo" src="https://i.pravatar.cc/160?img=47" style="width:92px; height:92px; border-radius:46px; border:4px solid var(--bg);" />
+      <div style="font-size:13px; font-weight:700; color:var(--ink); background:rgba(255,255,255,0.08); padding:9px 18px; border-radius:20px; margin-bottom:8px;">Suivre</div>
+    </div>
+    <div style="margin-top:10px; font-size:24px; font-weight:800; letter-spacing:-0.4px;">Léa <span style="font-size:13px; color:var(--acc); font-weight:700; vertical-align:3px;">NIV 9</span></div>
+    <div style="color:var(--mut); font-size:13.5px; margin-top:2px;">@lea · Coureuse, lève-tôt. Jamais deux jours sans. 🏃‍♀️</div>
+
+    <!-- Stat héros -->
+    <div style="display:flex; gap:26px; margin-top:18px;">
+      <div><div class="h-num" style="font-size:40px;">128</div><div style="font-size:10.5px; color:var(--faint); letter-spacing:1.5px;">SÉANCES</div></div>
+      <div><div class="h-num" style="font-size:40px; color:var(--acc);">23</div><div style="font-size:10.5px; color:var(--faint); letter-spacing:1.5px;">JOURS DE SUITE</div></div>
+      <div><div class="h-num" style="font-size:40px;">4 210</div><div style="font-size:10.5px; color:var(--faint); letter-spacing:1.5px;">XP</div></div>
+    </div>
+
+    <!-- Paliers (arbre premium) -->
+    <div class="card" style="margin-top:18px; padding:16px 18px;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline;">
+        <div style="font-size:11px; letter-spacing:1.5px; color:var(--faint); font-weight:700;">PROGRESSION · CORPS</div>
+        <div style="font-size:12px; color:var(--mut);">7/11 paliers</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:0; margin-top:16px;">
+        <!-- jalons reliés -->
+        <div style="width:14px;height:14px;border-radius:7px;background:var(--acc);box-shadow:0 0 12px rgba(255,90,31,0.6);"></div>
+        <div style="flex:1;height:2.5px;background:var(--acc);"></div>
+        <div style="width:14px;height:14px;border-radius:7px;background:var(--acc);"></div>
+        <div style="flex:1;height:2.5px;background:var(--acc);"></div>
+        <div style="width:18px;height:18px;border-radius:9px;background:var(--bg);border:2.5px solid var(--acc);box-shadow:0 0 14px rgba(255,90,31,0.5);"></div>
+        <div style="flex:1;height:2.5px;background:rgba(255,255,255,0.1);"></div>
+        <div style="width:14px;height:14px;border-radius:7px;background:rgba(255,255,255,0.12);"></div>
+        <div style="flex:1;height:2.5px;background:rgba(255,255,255,0.1);"></div>
+        <div style="width:14px;height:14px;border-radius:7px;background:rgba(255,255,255,0.12);"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:10.5px; color:var(--mut); margin-top:8px;">
+        <span>20 pompes</span><span style="color:var(--acc); font-weight:700;">Gainage 90 s</span><span>1re traction</span>
+      </div>
+    </div>
+
+    <!-- Dernière activité -->
+    <div class="card" style="margin-top:12px; padding:13px 16px; display:flex; gap:12px; align-items:center;">
+      <img class="photo" src="https://picsum.photos/id/1018/140/140" style="width:52px; height:52px; border-radius:12px;" />
+      <div style="flex:1;">
+        <div style="font-size:14px; font-weight:600;">Trail du dimanche — 9,4 km</div>
+        <div style="font-size:12px; color:var(--mut); margin-top:2px;">hier · 💬 4 · 👏 12</div>
+      </div>
+      <span class="h-num" style="font-size:19px; color:var(--acc);">+50</span>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <div class="tab"><span class="ic">⌂</span>Accueil</div>
+    <div class="tab"><span class="ic">◎</span>Découvrir</div>
+    <div class="tab plus"><span class="ic">＋</span></div>
+    <div class="tab"><span class="ic">◔</span>Groupes</div>
+    <div class="tab on"><span class="ic">◉</span>Profil</div>
+  </div>
+</div></div>
+
+<!-- ============================== COMPOSER ============================== -->
+<div class="wrap"><div class="label">A · PUBLIER</div>
+<div class="phone">
+  <div class="status"><span>9:41</span><span>􀙇 􀖀 􀋦</span></div>
+  <!-- sheet -->
+  <div style="position:absolute; top:64px; bottom:0; left:0; right:0; background:linear-gradient(180deg,#12151d,#0d0f15); border-radius:28px 28px 0 0; box-shadow: 0 -18px 50px rgba(0,0,0,0.6); padding:10px 22px 0;">
+    <div style="width:42px; height:5px; border-radius:3px; background:rgba(255,255,255,0.15); margin:4px auto 14px;"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span style="color:var(--mut); font-size:15px;">Annuler</span>
+      <span style="font-weight:800; font-size:16px;">Nouvelle activité</span>
+      <span style="font-size:14px; font-weight:800; color:#0a0c10; background:linear-gradient(140deg,var(--acc2),var(--acc)); padding:9px 18px; border-radius:19px; box-shadow:0 6px 18px rgba(255,90,31,0.35);">Publier</span>
+    </div>
+
+    <div style="font-size:11px; letter-spacing:1.5px; color:var(--faint); font-weight:700; margin-top:22px;">PUBLIER DANS</div>
+    <div style="display:flex; gap:8px; margin-top:9px;">
+      <span style="font-size:13px; font-weight:700; padding:8px 15px; border-radius:17px; background:rgba(255,90,31,0.15); color:var(--acc); box-shadow: inset 0 0 0 1.5px rgba(255,90,31,0.6);">Mon fil</span>
+      <span style="font-size:13px; font-weight:600; padding:8px 15px; border-radius:17px; background:rgba(255,255,255,0.06); color:var(--mut);">🔒 The Crew</span>
+    </div>
+
+    <div style="font-size:11px; letter-spacing:1.5px; color:var(--faint); font-weight:700; margin-top:20px;">TYPE</div>
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <div class="card" style="flex:1; text-align:center; padding:14px 0 12px; box-shadow: inset 0 0 0 1.5px rgba(255,90,31,0.55), 0 10px 24px rgba(0,0,0,0.4);">
+        <div style="font-size:22px;">🏃</div><div style="font-size:12px; font-weight:700; margin-top:4px; color:var(--acc);">Séance</div>
+      </div>
+      <div class="card" style="flex:1; text-align:center; padding:14px 0 12px; opacity:0.72;">
+        <div style="font-size:22px;">👟</div><div style="font-size:12px; font-weight:600; margin-top:4px; color:var(--mut);">Pas</div>
+      </div>
+      <div class="card" style="flex:1; text-align:center; padding:14px 0 12px; opacity:0.72;">
+        <div style="font-size:22px;">🥗</div><div style="font-size:12px; font-weight:600; margin-top:4px; color:var(--mut);">Repas</div>
+      </div>
+      <div class="card" style="flex:1; text-align:center; padding:14px 0 12px; opacity:0.72;">
+        <div style="font-size:22px;">😴</div><div style="font-size:12px; font-weight:600; margin-top:4px; color:var(--mut);">Repos</div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px; font-size:19px; color:var(--faint); font-weight:300;">Raconte ta séance…</div>
+
+    <div style="display:flex; gap:10px; margin-top:18px;">
+      <span style="font-size:13px; font-weight:600; color:var(--ink); background:rgba(255,255,255,0.07); padding:9px 16px; border-radius:18px;">30 min</span>
+      <span style="font-size:13px; font-weight:700; color:var(--acc); background:rgba(255,90,31,0.14); padding:9px 16px; border-radius:18px; box-shadow: inset 0 0 0 1.5px rgba(255,90,31,0.55);">45 min</span>
+      <span style="font-size:13px; font-weight:600; color:var(--ink); background:rgba(255,255,255,0.07); padding:9px 16px; border-radius:18px;">60 min</span>
+      <span style="font-size:13px; font-weight:600; color:var(--mut); background:rgba(255,255,255,0.05); padding:9px 14px; border-radius:18px;">📷 Photo</span>
+    </div>
+
+    <!-- Récompense premium -->
+    <div class="card" style="margin-top:22px; padding:16px 18px; display:flex; align-items:center; gap:16px;">
+      <svg width="56" height="56" viewBox="0 0 56 56">
+        <circle cx="28" cy="28" r="23" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="5.5"/>
+        <circle cx="28" cy="28" r="23" fill="none" stroke="url(#ga)" stroke-width="5.5" stroke-linecap="round"
+                stroke-dasharray="101 145" transform="rotate(-90 28 28)"/>
+        <text x="28" y="33" text-anchor="middle" fill="#f2f4f8" font-size="13" font-weight="300">64%</text>
+      </svg>
+      <div style="flex:1;">
+        <div style="font-size:13px; color:var(--mut);">Cette activité te rapporte</div>
+        <div><span class="h-num" style="font-size:30px; color:var(--acc);">+50 XP</span>
+          <span style="font-size:12px; color:var(--mut);">· plus que 310 XP → niveau 8</span></div>
+      </div>
+    </div>
+    <div style="text-align:center; color:var(--faint); font-size:12px; margin-top:14px;">Ta série 🔥 continue — publication dans ton fil.</div>
+  </div>
+</div></div>
+
+</body>
+</html>

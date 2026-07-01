@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="fr">
+<!-- DIRECTION C — « GRAPHITE ÉDITORIAL » : Nike Training Club. Graphite profond,
+     photos plein-bleed avec typo ÉNORME par-dessus, capitales serrées, orange en
+     signature fine. Athlétique et graphique. -->
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --bg: #101013;
+    --ink: #f5f5f3;
+    --mut: #98979b;
+    --faint: #55555c;
+    --acc: #ff4d00;
+    --hair: rgba(255,255,255,0.09);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #060608;
+    font-family: -apple-system, 'Helvetica Neue', system-ui, sans-serif;
+    display: flex; gap: 42px; padding: 40px; align-items: flex-start;
+    -webkit-font-smoothing: antialiased;
+  }
+  .phone {
+    width: 390px; height: 844px; border-radius: 48px; overflow: hidden; position: relative;
+    background: var(--bg);
+    box-shadow: 0 0 0 10px #1a1a1e, 0 30px 80px rgba(0,0,0,0.8);
+    color: var(--ink); flex-shrink: 0;
+  }
+  .label { position: absolute; top: -30px; left: 12px; color: #6b7280; font-size: 13px; font-weight: 700; letter-spacing: 2px; }
+  .wrap { position: relative; }
+  .status { display: flex; justify-content: space-between; padding: 16px 28px 6px; font-size: 14px; font-weight: 600; }
+  .cap { text-transform: uppercase; font-weight: 900; letter-spacing: -0.5px; font-stretch: condensed; }
+  .tag { font-size: 10px; letter-spacing: 2.5px; font-weight: 800; color: var(--acc); text-transform: uppercase; }
+  .tabbar {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 86px;
+    background: rgba(10,10,12,0.92); backdrop-filter: blur(18px);
+    border-top: 1px solid var(--hair);
+    display: flex; align-items: flex-start; justify-content: space-around; padding-top: 12px;
+  }
+  .tab { text-align: center; color: var(--faint); font-size: 9.5px; font-weight: 800; letter-spacing: 1px; width: 60px; text-transform: uppercase; }
+  .tab .ic { font-size: 20px; display: block; margin-bottom: 4px; }
+  .tab.on { color: var(--ink); }
+  .tab.plus .ic {
+    width: 46px; height: 46px; margin: -8px auto 0; border-radius: 8px; line-height: 46px;
+    background: var(--acc); color: #0d0d10; font-size: 26px; font-weight: 800;
+    box-shadow: 0 8px 24px rgba(255,77,0,0.4);
+  }
+  .photo { width: 100%; object-fit: cover; display: block; }
+  .bleed { position: relative; overflow: hidden; border-radius: 6px; }
+  .bleed .ov { position: absolute; inset: 0; background: linear-gradient(200deg, rgba(16,16,19,0.05) 30%, rgba(16,16,19,0.88) 88%); }
+</style>
+</head>
+<body>
+
+<!-- ============================== ACCUEIL ============================== -->
+<div class="wrap"><div class="label">C · ACCUEIL</div>
+<div class="phone">
+  <div class="status"><span>9:41</span><span>􀙇 􀖀 􀋦</span></div>
+
+  <div style="display:flex; justify-content:space-between; align-items:flex-end; padding:8px 22px 0;">
+    <div>
+      <div class="tag">Mercredi 2 juillet</div>
+      <div class="cap" style="font-size:34px; margin-top:2px;">Aujourd&rsquo;hui</div>
+    </div>
+    <img class="photo" src="https://i.pravatar.cc/72?img=12" style="width:38px; height:38px; border-radius:6px;" />
+  </div>
+
+  <!-- strip toi : compteur monumental -->
+  <div style="display:flex; align-items:stretch; gap:0; margin:14px 22px 0; border:1px solid var(--hair); border-radius:6px; overflow:hidden;">
+    <div style="flex:1.1; padding:12px 14px; border-right:1px solid var(--hair);">
+      <div class="cap" style="font-size:40px; line-height:0.95;">12<span style="font-size:15px; color:var(--acc);">&nbsp;J</span></div>
+      <div class="tag" style="color:var(--mut); margin-top:4px;">Série 🔥</div>
+    </div>
+    <div style="flex:1; padding:12px 14px; border-right:1px solid var(--hair);">
+      <div class="cap" style="font-size:40px; line-height:0.95;">07</div>
+      <div class="tag" style="color:var(--mut); margin-top:4px;">Niveau</div>
+    </div>
+    <div style="flex:1.4; padding:12px 14px;">
+      <div style="display:flex; justify-content:space-between;"><span class="tag" style="color:var(--mut);">XP</span><span style="font-size:11px; color:var(--mut); font-weight:700;">1 240/1 600</span></div>
+      <div style="height:9px; background:#1c1c21; margin-top:9px;">
+        <div style="width:64%; height:9px; background:var(--acc);"></div>
+      </div>
+      <div class="tag" style="color:var(--mut); margin-top:7px;">Quêtes 2/3</div>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:20px; padding:16px 22px 4px;">
+    <span class="cap" style="font-size:14px; border-bottom:3px solid var(--acc); padding-bottom:5px;">Tout</span>
+    <span class="cap" style="font-size:14px; color:var(--faint);">Abonnements</span>
+    <span class="cap" style="font-size:14px; color:var(--faint);">Groupes</span>
+  </div>
+
+  <!-- Post photo plein-bleed, typo dessus -->
+  <div class="bleed" style="margin:12px 22px 0; height:210px;">
+    <img class="photo" src="https://picsum.photos/id/1011/680/440" style="height:210px;" />
+    <div class="ov"></div>
+    <div style="position:absolute; top:12px; left:12px; display:flex; gap:8px; align-items:center;">
+      <img class="photo" src="https://i.pravatar.cc/64?img=47" style="width:30px;height:30px;border-radius:5px;" />
+      <b style="font-size:13.5px; text-shadow:0 2px 8px rgba(0,0,0,0.6);">LÉA</b>
+      <span style="font-size:11.5px; color:rgba(255,255,255,0.75);">12 min</span>
+    </div>
+    <div style="position:absolute; left:14px; right:14px; bottom:12px;">
+      <div class="tag">Séance · Course</div>
+      <div class="cap" style="font-size:30px; line-height:1; margin-top:3px;">5,2 km au lac</div>
+      <div style="display:flex; gap:16px; margin-top:8px; font-size:12px; color:var(--mut); font-weight:700;">
+        <span>31:04</span><span>5:58 /km</span><span style="color:var(--acc);">+50 XP</span>
+        <span style="margin-left:auto;">💬 2 👏 5</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Post repos, bandeau graphique -->
+  <div style="margin:12px 22px 0; border-left:3px solid #2ea883; padding:10px 14px; background:#15151a; border-radius:0 6px 6px 0; display:flex; align-items:center; gap:10px;">
+    <img class="photo" src="https://i.pravatar.cc/64?img=68" style="width:30px;height:30px;border-radius:5px;" />
+    <div style="flex:1;">
+      <b style="font-size:13.5px;">NOA</b> <span style="font-size:11.5px; color:var(--faint);">1 h</span>
+      <div style="font-size:13.5px; color:var(--mut); margin-top:1px;">Jour de repos — série protégée</div>
+    </div>
+    <span class="cap" style="font-size:15px; color:#2ea883;">Récup</span>
+  </div>
+
+  <!-- Post pas -->
+  <div style="margin:12px 22px 0; padding:12px 14px; background:#15151a; border-radius:6px;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <img class="photo" src="https://i.pravatar.cc/64?img=33" style="width:30px;height:30px;border-radius:5px;" />
+      <b style="font-size:13.5px;">SAM</b> <span style="font-size:11.5px; color:var(--faint);">3 h · Pas</span>
+      <span style="margin-left:auto; color:var(--faint); font-size:12px;">💬 0 👏 1</span>
+    </div>
+    <div style="display:flex; align-items:flex-end; gap:14px; margin-top:8px;">
+      <div class="cap" style="font-size:36px; line-height:1;">10 248</div>
+      <svg width="130" height="30" style="margin-left:auto;"><polyline points="0,26 18,22 36,24 54,14 72,18 90,7 108,12 130,3"
+        fill="none" stroke="#ff4d00" stroke-width="2.5"/></svg>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <div class="tab on"><span class="ic">⌂</span>Accueil</div>
+    <div class="tab"><span class="ic">◎</span>Découvrir</div>
+    <div class="tab plus"><span class="ic">＋</span></div>
+    <div class="tab"><span class="ic">◔</span>Groupes</div>
+    <div class="tab"><span class="ic">◉</span>Profil</div>
+  </div>
+</div></div>
+
+<!-- ============================== PROFIL ============================== -->
+<div class="wrap"><div class="label">C · PROFIL</div>
+<div class="phone">
+  <div class="bleed" style="height:300px; border-radius:0;">
+    <img class="photo" src="https://picsum.photos/id/1015/780/620" style="height:300px;" />
+    <div class="ov" style="background:linear-gradient(190deg, rgba(16,16,19,0.1) 25%, rgba(16,16,19,0.96) 92%);"></div>
+    <div class="status" style="position:absolute; top:0; left:0; right:0;"><span>9:41</span><span>􀙇 􀖀 􀋦</span></div>
+    <div style="position:absolute; left:22px; right:22px; bottom:14px; display:flex; align-items:flex-end; justify-content:space-between;">
+      <div>
+        <div class="tag">Athlète · Niveau 9</div>
+        <div class="cap" style="font-size:44px; line-height:1;">Léa</div>
+        <div style="font-size:13px; color:var(--mut); margin-top:4px;">@lea · Jamais deux jours sans. 🏃‍♀️</div>
+      </div>
+      <span class="cap" style="font-size:13px; background:var(--acc); color:#0d0d10; padding:10px 18px; border-radius:5px;">Suivre</span>
+    </div>
+  </div>
+
+  <div style="display:flex; margin:0 22px; border-bottom:1px solid var(--hair);">
+    <div style="flex:1; padding:16px 0;"><div class="cap" style="font-size:34px;">128</div><div class="tag" style="color:var(--mut);">Séances</div></div>
+    <div style="flex:1; padding:16px 0;"><div class="cap" style="font-size:34px; color:var(--acc);">23 J</div><div class="tag" style="color:var(--mut);">Série 🔥</div></div>
+    <div style="flex:1; padding:16px 0;"><div class="cap" style="font-size:34px;">4 210</div><div class="tag" style="color:var(--mut);">XP</div></div>
+  </div>
+
+  <div style="padding:16px 22px 0;">
+    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+      <span class="tag">Progression · Corps</span>
+      <span style="font-size:12px; color:var(--mut); font-weight:700;">7/11</span>
+    </div>
+    <div style="display:flex; gap:5px; margin-top:12px;">
+      <div style="flex:1; height:34px; background:var(--acc);"></div>
+      <div style="flex:1; height:34px; background:var(--acc);"></div>
+      <div style="flex:1; height:34px; background:var(--acc);"></div>
+      <div style="flex:1; height:34px; background:var(--acc);"></div>
+      <div style="flex:1; height:34px; background:var(--acc); opacity:0.85;"></div>
+      <div style="flex:1; height:34px; background:var(--acc); opacity:0.7;"></div>
+      <div style="flex:1; height:34px; background:var(--acc); opacity:0.55;"></div>
+      <div style="flex:1; height:34px; background:#232329; outline:1.5px dashed var(--acc); outline-offset:-4px;"></div>
+      <div style="flex:1; height:34px; background:#1a1a1f;"></div>
+      <div style="flex:1; height:34px; background:#1a1a1f;"></div>
+      <div style="flex:1; height:34px; background:#1a1a1f;"></div>
+    </div>
+    <div style="display:flex; justify-content:space-between; margin-top:7px;">
+      <span style="font-size:11px; color:var(--mut); font-weight:700;">20 pompes ✓</span>
+      <span class="tag">Prochain : gainage 90 s</span>
+    </div>
+  </div>
+
+  <div style="padding:18px 22px 0;">
+    <span class="tag" style="color:var(--mut);">Dernières activités</span>
+    <div class="bleed" style="height:110px; margin-top:10px;">
+      <img class="photo" src="https://picsum.photos/id/1018/680/240" style="height:110px;" />
+      <div class="ov"></div>
+      <div style="position:absolute; left:12px; bottom:8px;">
+        <div class="cap" style="font-size:19px;">Trail — 9,4 km</div>
+        <div style="font-size:11px; color:var(--mut); font-weight:700;">hier · 💬 4 · 👏 12 · <span style="color:var(--acc);">+50 XP</span></div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:10px; padding:12px 2px; border-bottom:1px solid var(--hair);">
+      <div style="flex:1; font-size:14px; font-weight:600;">Course 5 km <span style="color:var(--faint);">· mardi</span></div>
+      <span class="cap" style="font-size:16px; color:var(--acc);">+50</span>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <div class="tab"><span class="ic">⌂</span>Accueil</div>
+    <div class="tab"><span class="ic">◎</span>Découvrir</div>
+    <div class="tab plus"><span class="ic">＋</span></div>
+    <div class="tab"><span class="ic">◔</span>Groupes</div>
+    <div class="tab on"><span class="ic">◉</span>Profil</div>
+  </div>
+</div></div>
+
+<!-- ============================== COMPOSER ============================== -->
+<div class="wrap"><div class="label">C · PUBLIER</div>
+<div class="phone">
+  <div class="status"><span>9:41</span><span>􀙇 􀖀 􀋦</span></div>
+  <div style="padding:8px 22px 0;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span style="color:var(--mut); font-size:15px; font-weight:600;">✕</span>
+      <span class="cap" style="font-size:20px;">Nouvelle activité</span>
+      <span class="cap" style="font-size:13px; background:var(--acc); color:#0d0d10; padding:10px 18px; border-radius:5px;">Publier</span>
+    </div>
+
+    <div class="tag" style="margin-top:26px;">Publier dans</div>
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      <span class="cap" style="font-size:13px; padding:9px 16px; background:#1d1d22; border-bottom:3px solid var(--acc);">Mon fil</span>
+      <span class="cap" style="font-size:13px; padding:9px 16px; background:#17171b; color:var(--faint);">🔒 The Crew</span>
+    </div>
+
+    <div class="tag" style="margin-top:22px;">Type</div>
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      <div style="flex:1; text-align:center; padding:16px 0 13px; background:#1d1d22; border-bottom:3px solid var(--acc);">
+        <div style="font-size:22px;">🏃</div><div class="cap" style="font-size:12px; margin-top:5px;">Séance</div>
+      </div>
+      <div style="flex:1; text-align:center; padding:16px 0 13px; background:#17171b;">
+        <div style="font-size:22px; filter:grayscale(0.7); opacity:0.7;">👟</div><div class="cap" style="font-size:12px; margin-top:5px; color:var(--faint);">Pas</div>
+      </div>
+      <div style="flex:1; text-align:center; padding:16px 0 13px; background:#17171b;">
+        <div style="font-size:22px; filter:grayscale(0.7); opacity:0.7;">🥗</div><div class="cap" style="font-size:12px; margin-top:5px; color:var(--faint);">Repas</div>
+      </div>
+      <div style="flex:1; text-align:center; padding:16px 0 13px; background:#17171b;">
+        <div style="font-size:22px; filter:grayscale(0.7); opacity:0.7;">😴</div><div class="cap" style="font-size:12px; margin-top:5px; color:var(--faint);">Repos</div>
+      </div>
+    </div>
+
+    <div class="cap" style="margin-top:26px; font-size:26px; color:var(--faint);">Raconte ta séance_</div>
+
+    <div style="display:flex; gap:8px; margin-top:20px;">
+      <span class="cap" style="font-size:13px; padding:10px 16px; background:#17171b; color:var(--mut);">30 min</span>
+      <span class="cap" style="font-size:13px; padding:10px 16px; background:#1d1d22; border-bottom:3px solid var(--acc);">45 min</span>
+      <span class="cap" style="font-size:13px; padding:10px 16px; background:#17171b; color:var(--mut);">60 min</span>
+      <span class="cap" style="font-size:13px; padding:10px 16px; background:#17171b; color:var(--mut); outline:1.5px dashed var(--faint); outline-offset:-4px;">📷 Photo</span>
+    </div>
+
+    <div style="margin-top:26px; border:1px solid var(--hair); border-radius:6px; padding:16px 18px; position:relative; overflow:hidden;">
+      <div style="position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--acc);"></div>
+      <div style="display:flex; align-items:baseline; justify-content:space-between;">
+        <div>
+          <div class="tag" style="color:var(--mut);">Récompense</div>
+          <div class="cap" style="font-size:40px; color:var(--acc); line-height:1.05;">+50 XP</div>
+        </div>
+        <div style="text-align:right; font-size:12px; color:var(--mut); font-weight:700;">
+          310 XP → NIVEAU 8<br/>
+          <div style="width:120px; height:8px; background:#1c1c21; margin-top:8px;"><div style="width:64%; height:8px; background:var(--acc);"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="tag" style="text-align:center; color:var(--faint); margin-top:16px;">Série 🔥 protégée · publication dans ton fil</div>
+  </div>
+</div></div>
+
+</body>
+</html>
