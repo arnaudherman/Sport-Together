@@ -138,7 +138,7 @@ export function AuthedFlow({ userId }: { userId: string }) {
   if (view === 'log') {
     // Solo-first (ADR-0010) : on publie toujours, même sans groupe (post solo).
     return (
-      <LogScreen groupId={postingGroupId} onDone={() => setView('home')} onCancel={() => setView('home')} />
+      <LogScreen groupId={postingGroupId} userId={userId} onDone={() => setView('home')} onCancel={() => setView('home')} />
     );
   }
 

@@ -74,7 +74,7 @@ const SCREENS: { label: string; node: ReactNode }[] = [
   },
   {
     label: 'Publier',
-    node: <LogScreen groupId="demo-group" onDone={noop} onCancel={noop} />,
+    node: <LogScreen groupId="demo-group" userId="local-user" onDone={noop} onCancel={noop} />,
   },
 ];
 

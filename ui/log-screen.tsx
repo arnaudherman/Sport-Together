@@ -1,13 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { useFeedRepository } from '@/core/di/repositories-context';
 import type { FeedItemType } from '@/domain/entities/feed';
-import { xpForType } from '@/domain/usecases/gamification';
+import { celebrationFor, type Celebration, type ProgressSnapshot } from '@/domain/usecases/celebration';
+import { xpForType, xpFromFeed } from '@/domain/usecases/gamification';
 import { validateMeal } from '@/domain/usecases/nutrition';
+import { sessionsUnlocked } from '@/domain/usecases/skill-graph';
+import { CelebrationOverlay } from '@/ui/celebration-overlay';
 import { colors, font, radius } from '@/ui/theme';
 
 const TABS: { type: FeedItemType; label: string; icon: string }[] = [
@@ -32,10 +35,12 @@ function toNumber(value: string): number | undefined {
 /** Composer type Twitter : publier une séance / des pas / un repas (ADR-0002 / 0008). */
 export function LogScreen({
   groupId,
+  userId,
   onDone,
   onCancel,
 }: {
   groupId: string | null;
+  userId: string;
   onDone: () => void;
   onCancel: () => void;
 }) {
@@ -51,6 +56,35 @@ export function LogScreen({
   const [fat, setFat] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [celebration, setCelebration] = useState<Celebration>(null);
+  const before = useRef<ProgressSnapshot | null>(null);
+  const mounted = useRef(true);
+  const tz = -new Date().getTimezoneOffset();
+
+  // Progression AVANT le log, pour décider s'il faut célébrer (level-up / palier).
+  useEffect(() => {
+    mounted.current = true;
+    feed
+      .listUserFeed(userId)
+      .then((items) => {
+        before.current = { xp: xpFromFeed(items, userId), unlocked: sessionsUnlocked(items, userId, tz) };
+      })
+      .catch(() => {});
+    return () => {
+      mounted.current = false;
+    };
+  }, [feed, userId, tz]);
+
+  async function computeCelebration(): Promise<Celebration> {
+    if (!before.current) return null;
+    try {
+      const items = await feed.listUserFeed(userId);
+      const after = { xp: xpFromFeed(items, userId), unlocked: sessionsUnlocked(items, userId, tz) };
+      return celebrationFor(before.current, after);
+    } catch {
+      return null;
+    }
+  }
 
   async function submit() {
     setError(null);
@@ -82,11 +116,16 @@ export function LogScreen({
         await feed.logMeal(groupId, input);
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      onDone();
+      const c = await computeCelebration();
+      if (c && mounted.current) {
+        setCelebration(c); // l'overlay appelle onDone à sa fermeture
+      } else {
+        onDone();
+      }
     } catch (e) {
       setError((e as Error).message);
     } finally {
-      setBusy(false);
+      if (mounted.current) setBusy(false);
     }
   }
 
@@ -216,6 +255,8 @@ export function LogScreen({
           {groupId ? 'Ta publication apparaîtra dans le fil de ton groupe.' : 'Ta publication apparaîtra dans ton fil.'}
         </Text>
       </ScrollView>
+
+      <CelebrationOverlay celebration={celebration} onDismiss={onDone} />
     </View>
   );
 }
