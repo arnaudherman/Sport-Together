@@ -6,6 +6,8 @@ import { InMemoryAuthRepository } from '@/data/auth/in-memory-auth-repository';
 import { SupabaseAuthRepository } from '@/data/auth/supabase-auth-repository';
 import { DEMO_REACTIONS, InMemoryFeedRepository } from '@/data/feed/in-memory-feed-repository';
 import { SupabaseFeedRepository } from '@/data/feed/supabase-feed-repository';
+import { InMemoryFollowRepository } from '@/data/follow/in-memory-follow-repository';
+import { SupabaseFollowRepository } from '@/data/follow/supabase-follow-repository';
 import { InMemoryGroupRepository } from '@/data/group/in-memory-group-repository';
 import { SupabaseGroupRepository } from '@/data/group/supabase-group-repository';
 import { InMemoryNotificationRepository } from '@/data/notification/in-memory-notification-repository';
@@ -17,6 +19,7 @@ import { InMemoryReactionStore } from '@/data/reaction/in-memory-reaction-store'
 import { SupabaseReactionRepository } from '@/data/reaction/supabase-reaction-repository';
 import type { AuthRepository } from '@/domain/repositories/auth-repository';
 import type { FeedRepository } from '@/domain/repositories/feed-repository';
+import type { FollowRepository } from '@/domain/repositories/follow-repository';
 import type { GroupRepository } from '@/domain/repositories/group-repository';
 import type { NotificationRepository } from '@/domain/repositories/notification-repository';
 import type { ProfileRepository } from '@/domain/repositories/profile-repository';
@@ -34,6 +37,7 @@ export interface Repositories {
   feed: FeedRepository;
   reaction: ReactionRepository;
   notification: NotificationRepository;
+  follow: FollowRepository;
 }
 
 const RepositoriesContext = createContext<Repositories | null>(null);
@@ -48,6 +52,7 @@ function createDefaultRepositories(): Repositories {
       feed: new SupabaseFeedRepository(client),
       reaction: new SupabaseReactionRepository(client),
       notification: new SupabaseNotificationRepository(client),
+      follow: new SupabaseFollowRepository(client),
     };
   }
   // Mode hors-ligne : feed et réactions partagent le même store en mémoire.
@@ -60,6 +65,7 @@ function createDefaultRepositories(): Repositories {
     feed: new InMemoryFeedRepository(undefined, reactionStore),
     reaction: new InMemoryReactionRepository(reactionStore),
     notification: new InMemoryNotificationRepository(),
+    follow: new InMemoryFollowRepository(),
   };
 }
 
@@ -108,4 +114,8 @@ export function useReactionRepository(): ReactionRepository {
 
 export function useNotificationRepository(): NotificationRepository {
   return useRepositories().notification;
+}
+
+export function useFollowRepository(): FollowRepository {
+  return useRepositories().follow;
 }

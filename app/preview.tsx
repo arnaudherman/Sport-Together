@@ -36,6 +36,7 @@ const SCREENS: { label: string; node: ReactNode }[] = [
         onBack={noop}
         onOpenGroup={noop}
         onJoinGroup={noop}
+        onOpenAccount={noop}
       />
     ),
   },

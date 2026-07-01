@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useFeedRepository, useReactionRepository } from '@/core/di/repositories-context';
+import { useFeedRepository, useFollowRepository, useReactionRepository } from '@/core/di/repositories-context';
 import type { FeedItem, ReactionKind } from '@/domain/entities/feed';
 import { avatarColor, initial } from '@/ui/format';
 import { FeedItemCard } from '@/ui/feed-item-card';
@@ -33,8 +33,10 @@ export function FeedView({
 }) {
   const feed = useFeedRepository();
   const reactionRepo = useReactionRepository();
+  const followRepo = useFollowRepository();
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState<FeedItem[]>([]);
+  const [following, setFollowing] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -66,6 +68,15 @@ export function FeedView({
     load();
   }, [load]);
 
+  useEffect(() => {
+    followRepo
+      .listFollowing()
+      .then((f) => {
+        if (mounted.current) setFollowing(f);
+      })
+      .catch(() => {});
+  }, [followRepo]);
+
   async function refresh() {
     setRefreshing(true);
     await load();
@@ -73,10 +84,10 @@ export function FeedView({
   }
 
   const filtered = useMemo(() => {
-    if (tab === 'abonnements') return items.filter((i) => !i.groupName && i.authorId !== userId);
+    if (tab === 'abonnements') return items.filter((i) => following.includes(i.authorId));
     if (tab === 'groupes') return items.filter((i) => !!i.groupName);
     return items;
-  }, [items, tab, userId]);
+  }, [items, tab, following]);
 
   async function toggleReaction(item: FeedItem, kind: ReactionKind) {
     const active = (item.reactions?.mine ?? []).includes(kind);

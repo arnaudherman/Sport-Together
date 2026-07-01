@@ -3,7 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { useFeedRepository } from '@/core/di/repositories-context';
+import { useFeedRepository, useFollowRepository } from '@/core/di/repositories-context';
 import { EMPTY_REACTIONS, type FeedItem } from '@/domain/entities/feed';
 import { levelForXp, xpFromFeed } from '@/domain/usecases/gamification';
 import { MUSCU_GRAPH, sessionsUnlocked } from '@/domain/usecases/skill-graph';
@@ -25,6 +25,7 @@ export function ProfileScreen({
   onBack,
   onOpenGroup,
   onJoinGroup,
+  onOpenAccount,
 }: {
   targetUserId: string;
   targetName: string;
@@ -33,8 +34,10 @@ export function ProfileScreen({
   onBack: () => void;
   onOpenGroup: (id: string) => void;
   onJoinGroup: () => void;
+  onOpenAccount: () => void;
 }) {
   const feedRepo = useFeedRepository();
+  const followRepo = useFollowRepository();
   const [items, setItems] = useState<FeedItem[]>([]);
   const [following, setFollowing] = useState(false);
   const [tab, setTab] = useState<Tab>('publications');
@@ -66,6 +69,17 @@ export function ProfileScreen({
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const isSelf = targetUserId === currentUserId || targetUserId === 'local-user';
+    if (isSelf) return;
+    followRepo
+      .isFollowing(targetUserId)
+      .then((f) => {
+        if (mounted.current) setFollowing(f);
+      })
+      .catch(() => {});
+  }, [targetUserId, currentUserId, followRepo]);
 
   const tz = -new Date().getTimezoneOffset();
   const xp = useMemo(() => xpFromFeed(items, targetUserId), [items, targetUserId]);
@@ -120,14 +134,28 @@ export function ProfileScreen({
             {!isMe ? (
               <Pressable
                 style={[styles.follow, following && styles.followOn]}
-                onPress={() => setFollowing((f) => !f)}
+                onPress={async () => {
+                  const next = !following;
+                  setFollowing(next);
+                  try {
+                    if (next) await followRepo.follow(targetUserId);
+                    else await followRepo.unfollow(targetUserId);
+                  } catch {
+                    if (mounted.current) setFollowing(!next);
+                  }
+                }}
               >
                 <Ionicons name={following ? 'checkmark' : 'add'} size={16} color={following ? colors.text : '#0B0B0D'} />
                 <Text style={[styles.followText, following && styles.followTextOn]}>
                   {following ? 'Suivi' : 'Suivre'}
                 </Text>
               </Pressable>
-            ) : null}
+            ) : (
+              <Pressable style={styles.settings} onPress={onOpenAccount}>
+                <Ionicons name="settings-outline" size={16} color={colors.text} />
+                <Text style={styles.settingsText}>Compte</Text>
+              </Pressable>
+            )}
           </View>
 
           <View style={styles.nameRow}>
@@ -217,6 +245,8 @@ const styles = StyleSheet.create({
   followOn: { backgroundColor: colors.surfaceElevated },
   followText: { color: '#0B0B0D', fontWeight: '800' },
   followTextOn: { color: colors.text },
+  settings: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 10, minHeight: 44, marginBottom: 4 },
+  settingsText: { color: colors.text, fontWeight: '700', fontSize: 14 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, paddingHorizontal: 4 },
   name: { ...font.h1 },
   levelPill: { backgroundColor: colors.surfaceElevated, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 },

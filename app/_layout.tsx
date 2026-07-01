@@ -7,7 +7,7 @@ export default function RootLayout() {
   return (
     <RepositoriesProvider>
       <SafeAreaProvider>
-        <Stack screenOptions={{ headerTitle: 'Sport Together' }} />
+        <Stack screenOptions={{ headerShown: false }} />
       </SafeAreaProvider>
     </RepositoriesProvider>
   );

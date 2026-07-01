@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { useGroupRepository } from '@/core/di/repositories-context';
 import type { Group } from '@/domain/entities/group';
+import { AccountScreen } from '@/ui/account-screen';
 import { ErrorRetry } from '@/ui/error-retry';
 import { FeedView } from '@/ui/feed-view';
 import { GroupGate } from '@/ui/group-gate';
@@ -17,6 +18,7 @@ type Screen =
   | 'home'
   | 'log'
   | 'groups'
+  | 'account'
   | { profile: { id: string; name: string } }
   | { group: { id: string } };
 
@@ -72,8 +74,13 @@ export function AuthedFlow({ userId }: { userId: string }) {
         onBack={() => setView('home')}
         onOpenGroup={(id) => setView({ group: { id } })}
         onJoinGroup={() => setView('groups')}
+        onOpenAccount={() => setView('account')}
       />
     );
+  }
+
+  if (view === 'account') {
+    return <AccountScreen pseudo={profile.pseudo} onBack={() => setView('home')} />;
   }
 
   if (typeof view === 'object' && 'group' in view) {
