@@ -122,17 +122,10 @@ export class SupabaseFeedRepository implements FeedRepository {
     return this.listFeed({ column: 'author_id', value: userId });
   }
 
-  // Publier en solo (group_id null) exige une timeline perso côté backend (backlog).
-  private requireGroup(groupId: string | null): string {
-    if (groupId === null) {
-      throw new Error("Publier en solo arrive bientôt — rejoins un groupe pour l'instant.");
-    }
-    return groupId;
-  }
-
   async logSession(groupId: string | null, activity: string, durationMin?: number): Promise<void> {
+    // groupId null = post SOLO (timeline perso) — supporté par la RPC (migration solo_timeline).
     const { error } = await this.client.rpc('log_session', {
-      p_group_id: this.requireGroup(groupId),
+      p_group_id: groupId,
       p_activity: activity,
       p_duration_min: durationMin ?? null,
     });
@@ -141,7 +134,7 @@ export class SupabaseFeedRepository implements FeedRepository {
 
   async logSteps(groupId: string | null, steps: number): Promise<void> {
     const { error } = await this.client.rpc('log_steps', {
-      p_group_id: this.requireGroup(groupId),
+      p_group_id: groupId,
       p_steps: steps,
     });
     if (error) throw new Error(error.message);
@@ -149,7 +142,7 @@ export class SupabaseFeedRepository implements FeedRepository {
 
   async logMeal(groupId: string | null, meal: MealInput): Promise<void> {
     const { error } = await this.client.rpc('log_meal', {
-      p_group_id: this.requireGroup(groupId),
+      p_group_id: groupId,
       p_label: meal.label,
       p_moment: meal.moment ?? null,
       p_calories_kcal: meal.caloriesKcal ?? null,

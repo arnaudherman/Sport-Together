@@ -212,6 +212,31 @@ async function main() {
     assert.equal(after.length, 0, 'ne plus suivre retire la visibilité');
   });
 
+  await step('timeline perso : post solo (group_id null) visible par soi + abonnés seulement', async () => {
+    // alice publie en SOLO via la RPC (p_group_id null) — le cas nominal solo-first.
+    const fid = (await asUser(ALICE, `select public.log_session(null, 'Course solo', 25) as id`)).rows[0].id;
+    const row = (await admin(`select group_id from public.feed_items where id=$1`, [fid])).rows[0];
+    assert.equal(row.group_id, null, 'post solo sans groupe');
+    // l'auteure le voit (avec son détail).
+    const mine = (await asUser(ALICE, `select id from public.feed_items where id=$1`, [fid])).rows;
+    assert.equal(mine.length, 1, 'alice voit son post solo');
+    // bob (co-membre du groupe A mais non abonné) ne le voit PAS : solo = fil perso.
+    const bobSees = (await asUser(BOB, `select id from public.feed_items where id=$1`, [fid])).rows;
+    assert.equal(bobSees.length, 0, 'un co-membre non abonné ne voit pas le post solo');
+    // dave s'abonne à alice -> il voit le post + son détail, peut réagir ET commenter.
+    await asUser(DAVE, `insert into public.follows (follower_id, followee_id) values ($1,$2)`, [DAVE, ALICE]);
+    const daveSees = (await asUser(DAVE, `select id from public.feed_items where id=$1`, [fid])).rows;
+    assert.equal(daveSees.length, 1, 'un abonné voit le post solo');
+    const detail = (await asUser(DAVE, `select activity from public.sessions where feed_item_id=$1`, [fid])).rows;
+    assert.equal(detail.length, 1, 'le détail (session) suit la visibilité');
+    await asUser(DAVE, `insert into public.reactions (feed_item_id, author_id, kind) values ($1,$2,'kudos')`, [fid, DAVE]);
+    await asUser(DAVE, `insert into public.comments (feed_item_id, author_id, text) values ($1,$2,'Bien joué !')`, [fid, DAVE]);
+    // se désabonner retire tout.
+    await asUser(DAVE, `delete from public.follows where follower_id=$1 and followee_id=$2`, [DAVE, ALICE]);
+    const after = (await asUser(DAVE, `select id from public.feed_items where id=$1`, [fid])).rows;
+    assert.equal(after.length, 0, 'ne plus suivre retire la visibilité du post solo');
+  });
+
   await step('throttle nudge : l\'index unique (émetteur, cible, bucket 12h) bloque le doublon', async () => {
     const b0 = '2026-07-01T00:00:00.000Z';
     const b1 = '2026-07-01T12:00:00.000Z';

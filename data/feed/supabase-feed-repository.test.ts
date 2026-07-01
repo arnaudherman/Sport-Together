@@ -16,13 +16,14 @@ function fakeClient() {
 }
 
 describe('SupabaseFeedRepository — contrat de publication', () => {
-  it('REJETTE la publication solo (groupId null) sur les 3 types, sans appeler la RPC', async () => {
+  it('publie en SOLO (groupId null) : la RPC reçoit p_group_id null (timeline perso)', async () => {
     const { client, calls } = fakeClient();
     const repo = new SupabaseFeedRepository(client);
-    await expect(repo.logSession(null, 'Course')).rejects.toThrow(/solo/i);
-    await expect(repo.logSteps(null, 100)).rejects.toThrow(/solo/i);
-    await expect(repo.logMeal(null, { label: 'Bowl' })).rejects.toThrow(/solo/i);
-    expect(calls).toHaveLength(0); // la garde tombe AVANT tout appel réseau
+    await repo.logSession(null, 'Course', 25);
+    await repo.logSteps(null, 100);
+    expect(calls.map((c) => c.name)).toEqual(['log_session', 'log_steps']);
+    expect(calls[0].params).toEqual({ p_group_id: null, p_activity: 'Course', p_duration_min: 25 });
+    expect(calls[1].params).toEqual({ p_group_id: null, p_steps: 100 });
   });
 
   it('appelle log_session avec le bon groupe quand groupId est fourni', async () => {

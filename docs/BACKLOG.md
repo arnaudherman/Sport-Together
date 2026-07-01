@@ -43,9 +43,11 @@
   écran **Découvrir** ✓. **Visibilité RLS ✓** (`follow_feed_visibility` : `is_followed`/
   `can_see_item` — les posts + détails + réactions + commentaires + profil d'un auteur suivi
   HORS groupe commun sont visibles ; isolation préservée, harnais RLS **16/16**).
-- [ ] **Timeline perso backend** : publier « solo » sans groupe (`group_id` nullable ou
-  groupe perso auto-provisionné) + RLS d'insert/lecture. Front prêt (post solo en mock) ;
-  côté Supabase `logSession(null)` renvoie « bientôt » en attendant.
+- [x] **Timeline perso backend** ✓ (migration `solo_timeline`) : `group_id` **nullable**,
+  RPC `log_*` acceptent null, triggers sync/freeze/notify null-safe, FK simple d'intégrité
+  sur les tables enfants, **réagir/commenter partout où l'on voit le post** (`can_see_item`).
+  Post solo visible par l'auteur + ses abonnés seulement — harnais RLS **18/18**. Le client
+  Supabase publie en solo (plus de « bientôt »).
 - [~] **Commentaires** : écran Réponses + compteur + tables/RLS ✓ (mock complet). Reste :
   temps réel + notifications de réponse.
 - [ ] **Arbres de compétences** : au-delà de Muscu → Souffle, Hygiène de vie, Esprit/Lecture.

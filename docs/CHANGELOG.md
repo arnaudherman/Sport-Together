@@ -6,6 +6,21 @@ pas encore versionné (pré-MVP) ; entrées par date. Détail des décisions dan
 
 ## [Non publié]
 
+### 2026-07-01 — Timeline perso (backend) : publier en solo, pour de vrai
+
+- **`group_id` nullable** sur `feed_items` (+ tables enfants) : un post solo n'a pas de
+  groupe ; il est visible par **l'auteur + ses abonnés seulement** (un co-membre de groupe
+  non abonné ne le voit pas — solo = fil perso). RPC `log_*` acceptent `p_group_id null`.
+- **Triggers réécrits null-safe** : sync (`found` au lieu de la sentinelle `is null`),
+  freeze (`is distinct from`), notify (post solo → pas de notification de groupe).
+- **FK simple d'intégrité** ajoutée aux 5 tables enfants (la FK composite MATCH SIMPLE
+  n'est pas appliquée quand `group_id` est null).
+- **Réagir / commenter partout où l'on voit le post** (`can_see_item`) : débloque les
+  réactions des abonnés sur les posts solo ET sur les posts de groupe des auteurs suivis.
+- Client Supabase : `logSession/logSteps/logMeal(null)` **publient** (fin du « bientôt »).
+- Prouvé sur le harnais : **18/18** (nouveau test « timeline perso » : auteur ✓, co-membre
+  ✗, abonné ✓ + réaction + commentaire, unfollow ✗) — toute l'isolation existante tient.
+
 ### 2026-07-01 — Maintenabilité : mutualisation (dette de l'audit qualité)
 
 - **`useAsyncData`** : hook mutualisant le cycle *mounted-ref + load + loading/erreur +
