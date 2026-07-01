@@ -43,7 +43,7 @@ export function LevelHeader({
 
   return (
     <LinearGradient
-      colors={['#2c1d12', '#191411']}
+      colors={gradients.panel}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.card}

@@ -17,7 +17,7 @@ import { avatarColor, initial, timeAgo } from '@/ui/format';
 import { InviteCodeActions } from '@/ui/invite-code-actions';
 import { ScreenHeader } from '@/ui/screen-header';
 import { ScreenState } from '@/ui/screen-state';
-import { colors, font, radius } from '@/ui/theme';
+import { colors, font, gradients, radius } from '@/ui/theme';
 import { useAsyncData } from '@/ui/use-async-data';
 
 /** Écran Groupe : présence du jour vivante + entraide + streak collectif. */
@@ -205,9 +205,9 @@ export function GroupScreen({
       <ScreenState loading={loading} error={error} hasData={members.length > 0} onRetry={reload}>
         <ScrollView contentContainerStyle={styles.scroll}>
           <LinearGradient
-            colors={['#2c1d12', '#191411']}
+            colors={gradients.panel}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+            end={{ x: 0.6, y: 1 }}
             style={styles.heroCard}
           >
             <View style={styles.between}>

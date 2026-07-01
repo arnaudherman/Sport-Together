@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
@@ -15,7 +16,7 @@ import { FollowButton } from '@/ui/follow-button';
 import type { FollowListKind } from '@/ui/follow-list-screen';
 import { HolyGraph } from '@/ui/holy-graph';
 import { ScreenState } from '@/ui/screen-state';
-import { colors, font, radius } from '@/ui/theme';
+import { colors, font, gradients, radius } from '@/ui/theme';
 import { useAsyncData } from '@/ui/use-async-data';
 
 type Tab = 'publications' | 'competences' | 'medias';
@@ -90,6 +91,7 @@ export function ProfileScreen({
     return n;
   }, [items]);
 
+  const coverUrl = useMemo(() => items.find((i) => i.photoUrl)?.photoUrl, [items]);
   const av = avatarColor(targetUserId);
   const isMe = targetUserId === currentUserId;
   const name = isMe ? 'Moi' : profile?.pseudo ?? targetName;
@@ -139,12 +141,22 @@ export function ProfileScreen({
 
       <ScreenState loading={loading} error={error} hasData={items.length > 0} onRetry={reload}>
         <ScrollView contentContainerStyle={styles.scroll}>
-          <LinearGradient
-            colors={['#1a2733', '#3b4a3a', '#6b4a2a', '#241a12']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.cover}
-          />
+          {coverUrl ? (
+            <View style={styles.cover}>
+              <Image source={{ uri: coverUrl }} style={styles.coverImg} contentFit="cover" transition={200} />
+              <LinearGradient
+                colors={['rgba(10,12,16,0.15)', 'rgba(10,12,16,0.9)']}
+                style={styles.coverImg}
+              />
+            </View>
+          ) : (
+            <LinearGradient
+              colors={gradients.panel}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.cover}
+            />
+          )}
           <View style={styles.headRow}>
             <View style={[styles.avatar, { backgroundColor: av.bg }]}>
               <Text style={[styles.avatarText, { color: av.fg }]}>{initial(name)}</Text>
@@ -182,10 +194,19 @@ export function ProfileScreen({
               <Text style={styles.bioAdd}>＋ Ajoute une bio</Text>
             </Pressable>
           ) : null}
-          <View style={styles.stats}>
-            <Text style={styles.statText}><Text style={styles.statNum}>{items.length}</Text> publications</Text>
-            <Text style={styles.statText}><Text style={styles.statNum}>{bravos}</Text> bravos</Text>
-            <Text style={styles.statText}><Text style={styles.statNum}>{xp}</Text> XP</Text>
+          <View style={styles.heroRow}>
+            <View style={styles.hero}>
+              <Text style={styles.heroNum}>{items.length}</Text>
+              <Text style={styles.heroLabel}>Publications</Text>
+            </View>
+            <View style={styles.hero}>
+              <Text style={[styles.heroNum, styles.heroAccent]}>{streak}</Text>
+              <Text style={styles.heroLabel}>Jours de suite</Text>
+            </View>
+            <View style={styles.hero}>
+              <Text style={styles.heroNum}>{xp}</Text>
+              <Text style={styles.heroLabel}>XP · {bravos} bravos</Text>
+            </View>
           </View>
 
           {isMe ? (
@@ -284,6 +305,12 @@ const styles = StyleSheet.create({
   streak: { fontSize: 14, color: colors.accent, fontWeight: '700' },
   bio: { ...font.body, marginTop: 8, paddingHorizontal: 4 },
   bioAdd: { ...font.body, color: colors.accent, fontWeight: '700', marginTop: 8, paddingHorizontal: 4 },
+  coverImg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  heroRow: { flexDirection: 'row', gap: 26, marginTop: 16, paddingHorizontal: 4 },
+  hero: {},
+  heroNum: { ...font.stat, fontSize: 38 },
+  heroAccent: { color: colors.accent },
+  heroLabel: { ...font.label, fontSize: 10, marginTop: 2 },
   stats: { flexDirection: 'row', gap: 16, marginTop: 10, paddingHorizontal: 4 },
   statText: { fontSize: 13, color: colors.textMuted },
   statNum: { color: colors.text, fontWeight: '800' },

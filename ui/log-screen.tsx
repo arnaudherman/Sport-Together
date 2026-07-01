@@ -291,7 +291,7 @@ export function LogScreen({
         </View>
 
         <LinearGradient
-          colors={['rgba(240,101,47,0.22)', 'rgba(240,101,47,0.05)']}
+          colors={['rgba(255,90,31,0.20)', 'rgba(255,90,31,0.04)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.reward}
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   mInput: { flex: 1, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: 10, paddingVertical: 12, fontSize: 14, color: colors.text, textAlign: 'center' },
   tools: { flexDirection: 'row', gap: 20, alignItems: 'center', paddingLeft: 56, paddingTop: 2 },
   toolsHint: { color: colors.textMuted, fontSize: 12 },
-  reward: { borderRadius: radius.md, padding: 16, gap: 6, borderWidth: 1, borderColor: 'rgba(240,101,47,0.25)' },
+  reward: { borderRadius: radius.md, padding: 16, gap: 6, borderWidth: 1, borderColor: 'rgba(255,90,31,0.22)' },
   rewardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   rewardLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   rewardLabel: { ...font.label },
