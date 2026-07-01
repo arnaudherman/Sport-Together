@@ -2,14 +2,14 @@ import 'react-native-url-polyfill/auto';
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 import { env } from '@/core/env';
 
 /**
  * Stockage de session CHIFFRÉ (ADR-0005) adossé à expo-secure-store (Keychain iOS
- * / Keystore Android). Le jeton de session n'est JAMAIS en clair. La valeur est
- * découpée en morceaux < limite SecureStore (~2 Ko), donc robuste aux sessions
- * volumineuses.
+ * / Keystore Android) SUR NATIF UNIQUEMENT. Le jeton de session n'est jamais en
+ * clair. La valeur est découpée en morceaux < limite SecureStore (~2 Ko).
  */
 const CHUNK = 1800;
 
@@ -42,6 +42,34 @@ const secureStorage = {
 };
 
 /**
+ * Stockage web : localStorage (standard pour Supabase sur web), avec garde SSR —
+ * pendant le rendu statique/Node il n'y a pas de localStorage → no-op (pas de
+ * session persistée côté serveur, ce qui est correct). expo-secure-store n'existe
+ * pas sur web : l'utiliser plantait le rendu web (getValueWithKeyAsync undefined).
+ */
+type WebStore = {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+};
+
+function webLocalStorage(): WebStore | undefined {
+  return (globalThis as { localStorage?: WebStore }).localStorage;
+}
+
+const webStorage = {
+  async getItem(key: string): Promise<string | null> {
+    return webLocalStorage()?.getItem(key) ?? null;
+  },
+  async setItem(key: string, value: string): Promise<void> {
+    webLocalStorage()?.setItem(key, value);
+  },
+  async removeItem(key: string): Promise<void> {
+    webLocalStorage()?.removeItem(key);
+  },
+};
+
+/**
  * Client Supabase unique (ADR-0001 / ADR-0007). Vit dans core/, injecté dans les
  * repositories de data/ ; la présentation ne le touche jamais.
  */
@@ -51,7 +79,7 @@ export function getSupabaseClient(): SupabaseClient {
   if (!client) {
     client = createClient(env.supabaseUrl, env.supabaseAnonKey, {
       auth: {
-        storage: secureStorage,
+        storage: Platform.OS === 'web' ? webStorage : secureStorage,
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: false,
