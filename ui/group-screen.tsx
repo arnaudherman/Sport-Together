@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import {
   useFeedRepository,
@@ -13,6 +13,7 @@ import type { FeedItem } from '@/domain/entities/feed';
 import type { GroupMember } from '@/domain/entities/group';
 import { currentStreak, localDayKey } from '@/domain/usecases/streak';
 import { avatarColor, initial, timeAgo } from '@/ui/format';
+import { ScreenHeader } from '@/ui/screen-header';
 import { ScreenState } from '@/ui/screen-state';
 import { colors, font, radius } from '@/ui/theme';
 import { useAsyncData } from '@/ui/use-async-data';
@@ -23,11 +24,14 @@ export function GroupScreen({
   userId,
   onBack,
   onOpenProfile,
+  onLeft,
 }: {
   groupId: string;
   userId: string;
   onBack: () => void;
   onOpenProfile: (id: string, name: string) => void;
+  /** Appelé après avoir quitté le groupe (recharger la liste + revenir en arrière). */
+  onLeft: () => void;
 }) {
   const groupRepo = useGroupRepository();
   const feedRepo = useFeedRepository();
@@ -84,16 +88,27 @@ export function GroupScreen({
     }
   }
 
+  function confirmLeave() {
+    Alert.alert('Quitter ce groupe ?', 'Tu ne verras plus son activité. Tu pourras revenir avec un code d\'invitation.', [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Quitter',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await groupRepo.leaveGroup(groupId);
+            onLeft();
+          } catch (e) {
+            if (mounted.current) setError((e as Error).message);
+          }
+        },
+      },
+    ]);
+  }
+
   return (
     <View style={styles.container}>
-      <View style={styles.topRow}>
-        <Pressable onPress={onBack} hitSlop={{ top: 12, bottom: 12, left: 8, right: 16 }} style={styles.backRow}>
-          <Ionicons name="chevron-back" size={20} color={colors.accent} />
-          <Text style={styles.back}>Retour</Text>
-        </Pressable>
-        <Text style={styles.title}>Ton groupe</Text>
-        <View style={styles.backRow} />
-      </View>
+      <ScreenHeader title="Ton groupe" onBack={onBack} />
 
       <ScreenState loading={loading} error={error} hasData={members.length > 0} onRetry={reload}>
         <ScrollView contentContainerStyle={styles.scroll}>
@@ -174,6 +189,16 @@ export function GroupScreen({
               );
             })}
           </View>
+
+          <Pressable
+            style={({ pressed }) => [styles.leave, pressed && styles.pressed]}
+            onPress={confirmLeave}
+            accessibilityRole="button"
+            accessibilityLabel="Quitter le groupe"
+          >
+            <Ionicons name="exit-outline" size={17} color={colors.danger} />
+            <Text style={styles.leaveText}>Quitter le groupe</Text>
+          </Pressable>
         </ScrollView>
       </ScreenState>
     </View>
@@ -182,16 +207,20 @@ export function GroupScreen({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 16 },
-  topRow: {
+  leave: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 8,
-    paddingBottom: 8,
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 18,
+    paddingVertical: 13,
+    minHeight: 44,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  backRow: { flexDirection: 'row', alignItems: 'center', width: 70 },
-  back: { fontSize: 15, color: colors.accent, fontWeight: '700' },
-  title: { ...font.h1 },
+  leaveText: { color: colors.danger, fontWeight: '800', fontSize: 15 },
+  pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
   link: { fontSize: 14, color: colors.textMuted, fontWeight: '700', width: 70, textAlign: 'right' },
   scroll: { paddingBottom: 32, gap: 12 },
   card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16 },

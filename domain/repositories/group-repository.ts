@@ -10,4 +10,6 @@ export interface GroupRepository {
   listMembers(groupId: string): Promise<GroupMember[]>;
   createGroup(name: string): Promise<Group>;
   joinByCode(code: string): Promise<Group>;
+  /** Quitter un groupe (supprime SA propre appartenance — politique memberships_delete). */
+  leaveGroup(groupId: string): Promise<void>;
 }

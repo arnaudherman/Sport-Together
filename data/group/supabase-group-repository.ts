@@ -47,6 +47,12 @@ export class SupabaseGroupRepository implements GroupRepository {
     return { id: row.id, name: row.name, inviteCode: row.invite_code };
   }
 
+  async leaveGroup(groupId: string): Promise<void> {
+    // La RLS (memberships_delete: user_id = auth.uid()) borne à SA propre ligne.
+    const { error } = await this.client.from('memberships').delete().eq('group_id', groupId);
+    if (error) throw new Error(error.message);
+  }
+
   async joinByCode(code: string): Promise<Group> {
     // join_group_by_code renvoie table(id, name) -> tableau (sans invite_code).
     const { data, error } = await this.client.rpc('join_group_by_code', {

@@ -5,7 +5,7 @@ import type { GroupRepository } from '@/domain/repositories/group-repository';
 export class InMemoryGroupRepository implements GroupRepository {
   // Pré-seedé avec des groupes de démo (solo-first : add-on). 'demo-group' porte
   // DEMO_FEED ; 'les-costauds' illustre l'appartenance à plusieurs cercles.
-  private readonly groups: Group[] = [
+  private groups: Group[] = [
     { id: 'demo-group', name: 'The Crew' },
     { id: 'les-costauds', name: 'Les Costauds' },
   ];
@@ -36,5 +36,9 @@ export class InMemoryGroupRepository implements GroupRepository {
       this.groups.push({ id, name: `Groupe ${code}` });
     }
     return { id, name: `Groupe ${code}` };
+  }
+
+  async leaveGroup(groupId: string): Promise<void> {
+    this.groups = this.groups.filter((g) => g.id !== groupId);
   }
 }

@@ -145,6 +145,10 @@ export function AuthedFlow({ userId }: { userId: string }) {
         userId={userId}
         onBack={pop}
         onOpenProfile={(id, name) => push({ profile: { id, name } })}
+        onLeft={() => {
+          loadGroups();
+          pop();
+        }}
       />
     );
   }
