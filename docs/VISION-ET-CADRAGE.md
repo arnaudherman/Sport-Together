@@ -1,9 +1,12 @@
 # Sport Together — Vision & Cadrage
 
-> **Statut : v1.0 — cible validée.** Cadrage figé après arbitrage avec le porteur
-> (juin 2026). C'est la source de vérité du *quoi* et du *pourquoi* ; les ADR
-> couvrent le *comment*. Tout changement de cap passe par une révision datée de ce
-> document (voir le journal en fin de fichier).
+> **Statut : v1.1 — cible validée, élargie à la progression gamifiée.** Cadrage
+> figé après arbitrage avec le porteur (juin-juillet 2026). C'est la source de
+> vérité du *quoi* et du *pourquoi* ; les ADR couvrent le *comment*. La v1.1 acte
+> l'élargissement du produit vers un **self-improvement gamifié** (progression
+> personnelle + entraide, sans compétition — voir §3, §8 et ADR-0009). Tout
+> changement de cap passe par une révision datée de ce document (voir le journal en
+> fin de fichier).
 
 ---
 
@@ -50,6 +53,15 @@ Quatre mécaniques portent ce différenciateur :
 - **Les goals gamifiés** : séances/activités, pas, et nutrition (calories/macros),
   pensés comme une progression de jeu — sans jamais armer les pièges de la diet
   culture (voir §8).
+
+**Élargissement v1.1 — la progression gamifiée (ADR-0009).** Au-delà de tenir le
+rythme, le produit veut *pousser à aller plus loin* (esprit école 42 : le *holy
+graph*). Trois briques, toutes **non compétitives** : (1) **XP / niveaux** dérivés
+des goals loggés ; (2) des **arbres de compétences** par domaine — corps, souffle,
+hygiène de vie, esprit/lecture — où l'on débloque des paliers concrets ; (3) des
+**quêtes d'entraide** où l'on aide un ami à franchir un palier (« aider Léa à passer
+15 tractions »), l'aidant récompensé autant que l'aidé. La progression se joue
+*contre soi et la carte*, jamais dans un classement (voir §8).
 
 ## 4. La boucle d'engagement (core loop)
 
@@ -137,6 +149,13 @@ qu'on s'interdit de coder pour le premier jet.
 > entre dans le périmètre, **à la condition stricte** des garde-fous de sécurité
 > ci-dessous, qui remplacent l'ancien interdit.
 
+> **Précision v1.1 (gamification, ADR-0009) :** l'interdit « pas de comparaison
+> compétitive » ci-dessous **reste entier**. XP, niveaux et arbres de compétences
+> sont de la **progression personnelle** (contre soi et la carte) — jamais un
+> classement, ni mondial ni entre amis. Le levier social est l'**entraide**
+> (récompensée), pas la rivalité. Toute mécanique qui trierait les membres « du
+> meilleur au moins bon » est proscrite au même titre que le leaderboard calorique.
+
 On refuse explicitement :
 
 - **Tout objectif de poids** et tout déficit calorique agressif ; aucune cible
@@ -169,7 +188,7 @@ que ce soit.
 
 ## 10. Décisions actées & décisions ouvertes
 
-### Actées en v1.0
+### Actées (v1.0 / v1.1)
 
 - **Backend** : Supabase (PostgreSQL, Auth, Realtime, Storage, RLS) — ADR-0001.
 - **Modèle de feed polymorphe** (`FEED_ITEMS` + détails) — ADR-0002. Les types de
@@ -187,6 +206,9 @@ que ce soit.
 - **Nutrition** : suivi calories/macros dès le MVP, sous les garde-fous §8.
 - **Photos** : Supabase Storage, compression côté client (~1080 px, JPEG ~0,7),
   bucket protégé par RLS par groupe, accès par URLs signées.
+- **Gamification (v1.1)** : progression personnelle (XP / niveaux / arbres de
+  compétences) + quêtes d'entraide coopératives, **sans classement compétitif** —
+  ADR-0009. DA « dark cinématique » associée dans `docs/DESIGN-SYSTEM.md`.
 
 ### Notes d'implémentation (non bloquantes)
 
@@ -210,11 +232,12 @@ que ce soit.
 | ADR-0001 | Backend — Supabase | **accepté** |
 | ADR-0002 | Modèle de feed polymorphe (`FEED_ITEMS`) | **accepté** |
 | ADR-0003 | Framework client — Expo/React Native, iOS-first | **accepté** |
-| ADR-0004 | Isolation multi-tenant & Row Level Security | à rédiger |
-| ADR-0005 | Authentification & identité | à rédiger |
-| ADR-0006 | Notifications push (Expo Notifications) | à rédiger |
-| ADR-0007 | Architecture client en couches (repositories + DI) | à rédiger |
-| ADR-0008 | Nutrition : modèle de données & garde-fous | à rédiger |
+| ADR-0004 | Isolation multi-tenant & Row Level Security | **accepté** |
+| ADR-0005 | Authentification & identité | **accepté** |
+| ADR-0006 | Notifications push (Expo Notifications) | **accepté** |
+| ADR-0007 | Architecture client en couches (repositories + DI) | **accepté** |
+| ADR-0008 | Nutrition : modèle de données & garde-fous | **accepté** |
+| ADR-0009 | Gamification & progression (XP, niveaux, arbres, entraide) | **accepté** |
 
 > **Note :** la nutrition fait l'objet d'un ADR dédié (ADR-0008 : modèle de données
 > calories/macros + garde-fous TCA), vu sa centralité au MVP et sa sensibilité. Le
@@ -225,6 +248,13 @@ que ce soit.
 
 ## Journal des révisions
 
+- **v1.1 (2026-07-01)** — Élargissement assumé vers un **self-improvement gamifié**.
+  Décisions : gamification par **progression personnelle** (XP, niveaux, arbres de
+  compétences) + **quêtes d'entraide** coopératives, **sans classement compétitif**
+  (ADR-0009) ; réconciliation explicite du §8 (les XP/niveaux ne sont pas de la
+  comparaison compétitive) ; modèle social **hybride** (groupe fermé au cœur + amis
+  inter-groupes opt-in) ; DA « dark cinématique » (`docs/DESIGN-SYSTEM.md`). Les
+  ADR-0004 à 0008 sont passés à *accepté* (rédigés et committés).
 - **v1.0 (2026-06-30)** — Cible validée après arbitrage avec le porteur. Décisions :
   multi-groupe complet ; auth SiwA + magic link ; streak personnel + journée
   parfaite collective (non punitif) ; goals multi-types (séance/activité, pas
@@ -233,4 +263,6 @@ que ce soit.
   Photos sur Supabase Storage avec compression client.
 - **v0.1** — Brouillon de cadrage initial.
 
-*Prochaine étape : rédaction des ADR-0004 à 0007, puis mise en place du dépôt Git.*
+*Prochaine étape : construire la 1ʳᵉ tranche gamifiée (arbre Muscu + quêtes
+d'entraide) et brancher un projet Supabase réel pour valider la boucle sur le
+groupe fondateur.*
