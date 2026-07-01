@@ -231,6 +231,12 @@ async function main() {
     assert.equal(detail.length, 1, 'le détail (session) suit la visibilité');
     await asUser(DAVE, `insert into public.reactions (feed_item_id, author_id, kind) values ($1,$2,'kudos')`, [fid, DAVE]);
     await asUser(DAVE, `insert into public.comments (feed_item_id, author_id, text) values ($1,$2,'Bien joué !')`, [fid, DAVE]);
+    // supprimer un commentaire : réservé à son auteur (alice ne peut pas, dave oui).
+    const cid = (await admin(`select id from public.comments where feed_item_id=$1 and author_id=$2`, [fid, DAVE])).rows[0].id;
+    const foreignDel = await asUser(ALICE, `delete from public.comments where id=$1`, [cid]);
+    assert.equal(foreignDel.rowCount, 0, 'supprimer le commentaire d\'autrui = 0 ligne');
+    const ownDel = await asUser(DAVE, `delete from public.comments where id=$1`, [cid]);
+    assert.equal(ownDel.rowCount, 1, 'dave supprime son propre commentaire');
     // se désabonner retire tout.
     await asUser(DAVE, `delete from public.follows where follower_id=$1 and followee_id=$2`, [DAVE, ALICE]);
     const after = (await asUser(DAVE, `select id from public.feed_items where id=$1`, [fid])).rows;

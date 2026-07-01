@@ -22,6 +22,13 @@ export class InMemoryCommentStore {
     list.push(comment);
     this.byItem.set(comment.feedItemId, list);
   }
+
+  remove(commentId: string): void {
+    for (const [itemId, list] of this.byItem) {
+      const next = list.filter((c) => c.id !== commentId);
+      if (next.length !== list.length) this.byItem.set(itemId, next);
+    }
+  }
 }
 
 /** Commentaires de démonstration (mode hors-ligne). */

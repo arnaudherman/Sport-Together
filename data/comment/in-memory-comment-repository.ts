@@ -14,6 +14,10 @@ export class InMemoryCommentRepository implements CommentRepository {
     return this.store.list(feedItemId);
   }
 
+  async remove(commentId: string): Promise<void> {
+    this.store.remove(commentId);
+  }
+
   async add(feedItemId: string, text: string): Promise<void> {
     this.store.add({
       id: `c-${feedItemId}-${this.store.count(feedItemId) + 1}-${text.length}`,

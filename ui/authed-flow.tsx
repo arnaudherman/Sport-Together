@@ -111,7 +111,7 @@ export function AuthedFlow({ userId }: { userId: string }) {
   }
 
   if (typeof view === 'object' && 'comments' in view) {
-    return <CommentsScreen item={view.comments.item} onBack={pop} />;
+    return <CommentsScreen item={view.comments.item} currentUserId={userId} onBack={pop} />;
   }
 
   if (view === 'account') {

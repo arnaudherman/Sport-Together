@@ -9,4 +9,6 @@ export interface CommentRepository {
   listForItem(feedItemId: string): Promise<Comment[]>;
   /** Ajoute un commentaire (auteur = utilisateur courant). */
   add(feedItemId: string, text: string): Promise<void>;
+  /** Supprime un commentaire (réservé à son auteur par la RLS). */
+  remove(commentId: string): Promise<void>;
 }

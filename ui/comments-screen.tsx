@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -20,7 +21,15 @@ import { ScreenHeader } from '@/ui/screen-header';
 import { colors, font, radius } from '@/ui/theme';
 
 /** Fil de réponses d'un post (commentaires) + composer (ADR-0010). */
-export function CommentsScreen({ item, onBack }: { item: FeedItem; onBack: () => void }) {
+export function CommentsScreen({
+  item,
+  currentUserId,
+  onBack,
+}: {
+  item: FeedItem;
+  currentUserId: string;
+  onBack: () => void;
+}) {
   const commentRepo = useCommentRepository();
   const [comments, setComments] = useState<Comment[]>([]);
   const [text, setText] = useState('');
@@ -71,6 +80,28 @@ export function CommentsScreen({ item, onBack }: { item: FeedItem; onBack: () =>
     }
   }
 
+  function confirmRemove(commentId: string) {
+    Alert.alert('Supprimer cette réponse ?', 'Cette action est définitive.', [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: async () => {
+          const snapshot = comments;
+          setComments((prev) => prev.filter((c) => c.id !== commentId)); // optimiste
+          try {
+            await commentRepo.remove(commentId);
+          } catch (e) {
+            if (mounted.current) {
+              setComments(snapshot);
+              setError((e as Error).message);
+            }
+          }
+        },
+      },
+    ]);
+  }
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -102,6 +133,16 @@ export function CommentsScreen({ item, onBack }: { item: FeedItem; onBack: () =>
               </Text>
               <Text style={styles.commentText}>{c.text}</Text>
             </View>
+            {c.authorId === currentUserId ? (
+              <Pressable
+                onPress={() => confirmRemove(c.id)}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                accessibilityRole="button"
+                accessibilityLabel="Supprimer la réponse"
+              >
+                <Ionicons name="trash-outline" size={15} color={colors.textMuted} />
+              </Pressable>
+            ) : null}
           </View>
         )}
         ListEmptyComponent={

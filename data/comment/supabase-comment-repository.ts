@@ -41,6 +41,12 @@ export class SupabaseCommentRepository implements CommentRepository {
     });
   }
 
+  async remove(commentId: string): Promise<void> {
+    // La RLS (comments_delete: author_id = auth.uid()) borne à ses propres commentaires.
+    const { error } = await this.client.from('comments').delete().eq('id', commentId);
+    if (error) throw new Error(error.message);
+  }
+
   async add(feedItemId: string, text: string): Promise<void> {
     const { data } = await this.client.auth.getSession();
     const uid = data.session?.user.id;

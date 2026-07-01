@@ -125,6 +125,17 @@ export function FeedItemCard({
               </Pressable>
             );
           })}
+          {onShare ? (
+            <Pressable
+              style={styles.engItem}
+              onPress={onShare}
+              hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+              accessibilityRole="button"
+              accessibilityLabel="Partager la publication"
+            >
+              <Ionicons name="share-outline" size={16} color={colors.textMuted} />
+            </Pressable>
+          ) : null}
           <View style={styles.spacer} />
           <Text style={styles.xp}>+{xpForType(item.type)} XP</Text>
         </View>

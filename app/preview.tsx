@@ -70,7 +70,7 @@ const SCREENS: { label: string; node: ReactNode }[] = [
   },
   {
     label: 'Réponses',
-    node: <CommentsScreen item={DEMO_POST} onBack={noop} />,
+    node: <CommentsScreen item={DEMO_POST} currentUserId="local-user" onBack={noop} />,
   },
   {
     label: 'Publier',

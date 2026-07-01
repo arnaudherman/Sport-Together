@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, RefreshControl, Share, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useFeedRepository, useFollowRepository, useReactionRepository } from '@/core/di/repositories-context';
@@ -108,6 +108,12 @@ export function FeedView({
     ]);
   }
 
+  function sharePost(item: FeedItem) {
+    Share.share({
+      message: `${item.authorName} sur Sport Together : ${item.summary} 💪`,
+    }).catch(() => {});
+  }
+
   const av = avatarColor(userId);
 
   return (
@@ -187,6 +193,7 @@ export function FeedView({
               onPressAuthor={() => onOpenProfile(item.authorId, item.authorName)}
               onOpenComments={() => onOpenComments(item)}
               onOpenGroup={item.groupName ? () => onOpenGroup(item.groupId) : undefined}
+              onShare={() => sharePost(item)}
               onDelete={item.authorId === userId ? () => confirmDelete(item) : undefined}
             />
           )}

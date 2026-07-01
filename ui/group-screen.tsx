@@ -11,7 +11,8 @@ import {
 } from '@/core/di/repositories-context';
 import type { FeedItem } from '@/domain/entities/feed';
 import type { GroupMember } from '@/domain/entities/group';
-import { currentStreak, localDayKey } from '@/domain/usecases/streak';
+import { isPerfectDay } from '@/domain/usecases/perfect-day';
+import { currentStreak, localDayKey, perfectDays, previousDayKey } from '@/domain/usecases/streak';
 import { avatarColor, initial, timeAgo } from '@/ui/format';
 import { ScreenHeader } from '@/ui/screen-header';
 import { ScreenState } from '@/ui/screen-state';
@@ -77,6 +78,30 @@ export function GroupScreen({
   }, [items, tz, todayKey]);
 
   const perfectCount = members.filter((m) => loggedToday.has(m.id)).length;
+  const todayItems = useMemo(
+    () => items.filter((it) => localDayKey(it.createdAt, tz) === todayKey),
+    [items, tz, todayKey],
+  );
+  const perfectToday = isPerfectDay(members.map((m) => m.id), todayItems);
+
+  // 7 derniers jours : lesquels ont été « parfaits » (tous les membres ont participé) ?
+  const weekPerfect = useMemo(() => {
+    const byDay = new Map<string, Set<string>>();
+    for (const it of items) {
+      const key = localDayKey(it.createdAt, tz);
+      const s = byDay.get(key) ?? new Set<string>();
+      s.add(it.authorId);
+      byDay.set(key, s);
+    }
+    const perfect = perfectDays(members.map((m) => m.id), byDay);
+    const days: { key: string; perfect: boolean }[] = [];
+    let cursor = todayKey;
+    for (let i = 0; i < 7; i += 1) {
+      days.unshift({ key: cursor, perfect: perfect.has(cursor) });
+      cursor = previousDayKey(cursor);
+    }
+    return days;
+  }, [items, members, tz, todayKey]);
 
   async function nudge(memberId: string) {
     try {
@@ -133,6 +158,24 @@ export function GroupScreen({
                 </Text>
                 <Text style={styles.label}>Journée parfaite</Text>
               </View>
+            </View>
+
+            {perfectToday ? (
+              <View style={styles.perfectBanner}>
+                <Text style={styles.perfectText}>✨ Journée parfaite — tout le monde a participé !</Text>
+              </View>
+            ) : null}
+
+            <View style={styles.weekRow} accessibilityLabel="Journées parfaites des 7 derniers jours">
+              {weekPerfect.map((d) => (
+                <Ionicons
+                  key={d.key}
+                  name={d.perfect ? 'star' : 'star-outline'}
+                  size={16}
+                  color={d.perfect ? colors.gold : colors.textFaint}
+                />
+              ))}
+              <Text style={styles.weekLabel}>7 derniers jours</Text>
             </View>
           </LinearGradient>
 
@@ -220,6 +263,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   leaveText: { color: colors.danger, fontWeight: '800', fontSize: 15 },
+  perfectBanner: { backgroundColor: colors.accentSoft, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 8, marginTop: 12 },
+  perfectText: { color: colors.accent, fontWeight: '700', fontSize: 13 },
+  weekRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 },
+  weekLabel: { ...font.label, marginLeft: 6 },
   pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
   link: { fontSize: 14, color: colors.textMuted, fontWeight: '700', width: 70, textAlign: 'right' },
   scroll: { paddingBottom: 32, gap: 12 },

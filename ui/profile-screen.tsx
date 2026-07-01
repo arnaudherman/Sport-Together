@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
 import { useFeedRepository, useProfileRepository } from '@/core/di/repositories-context';
 import { EMPTY_REACTIONS, type FeedItem } from '@/domain/entities/feed';
@@ -207,6 +207,7 @@ export function ProfileScreen({
                     key={it.id}
                     item={it}
                     onOpenComments={() => onOpenComments(it)}
+                    onShare={() => Share.share({ message: `${it.authorName} sur Sport Together : ${it.summary} 💪` }).catch(() => {})}
                     onDelete={isMe ? () => confirmDelete(it) : undefined}
                   />
                 ))}
