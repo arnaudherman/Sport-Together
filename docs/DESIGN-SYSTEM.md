@@ -1,53 +1,86 @@
-# Sport Together — Direction Artistique & Design System
+# Design System v2 — « Obsidienne » (sport premium nocturne)
 
-> DA **« dark cinématique, accent chaud »** (inspirée de la référence Promethee).
-> Objectif : une app premium, motivante, gamifiée, où chaque écran donne envie de
-> revenir. Les tokens vivent dans `ui/theme.ts` — aucune couleur en dur ailleurs.
+> **Verrouillé le 2026-07-02 avec le porteur.** Référence : Whoop nocturne — sobre,
+> haut de gamme, données mises en scène. La maquette qui fait foi :
+> **`docs/mockups/target-a-obsidienne.html`** (rendu `renders/target-a-obsidienne.png`).
+> Tout écran RN doit être **comparé à cette maquette avant commit** (capture /preview).
+> L'ancienne DA « Prometheus / RPG sombre » (v1) est abandonnée.
 
-## Principes
+## 1. Principes
 
-1. **Sombre et cinématique.** Fond near-black tiède ; les visuels forts (hero
-   images peintes/chaudes) portent l'émotion. On respire, beaucoup de noir.
-2. **Un seul accent chaud.** L'orange (`#F0652F`) est rare et précieux : CTA
-   principal, XP, progression, éléments actifs. Jamais décoratif.
-3. **Les chiffres sont des héros.** Gros, bold (niveau, XP, streak, durée). Les
-   labels sont petits, gris, en MAJUSCULES espacées.
-4. **Cartes calmes.** Surfaces sombres élevées, bordure 1px discrète, radius
-   généreux (14–20). Peu d'ombres, beaucoup de contraste maîtrisé.
-5. **Récompense visible.** Chaque action loggée se voit (XP gagné, palier
-   franchi) — la DA sert la motivation, pas la décoration.
+1. **Premium sobre, pas gamer.** La gamification (XP, niveaux, série, paliers) est
+   présentée comme de la *donnée sportive* (anneaux, barres fines, jalons) — jamais
+   comme un HUD de jeu.
+2. **Jamais de boxy.** Aucune carte à bordure dure : les surfaces sont des **dégradés**
+   sombres portés par des **ombres douces**. Les séparations se font par l'espace et
+   des filets `hairline`.
+3. **Les chiffres sont des héros, en finesse.** Les valeurs clés sont grandes et
+   **ultra-light** (weight 200, letter-spacing serré) — le contraste vient de la taille,
+   pas de la graisse.
+4. **L'orange est rare et précieux.** Un seul accent (`#FF5A1F`, dégradé vers `#FFA26B`),
+   réservé aux actions primaires, à la progression et aux moments de récompense. Jamais
+   décoratif.
+5. **La photo fait partie du langage.** Posts avec photo, covers de profil — toujours
+   avec un overlay sombre pour garder la lisibilité et l'ambiance nocturne.
+6. **Vraie app iOS.** Tab bar persistante (Accueil / Découvrir / ＋ / Groupes / Profil),
+   ＋ central en pilule dégradée ; les écrans de détail s'empilent par-dessus.
 
-## Tokens (`ui/theme.ts`)
+## 2. Tokens (`ui/theme.ts`)
 
-| Rôle | Token | Valeur |
+| Token | Valeur | Usage |
 |---|---|---|
-| Fond | `colors.bg` | `#0B0B0D` |
-| Carte | `colors.surface` | `#161514` |
-| Bordure | `colors.border` | `#2A2825` |
-| Texte | `colors.text` | `#F5F4F2` |
-| Texte muet | `colors.textMuted` | `#8A8784` |
-| **Accent** | `colors.accent` | `#F0652F` |
-| Positif | `colors.success` | `#4ADE80` |
-| Or (médailles) | `colors.gold` | `#F5C451` |
-| Radius | `radius.{sm,md,lg,pill}` | `10 / 14 / 20 / 999` |
+| `bg` | `#0A0C10` | fond d'écran (near-black bleuté) + halo radial discret en haut |
+| `panel1 → panel2` | `#141821 → #10131A` | surface des cartes (dégradé 160°) |
+| `text` | `#F2F4F8` | texte principal |
+| `textMuted` | `#8B93A3` | texte secondaire |
+| `textFaint` | `#565E6E` | légendes / placeholders (jamais du contenu) |
+| `accent` | `#FF5A1F` | action / progression / récompense |
+| `accent2` | `#FFA26B` | départ des dégradés d'accent |
+| `gradients.accent` | `[#FFA26B, #FF5A1F]` | CTA, barre d'XP, anneau |
+| `success` | `#3DDC97` | récup / validé |
+| `hair` | `rgba(255,255,255,0.06)` | filets, tracks |
+| `track` | `rgba(255,255,255,0.08)` | fond des barres/anneaux |
+| `onAccent` | `#0A0C10` | encre sur aplat orange |
+| `radius` | sm 12 · md 16 · **lg 22** · pill 999 | cartes en lg |
+| ombre carte | `0 14px 30px rgba(0,0,0,0.45)` | + highlight 1px `rgba(255,255,255,0.05)` en haut |
 
-Typo : `font.{display,h1,stat,title,body,label}` — display/stat en 800, `label`
-en 700 MAJ espacé gris.
+**Typo** (SF système) : display 34/800 serré · **héros num 34–46/200** · title 15/700 ·
+body 14–15/400 · label 11/700 letterspacing 1.5 UPPERCASE (`textFaint`).
 
-## Composants signature
+## 3. Composants signature
 
-- **CTA pilule** orange plein (« Lancer la session » → chez nous « Logger »).
-- **Pill de niveau** (`Niveau 12`) : fond surface, texte clair.
-- **Barre d'XP / de progression** : track sombre + remplissage orange arrondi.
-- **Chips de réaction** (👏 💪) : arrondies, actives = fond accent-soft + texte orange.
-- **Badge de streak** : flamme + nombre, ton chaud.
-- **Arbre de compétences (holy graph)** : graphe ramifié SVG, nœuds débloqués en
-  orange, verrouillés sombres (onglet Compétences du profil / écran Progression).
-- **Heatmap** type contribution : cases sombres → orange (assiduité 90 j).
-- **Hero / cover** : image cinématique chaude en tête de profil.
+- **`Surface`** : carte dégradée (panel1→panel2, 160°), radius 22, ombre douce,
+  highlight 1px en haut. *Remplace toutes les cartes à bordure.*
+- **`Ring`** : anneau de données SVG (stroke 5.5–7, dégradé accent, fond `track`,
+  extrémités rondes), valeur ultra-light au centre + légende UPPERCASE dessous.
+  Usages : série (jours), % vers le niveau suivant, récompense du composer.
+- **`TabBar`** : 5 onglets, fond `rgba(13,15,21,0.86)` + blur, filet hairline en haut,
+  icônes Ionicons, actif = blanc, inactif = `textFaint` ; **＋ central** 46px en pilule
+  dégradée accent avec glow.
+- **Bandeau « toi »** (accueil) : Surface compacte = Ring série + « Niveau N » +
+  barre d'XP fine dégradée + méta (série protégée 😴, quêtes 2/3).
+- **Carte de post** : avatar rond, nom + @handle · temps, badge type discret
+  (`hair` bg) ; **photo** 16:9 radius 16 si présente ; ligne de stats en chiffres
+  ultra-light (durée, allure, `+XP` en accent) ; engagement à droite (💬 👏).
+- **Post « repos »** : compact, point `success` + « Récup » — jamais culpabilisant.
+- **Sparkline** : polyline fine (2.5) grise → accent, pour les pas/tendances.
+- **Paliers (arbre)** : jalons ronds reliés par un fil — accompli = accent plein,
+  courant = anneau accent + glow, à venir = `hair`. Labels 10.5 en dessous.
+- **Profil** : cover photo avec dégradé vers `bg`, avatar 92 chevauchant, stats héros
+  (SÉANCES / JOURS DE SUITE / XP) en 40/200 avec labels UPPERCASE.
+- **Composer** : sheet radius 28 par-dessus le fond, poignée, `PUBLIER DANS` +
+  `TYPE` en labels UPPERCASE, sélections = fond `accentSoft` + liseré accent
+  (jamais de bordure sur les non-sélectionnés), module récompense = Surface avec
+  Ring % niveau + `+50 XP` héros.
 
-## Application
+## 4. Ce qui est banni
 
-Restyler écran par écran en partant du **feed** (l'écran central). Chaque écran :
-fond `colors.bg`, contenu en cartes `colors.surface`, un seul accent orange par
-zone d'action. Voir `ui/feed-view.tsx` (maquette de référence).
+- Bordures dures sur les cartes (`borderWidth` + `borderColor` visibles).
+- Chiffres-héros en gras massif (c'était la v1) — ici c'est **light**.
+- Orange décoratif, emojis en guise d'icônes de chrome, écrans sans tab bar,
+  états vides « morts » (toujours un CTA), zéros sans mise en scène.
+
+## 5. Méthode (inchangée, elle a fait ses preuves)
+
+Nouvel écran ⇒ **maquette d'abord** (HTML → PNG → validation porteur) ⇒ code RN
+fidèle ⇒ **capture comparée à la maquette** ⇒ gate ⇒ commit.

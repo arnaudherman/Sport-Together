@@ -103,8 +103,9 @@ function demoItem(
   createdAt: string,
   summary: string,
   groupName?: string,
+  photoUrl?: string,
 ): FeedItem {
-  return { id, groupId: 'demo-group', authorId, authorName, type, createdAt, summary, groupName };
+  return { id, groupId: 'demo-group', authorId, authorName, type, createdAt, summary, groupName, photoUrl };
 }
 
 // Solo-first : Moi = posts perso, Sam = abonnement (pas de groupe), Léa/Noa =
@@ -112,14 +113,15 @@ function demoItem(
 export const DEMO_FEED: readonly FeedItem[] = [
   // Aujourd'hui
   demoItem('d0-moi-s', 'local-user', 'Moi', 'session', at(0, 40), '45 min de course — plus longue série cette semaine'),
-  demoItem('d0-lea-s', 'u-lea', 'Léa', 'session', at(0, 12), '30 min de renforcement', 'The Crew'),
+  demoItem('d0-lea-s', 'u-lea', 'Léa', 'session', at(0, 12), 'Course matinale au bord du lac — 5,2 km', 'The Crew', 'https://picsum.photos/id/1011/680/360'),
   demoItem('d0-sam-st', 'u-sam', 'Sam', 'steps', at(0, 74), '10 248 pas'),
   demoItem('d0-noa-m', 'u-noa', 'Noa', 'meal', at(0, 150), 'Salade César · 480 kcal', 'Les Costauds'),
+  demoItem('d0-noa-r', 'u-noa', 'Noa', 'rest', at(0, 65), 'Jour de repos 😴'),
   // Hier
   demoItem('d1-moi-s', 'local-user', 'Moi', 'session', at(1, 60), 'Muscu haut du corps'),
   demoItem('d1-moi-m', 'local-user', 'Moi', 'meal', at(1, 200), 'Poulet-riz · 640 kcal'),
-  demoItem('d1-lea-s', 'u-lea', 'Léa', 'session', at(1, 30), 'Course 5 km', 'The Crew'),
-  demoItem('d1-sam-s', 'u-sam', 'Sam', 'session', at(1, 90), 'Vélo 40 min'),
+  demoItem('d1-lea-s', 'u-lea', 'Léa', 'session', at(1, 30), 'Course 5 km', 'The Crew', 'https://picsum.photos/id/1018/680/360'),
+  demoItem('d1-sam-s', 'u-sam', 'Sam', 'session', at(1, 90), 'Vélo 40 min', undefined, 'https://picsum.photos/id/1015/680/360'),
   demoItem('d1-noa-st', 'u-noa', 'Noa', 'steps', at(1, 120), '8 430 pas', 'Les Costauds'),
   // Avant-hier
   demoItem('d2-moi-s', 'local-user', 'Moi', 'session', at(2, 50), 'Gainage + pompes'),

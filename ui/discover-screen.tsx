@@ -23,7 +23,7 @@ export function DiscoverScreen({
   onJoinGroup,
 }: {
   userId: string;
-  onBack: () => void;
+  onBack?: () => void;
   onOpenProfile: (id: string, name: string) => void;
   onJoinGroup: () => void;
 }) {

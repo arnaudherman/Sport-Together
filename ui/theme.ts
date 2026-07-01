@@ -1,47 +1,61 @@
 /**
- * Design system — DA « dark cinématique, accent chaud » (voir docs/DESIGN-SYSTEM.md).
- * Source unique des tokens visuels ; les composants ne codent pas de couleurs en dur.
+ * Design system v2 « Obsidienne » — sport premium nocturne (voir docs/DESIGN-SYSTEM.md,
+ * maquette de référence docs/mockups/target-a-obsidienne.html). Source unique des
+ * tokens ; les composants ne codent pas de couleurs en dur.
  */
 export const colors = {
-  bg: '#0B0B0D', // fond near-black tiède
-  surface: '#161514', // cartes
-  surfaceElevated: '#1D1B19',
-  border: '#2A2825',
-  text: '#F5F4F2',
-  textMuted: '#8A8784',
-  textFaint: '#5B5854',
-  accent: '#F0652F', // orange chaud
-  accentSoft: 'rgba(240,101,47,0.16)',
-  onAccent: '#0B0B0D', // encre/icône sur aplat orange (== bg)
-  success: '#4ADE80',
-  danger: '#F2555A', // erreurs (corail chaud, cohérent avec la DA)
+  bg: '#0A0C10', // near-black bleuté
+  surface: '#141821', // panel1 (utiliser <Surface> pour le dégradé complet)
+  surfaceElevated: '#1A2030',
+  border: 'rgba(255,255,255,0.06)', // hairline UNIQUEMENT (filets) — jamais de boxy
+  text: '#F2F4F8',
+  textMuted: '#8B93A3',
+  textFaint: '#565E6E',
+  accent: '#FF5A1F', // orange — rare et précieux
+  accent2: '#FFA26B', // départ des dégradés d'accent
+  accentSoft: 'rgba(255,90,31,0.14)',
+  onAccent: '#0A0C10', // encre/icône sur aplat orange
+  success: '#3DDC97', // récup / validé
+  danger: '#FF5A66',
   gold: '#F5C451',
-  track: '#2A2825', // barres de progression (fond)
+  track: 'rgba(255,255,255,0.08)', // fond des barres/anneaux
 } as const;
 
 /** Dégradés de la DA — centralisés pour ne pas coder les hex en dur dans les écrans. */
 export const gradients = {
-  accent: ['#F58A4C', '#F0652F'] as const, // pilule/CTA orange (FAB, barre d'XP)
+  accent: ['#FFA26B', '#FF5A1F'] as const, // CTA, barre d'XP, anneau
+  panel: ['#141821', '#10131A'] as const, // surface des cartes (160°)
+  halo: ['#182032', 'rgba(24,32,50,0)'] as const, // halo discret en haut d'écran
 } as const;
 
 export const radius = {
-  sm: 10,
-  md: 14,
-  lg: 20,
+  sm: 12,
+  md: 16,
+  lg: 22,
   pill: 999,
 } as const;
 
 export const font = {
-  display: { fontSize: 32, fontWeight: '800', color: colors.text } as const,
-  h1: { fontSize: 22, fontWeight: '800', color: colors.text } as const,
-  stat: { fontSize: 26, fontWeight: '800', color: colors.text } as const,
-  title: { fontSize: 16, fontWeight: '700', color: colors.text } as const,
-  body: { fontSize: 15, fontWeight: '400', color: colors.text } as const,
+  display: { fontSize: 32, fontWeight: '800', letterSpacing: -0.5, color: colors.text } as const,
+  h1: { fontSize: 24, fontWeight: '800', letterSpacing: -0.4, color: colors.text } as const,
+  /** Chiffres-héros : grands et ULTRA-LIGHT (le contraste vient de la taille). */
+  stat: { fontSize: 34, fontWeight: '200', letterSpacing: -1, color: colors.text } as const,
+  title: { fontSize: 15, fontWeight: '700', color: colors.text } as const,
+  body: { fontSize: 14.5, fontWeight: '400', color: colors.text } as const,
   label: {
     fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 1,
+    letterSpacing: 1.5,
     textTransform: 'uppercase',
-    color: colors.textMuted,
+    color: colors.textFaint,
   } as const,
+} as const;
+
+/** Ombre douce des cartes (DA : la profondeur vient de l'ombre, pas des bordures). */
+export const cardShadow = {
+  shadowColor: '#000000',
+  shadowOpacity: 0.45,
+  shadowRadius: 18,
+  shadowOffset: { width: 0, height: 12 },
+  elevation: 10,
 } as const;

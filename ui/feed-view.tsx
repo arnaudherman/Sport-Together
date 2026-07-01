@@ -12,8 +12,7 @@ import { PrimaryButton } from '@/ui/button';
 import { avatarColor, initial } from '@/ui/format';
 import { FeedItemCard } from '@/ui/feed-item-card';
 import { filterFeed, type FeedTab } from '@/ui/feed-filter';
-import { LevelHeader } from '@/ui/level-header';
-import { QuestsStrip } from '@/ui/quests-strip';
+import { YouStrip } from '@/ui/you-strip';
 import { ScreenState } from '@/ui/screen-state';
 import { colors, font, gradients, radius } from '@/ui/theme';
 import { useAsyncData } from '@/ui/use-async-data';
@@ -174,7 +173,7 @@ export function FeedView({
   return (
     <View style={styles.container}>
       <View style={styles.top}>
-        <Text style={styles.brand}>Accueil</Text>
+        <Text style={styles.brand}>Aujourd’hui</Text>
         <Pressable
           onPress={() => onOpenProfile(userId, pseudo)}
           hitSlop={8}
@@ -192,12 +191,13 @@ export function FeedView({
           <Pressable
             key={t.key}
             onPress={() => setTab(t.key)}
-            style={[styles.schip, tab === t.key && styles.schipOn]}
+            style={styles.schip}
             accessibilityRole="tab"
             accessibilityState={{ selected: tab === t.key }}
             accessibilityLabel={t.label}
           >
             <Text style={[styles.schipText, tab === t.key && styles.schipTextOn]}>{t.label}</Text>
+            {tab === t.key ? <View style={styles.schipUnderline} /> : null}
           </Pressable>
         ))}
       </View>
@@ -210,7 +210,7 @@ export function FeedView({
           ListHeaderComponent={
             tab === 'tout' ? (
               items.length === 0 ? (
-                <LinearGradient colors={['#2c1d12', '#191411']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.welcome}>
+                <LinearGradient colors={gradients.panel} start={{ x: 0, y: 0 }} end={{ x: 0.6, y: 1 }} style={styles.welcome}>
                   <Text style={styles.welcomeTitle}>Bienvenue, {pseudo || 'toi'} 👋</Text>
                   <Text style={styles.welcomeSub}>Publie ta première séance pour lancer ta progression.</Text>
                   <View style={styles.welcomeBullets}>
@@ -221,12 +221,9 @@ export function FeedView({
                   <PrimaryButton title="Publier ma première séance" onPress={onOpenLog} />
                 </LinearGradient>
               ) : (
-                <View style={styles.headerCard}>
-                  <Pressable onPress={() => onOpenProfile(userId, pseudo)}>
-                    <LevelHeader pseudo={pseudo} userId={userId} items={items} />
-                  </Pressable>
-                  <QuestsStrip items={items} userId={userId} />
-                </View>
+                <Pressable style={styles.headerCard} onPress={() => onOpenProfile(userId, pseudo)}>
+                  <YouStrip items={items} userId={userId} />
+                </Pressable>
               )
             ) : tab === 'abonnements' ? (
               <Pressable
@@ -284,17 +281,6 @@ export function FeedView({
         </Pressable>
       ) : null}
 
-      <Pressable
-        style={({ pressed }) => [styles.fabWrap, { bottom: 20 + insets.bottom }, pressed && styles.fabPressed]}
-        onPress={onOpenLog}
-        accessibilityRole="button"
-        accessibilityLabel="Publier une séance"
-      >
-        <LinearGradient colors={gradients.accent} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fab}>
-          <Ionicons name="add" size={22} color={colors.onAccent} />
-          <Text style={styles.fabText}>Publier</Text>
-        </LinearGradient>
-      </Pressable>
     </View>
   );
 }
@@ -305,20 +291,11 @@ const styles = StyleSheet.create({
   brand: { ...font.h1, fontSize: 24 },
   avatar: { width: 40, height: 40, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 16, fontWeight: '800' },
-  seg: { flexDirection: 'row', gap: 8, marginBottom: 8 },
-  schip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    minHeight: 44,
-    justifyContent: 'center',
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  schipOn: { backgroundColor: colors.accent, borderColor: colors.accent },
-  schipText: { color: colors.textMuted, fontWeight: '700', fontSize: 14 },
-  schipTextOn: { color: colors.onAccent },
+  seg: { flexDirection: 'row', gap: 22, marginBottom: 10, paddingHorizontal: 4 },
+  schip: { paddingVertical: 8, minHeight: 44, justifyContent: 'center' },
+  schipText: { color: colors.textFaint, fontWeight: '600', fontSize: 14.5 },
+  schipTextOn: { color: colors.text },
+  schipUnderline: { position: 'absolute', left: 0, right: 0, bottom: 4, height: 3, borderRadius: 2, backgroundColor: colors.accent },
   headerCard: { marginBottom: 12 },
   welcome: { borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, padding: 22, gap: 12, marginBottom: 12, marginTop: 4 },
   welcomeTitle: { ...font.h1 },
@@ -363,9 +340,6 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
   },
-  fabPressed: { opacity: 0.92, transform: [{ scale: 0.98 }] },
-  fab: { flexDirection: 'row', gap: 8, borderRadius: radius.pill, paddingVertical: 16, alignItems: 'center', justifyContent: 'center' },
-  fabText: { ...font.title, color: colors.onAccent },
   banner: {
     position: 'absolute',
     left: 16,

@@ -37,7 +37,7 @@ export function ProfileScreen({
   targetName: string;
   currentUserId: string;
   groups: { id: string; name: string }[];
-  onBack: () => void;
+  onBack?: () => void;
   onOpenGroup: (id: string) => void;
   onJoinGroup: () => void;
   onOpenAccount: () => void;
@@ -125,10 +125,14 @@ export function ProfileScreen({
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
-        <Pressable onPress={onBack} hitSlop={{ top: 12, bottom: 12, left: 8, right: 16 }} style={styles.backRow}>
-          <Ionicons name="chevron-back" size={20} color={colors.accent} />
-          <Text style={styles.back}>Retour</Text>
-        </Pressable>
+        {onBack ? (
+          <Pressable onPress={onBack} hitSlop={{ top: 12, bottom: 12, left: 8, right: 16 }} style={styles.backRow}>
+            <Ionicons name="chevron-back" size={20} color={colors.accent} />
+            <Text style={styles.back}>Retour</Text>
+          </Pressable>
+        ) : (
+          <View style={styles.backRow} />
+        )}
         <Text style={styles.title}>Profil</Text>
         <View style={styles.spacer} />
       </View>

@@ -39,6 +39,8 @@ export interface FeedItem {
    * Absent = post « solo » / d'un abonnement (pas via un groupe).
    */
   groupName?: string;
+  /** Photo du post (URL affichable) — la DA v2 met la photo au cœur du fil. */
+  photoUrl?: string;
 }
 
 /** Agrégat vide réutilisable. */

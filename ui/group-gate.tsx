@@ -13,7 +13,8 @@ export function GroupGate({
   onBack,
 }: {
   onReady: (groupId: string) => void;
-  onBack: () => void;
+  /** Absent = écran RACINE de l'onglet Groupes (pas de Retour). */
+  onBack?: () => void;
 }) {
   const groups = useGroupRepository();
   const [myGroups, setMyGroups] = useState<Group[]>([]);
@@ -96,9 +97,11 @@ export function GroupGate({
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
-      <Pressable onPress={onBack} hitSlop={10} style={styles.backRow}>
-        <Text style={styles.link}>‹ Retour</Text>
-      </Pressable>
+      {onBack ? (
+        <Pressable onPress={onBack} hitSlop={10} style={styles.backRow}>
+          <Text style={styles.link}>‹ Retour</Text>
+        </Pressable>
+      ) : null}
       <Text style={styles.title}>Tes groupes</Text>
       {myGroups.length === 0 ? (
         <Text style={styles.hint}>Aucun groupe — crée-en un ou rejoins celui d'un ami.</Text>

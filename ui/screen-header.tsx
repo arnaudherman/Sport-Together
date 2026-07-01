@@ -14,21 +14,26 @@ export function ScreenHeader({
   right,
 }: {
   title: string;
-  onBack: () => void;
+  /** Absent = écran RACINE d'un onglet (pas de Retour). */
+  onBack?: () => void;
   right?: React.ReactNode;
 }) {
   return (
     <View style={styles.row}>
-      <Pressable
-        onPress={onBack}
-        hitSlop={{ top: 12, bottom: 12, left: 8, right: 16 }}
-        style={styles.back}
-        accessibilityRole="button"
-        accessibilityLabel="Retour"
-      >
-        <Ionicons name="chevron-back" size={20} color={colors.accent} />
-        <Text style={styles.backText}>Retour</Text>
-      </Pressable>
+      {onBack ? (
+        <Pressable
+          onPress={onBack}
+          hitSlop={{ top: 12, bottom: 12, left: 8, right: 16 }}
+          style={styles.back}
+          accessibilityRole="button"
+          accessibilityLabel="Retour"
+        >
+          <Ionicons name="chevron-back" size={20} color={colors.accent} />
+          <Text style={styles.backText}>Retour</Text>
+        </Pressable>
+      ) : (
+        <View style={styles.back} />
+      )}
       <Text style={styles.title}>{title}</Text>
       <View style={styles.side}>{right}</View>
     </View>

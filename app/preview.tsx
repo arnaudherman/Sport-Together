@@ -10,6 +10,7 @@ import { GroupScreen } from '@/ui/group-screen';
 import { HolyGraph } from '@/ui/holy-graph';
 import { LogScreen } from '@/ui/log-screen';
 import { ProfileScreen } from '@/ui/profile-screen';
+import { TabBar } from '@/ui/tab-bar';
 
 // Route de PREVIEW (dev-only) : rend les écrans réels avec des données mock pour
 // les captures. Non destinée à la production.
@@ -32,7 +33,14 @@ const DEMO_POST: FeedItem = {
 const SCREENS: { label: string; node: ReactNode }[] = [
   {
     label: 'Accueil',
-    node: <FeedView userId="local-user" pseudo="Toi" onOpenProfile={noop} onOpenLog={noop} onOpenComments={noop} onOpenDiscover={noop} onOpenGroup={noop} onOpenGroups={noop} />,
+    node: (
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          <FeedView userId="local-user" pseudo="Toi" onOpenProfile={noop} onOpenLog={noop} onOpenComments={noop} onOpenDiscover={noop} onOpenGroup={noop} onOpenGroups={noop} />
+        </View>
+        <TabBar active="home" onTab={noop} onCompose={noop} />
+      </View>
+    ),
   },
   {
     label: 'Groupe',
