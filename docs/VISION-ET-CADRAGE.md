@@ -248,6 +248,13 @@ que ce soit.
 
 ## Journal des révisions
 
+- **v1.2 (2026-07-01)** — Mise en œuvre & vérification. Front en DA « dark cinématique »
+  (dégradés, icônes, radar, skeletons) + flux social complet (feed/groupe/profil/
+  progression/log). **Backend prouvé sur un vrai Supabase** (stack local, e2e 11/11,
+  harnais RLS 15/15) et **bug de grants corrigé** (migration `090800`, cf. ADR-0004).
+  Stockage de session rendu **par plateforme** (ADR-0005). Mode faux-user (mock) par
+  défaut pour l'itération front. Détail dans `docs/CHANGELOG.md` ; reste à faire dans
+  `docs/BACKLOG.md`.
 - **v1.1 (2026-07-01)** — Élargissement assumé vers un **self-improvement gamifié**.
   Décisions : gamification par **progression personnelle** (XP, niveaux, arbres de
   compétences) + **quêtes d'entraide** coopératives, **sans classement compétitif**

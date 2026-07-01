@@ -1,0 +1,52 @@
+# Changelog — Sport Together
+
+Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/). Le projet n'est
+pas encore versionné (pré-MVP) ; entrées par date. Détail des décisions dans
+`docs/adr/`, cible dans `docs/VISION-ET-CADRAGE.md`, reste à faire dans `docs/BACKLOG.md`.
+
+## [Non publié]
+
+### 2026-07-01 — Backend prouvé sur du réel + corrections
+
+- **Vérifié de bout en bout sur un vrai Supabase** (stack local `supabase start`) :
+  auth GoTrue, `create_group`/`join_group_by_code`, `log_*`, feed polymorphe, RLS
+  d'isolation — **e2e 11/11** + harnais RLS **15/15**.
+- **Corrigé (bug attrapé grâce au réel)** : migration **`090800_grants.sql`** — les rôles
+  `authenticated`/`service_role` n'avaient pas les droits DML (`permission denied for
+  table`) ; l'app aurait été cassée sur un vrai backend. La RLS reste le gate au niveau ligne.
+- **Corrigé** : adaptateur de stockage de session **selon la plateforme** (SecureStore
+  chiffré natif / `localStorage` web / no-op SSR) — corrige le crash au rendu web
+  `ExpoSecureStore.getValueWithKeyAsync is not a function` quand Supabase est configuré.
+- **Mode faux-user (mock)** : n'importe quel e-mail + code connecte, et on atterrit dans
+  un groupe de démo « The Crew » **pré-seedé** (feed sur 3 jours, réactions, streaks).
+- **Outillage** : route de dev `app/preview.tsx` + support web pour **captures d'écran**
+  du rendu réel (voir skill `preview-screenshot`), script d'application des migrations.
+
+### 2026-07-01 — DA « dark cinématique » + gamification
+
+- **Design system** (`docs/DESIGN-SYSTEM.md`, `ui/theme.ts`) : DA sombre + accent orange.
+- **Upgrade visuel** : dégradés (`expo-linear-gradient`) sur les cartes-héros, **vraies
+  icônes** (`@expo/vector-icons`), **skeletons** de chargement, cibles tactiles ≥ 44 px.
+- **Gamification (ADR-0009)** : moteur XP/niveaux (pur, testé), **arbre de compétences**
+  Muscu débloquable, **radar de compétences** (SVG dérivé du feed), quêtes d'entraide
+  (conception) — progression personnelle + entraide, **sans classement compétitif**.
+- **Flux social** : feed vivant (présence, activité groupée par jour, réactions), écran
+  **Groupe & entraide** (statuts du jour, encourager), écran **Profil** (stats, heatmap,
+  radar), écran **Logger** dédié, navigation feed ↔ groupe ↔ profil ↔ progression ↔ log.
+- **Critique design multi-agents** (36 findings → 10) + correctifs : états
+  chargement/erreur, safe-area, chiffres-héros, accent plus rare, onboarding gamifié.
+- **Docs** : `VISION` v1.1 (scope self-improvement, réconciliation §8), maquette HD du flux.
+
+### 2026-06-30 — Cadrage + backend + scaffold
+
+- **Cadrage** : `VISION-ET-CADRAGE.md` v1.0, **ADR-0001 à 0008** (Supabase, feed
+  polymorphe, Expo/RN iOS-first, RLS multi-tenant, auth, push, archi en couches, nutrition).
+- **Backend Supabase** : 8 migrations (schéma, RLS, RPC groupes/log, storage photos,
+  notifications, durcissement invitations, correctifs). Trigger de gel du `group_id`,
+  FK composite, RPC SECURITY DEFINER.
+- **Edge Functions** (Deno) : `notify_group` (secret partagé), `nudge` (throttle 12h),
+  `delete_account` (purge + anonymisation). deno check/lint OK.
+- **Client Expo/RN** : architecture en couches (domain / data / ui / core) avec
+  repositories + DI, implémentations Supabase **et** mocks, ESLint no-restricted-imports.
+- **Tests** : 42 tests front (jest-expo), 15 tests RLS/RPC sur Postgres réel, CI (3 jobs).
+- **Analyse de code** à 100 % (`docs/ANALYSE-CODE.md`, note B+) ; 9 findings high résolus.

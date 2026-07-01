@@ -172,3 +172,14 @@ Détails :
 - ADR-0004 — `auth.uid()` est la clé sur laquelle reposent toutes les politiques RLS.
 - ADR-0007 — `AuthRepository` : interface multi-provider ; la présentation dépend de
   cette interface, jamais du SDK Supabase directement.
+
+## Mise à jour (2026-07-01) — Stockage de session par plateforme
+
+Le stockage chiffré via **expo-secure-store** (Keychain/Keystore) n'existe **que sur
+natif** : l'utiliser au rendu **web/SSR** plantait (`ExpoSecureStore.getValueWithKeyAsync
+is not a function`) dès que Supabase est configuré (le rendu statique instancie le
+client). L'adaptateur de session est désormais **choisi selon `Platform.OS`** :
+SecureStore chiffré (natif) · `localStorage` (web) · no-op (SSR, pas de session côté
+serveur). Décision : la session reste chiffrée là où c'est possible (natif, cible
+principale) ; le web utilise le stockage standard navigateur. Voir `core/supabase/client.ts`.
+

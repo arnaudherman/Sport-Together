@@ -191,3 +191,15 @@ Le mécanisme :
   en remplacement) de la RLS.
 - ADR-0008 — Les tables de nutrition (`MEALS`) sont soumises aux mêmes politiques par
   `group_id`.
+
+## Mise à jour (2026-07-01) — Droits de table (GRANT) indispensables
+
+La RLS filtre les **lignes**, mais ne donne pas l'accès à la **table** : les rôles
+`authenticated` / `service_role` doivent aussi avoir les `GRANT` DML, sinon PostgREST
+renvoie `permission denied for table`. En cloud Supabase ces droits sont souvent posés
+par les privilèges par défaut, mais **pas en local (`supabase start`) ni en self-host** —
+vérifié en lançant un vrai stack (l'app était cassée sans ça). Corrigé par la migration
+**`20260630090800_grants.sql`** (idempotente : crée les rôles si absents, `grant` à
+`authenticated`/`service_role`, la RLS restant le seul gate au niveau ligne). Prouvé par
+un e2e réel (11/11) + le harnais RLS (15/15).
+
