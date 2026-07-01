@@ -4,10 +4,13 @@ export interface Profile {
   pseudo: string;
   avatarUrl?: string;
   isAdult: boolean;
+  /** Bio libre affichée sur le profil (optionnelle). */
+  bio?: string;
 }
 
 export interface ProfileInput {
   pseudo: string;
   avatarUrl?: string;
   isAdult: boolean;
+  bio?: string;
 }

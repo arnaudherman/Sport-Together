@@ -1,16 +1,59 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { useAuthRepository } from '@/core/di/repositories-context';
-import { GhostButton } from '@/ui/button';
+import { useAuthRepository, useProfileRepository } from '@/core/di/repositories-context';
+import { GhostButton, PrimaryButton } from '@/ui/button';
 import { handle, initial } from '@/ui/format';
 import { colors, font, radius } from '@/ui/theme';
 
-/** Écran Compte : déconnexion + suppression de compte (exigence Apple/RGPD). */
+/** Écran Compte : éditer son profil (pseudo/bio) + déconnexion + suppression. */
 export function AccountScreen({ pseudo, onBack }: { pseudo: string; onBack: () => void }) {
   const auth = useAuthRepository();
+  const profileRepo = useProfileRepository();
+  const [name, setName] = useState(pseudo);
+  const [bio, setBio] = useState('');
+  const [isAdult, setIsAdult] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const mounted = useRef(true);
+
+  useEffect(() => {
+    mounted.current = true;
+    profileRepo
+      .getMyProfile()
+      .then((p) => {
+        if (p && mounted.current) {
+          setName(p.pseudo);
+          setBio(p.bio ?? '');
+          setIsAdult(p.isAdult);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      mounted.current = false;
+    };
+  }, [profileRepo]);
+
+  async function save() {
+    const value = name.trim();
+    if (!value) {
+      setError('Choisis un pseudo.');
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    setSaved(false);
+    try {
+      await profileRepo.updateMyProfile({ pseudo: value, isAdult, bio: bio.trim() });
+      if (mounted.current) setSaved(true);
+    } catch (e) {
+      if (mounted.current) setError((e as Error).message);
+    } finally {
+      if (mounted.current) setBusy(false);
+    }
+  }
 
   async function signOut() {
     setBusy(true);
@@ -19,7 +62,6 @@ export function AccountScreen({ pseudo, onBack }: { pseudo: string; onBack: () =
     } finally {
       setBusy(false);
     }
-    // La session passe à null -> l'écran racine revient à la connexion.
   }
 
   function confirmDelete() {
@@ -47,7 +89,7 @@ export function AccountScreen({ pseudo, onBack }: { pseudo: string; onBack: () =
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
-        <Pressable onPress={onBack} hitSlop={{ top: 12, bottom: 12, left: 8, right: 16 }} style={styles.backRow}>
+        <Pressable onPress={onBack} hitSlop={{ top: 12, bottom: 12, left: 8, right: 16 }} style={styles.backRow} accessibilityRole="button" accessibilityLabel="Retour">
           <Ionicons name="chevron-back" size={20} color={colors.accent} />
           <Text style={styles.back}>Retour</Text>
         </Pressable>
@@ -55,28 +97,44 @@ export function AccountScreen({ pseudo, onBack }: { pseudo: string; onBack: () =
         <View style={styles.spacer} />
       </View>
 
-      <View style={styles.card}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{initial(pseudo || 'T')}</Text>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={styles.card}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{initial(name || 'T')}</Text>
+          </View>
+          <View>
+            <Text style={styles.name}>{name || 'Moi'}</Text>
+            <Text style={styles.handle}>{handle(name || 'moi')}</Text>
+          </View>
         </View>
-        <View>
-          <Text style={styles.name}>{pseudo || 'Moi'}</Text>
-          <Text style={styles.handle}>{handle(pseudo || 'moi')}</Text>
+
+        <Text style={styles.label}>Pseudo</Text>
+        <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Ton pseudo" placeholderTextColor={colors.textFaint} autoCapitalize="words" />
+        <Text style={styles.label}>Bio</Text>
+        <TextInput
+          style={[styles.input, styles.bio]}
+          value={bio}
+          onChangeText={setBio}
+          placeholder="Parle un peu de toi…"
+          placeholderTextColor={colors.textFaint}
+          multiline
+          maxLength={160}
+        />
+        <PrimaryButton title={saved ? 'Enregistré ✓' : 'Enregistrer'} onPress={save} busy={busy} />
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+
+        <View style={styles.divider} />
+
+        <View style={styles.actions}>
+          <GhostButton title="Se déconnecter" onPress={signOut} disabled={busy} />
+          <Pressable style={[styles.danger, busy && styles.dim]} onPress={confirmDelete} disabled={busy} accessibilityRole="button" accessibilityLabel="Supprimer mon compte">
+            <Ionicons name="trash-outline" size={18} color={colors.danger} />
+            <Text style={styles.dangerText}>Supprimer mon compte</Text>
+          </Pressable>
+          {busy ? <ActivityIndicator color={colors.accent} /> : null}
         </View>
-      </View>
-
-      <View style={styles.actions}>
-        <GhostButton title="Se déconnecter" onPress={signOut} disabled={busy} />
-        <Pressable style={[styles.danger, busy && styles.dim]} onPress={confirmDelete} disabled={busy}>
-          <Ionicons name="trash-outline" size={18} color={colors.danger} />
-          <Text style={styles.dangerText}>Supprimer mon compte</Text>
-        </Pressable>
-        {busy ? <ActivityIndicator color={colors.accent} /> : null}
-      </View>
-
-      <Text style={styles.note}>
-        La suppression retire tes appartenances aux groupes et anonymise tes publications.
-      </Text>
+        <Text style={styles.note}>La suppression retire tes appartenances aux groupes et anonymise tes publications.</Text>
+      </ScrollView>
     </View>
   );
 }
@@ -88,33 +146,20 @@ const styles = StyleSheet.create({
   back: { fontSize: 15, color: colors.accent, fontWeight: '700' },
   title: { ...font.h1 },
   spacer: { width: 90 },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    padding: 16,
-    marginTop: 8,
-  },
+  scroll: { paddingBottom: 32, gap: 10 },
+  card: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16, marginTop: 4, marginBottom: 6 },
   avatar: { width: 52, height: 52, borderRadius: radius.pill, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 20, fontWeight: '800', color: colors.accent },
   name: { ...font.title },
   handle: { fontSize: 13, color: colors.textMuted },
-  actions: { gap: 12, marginTop: 20 },
-  danger: {
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.danger,
-    borderRadius: radius.pill,
-    paddingVertical: 13,
-  },
+  label: { ...font.label, marginTop: 6 },
+  input: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.text },
+  bio: { minHeight: 72, textAlignVertical: 'top' },
+  error: { color: colors.danger, fontSize: 14 },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: 16 },
+  actions: { gap: 12 },
+  danger: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.danger, borderRadius: radius.pill, paddingVertical: 13 },
   dim: { opacity: 0.5 },
   dangerText: { color: colors.danger, fontWeight: '800', fontSize: 16 },
-  note: { color: colors.textFaint, fontSize: 13, marginTop: 16, lineHeight: 19 },
+  note: { color: colors.textFaint, fontSize: 13, marginTop: 12, lineHeight: 19 },
 });

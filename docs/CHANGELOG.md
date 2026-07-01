@@ -17,6 +17,8 @@ pas encore versionné (pré-MVP) ; entrées par date. Détail des décisions dan
   **code mort** (radar) + sentinelle mock `local-user`.
 - **Découvrir** : nouvel écran de suggestions à suivre (membres de tes groupes non suivis)
   pour alimenter l'onglet Abonnements.
+- **Édition de profil** (pseudo + bio) dans l'écran Compte + **vraies bios** sur les profils
+  (`ProfileRepository.getProfile`, migration `bio`) — fini la bio bidon identique partout.
 
 ### 2026-07-01 — Pivot solo-first + couche sociale (Twitter-like)
 

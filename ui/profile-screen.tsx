@@ -3,8 +3,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { useFeedRepository, useFollowRepository } from '@/core/di/repositories-context';
+import { useFeedRepository, useFollowRepository, useProfileRepository } from '@/core/di/repositories-context';
 import { EMPTY_REACTIONS, type FeedItem } from '@/domain/entities/feed';
+import type { Profile } from '@/domain/entities/profile';
 import { levelForXp, xpFromFeed } from '@/domain/usecases/gamification';
 import { MUSCU_GRAPH, sessionsUnlocked } from '@/domain/usecases/skill-graph';
 import { streakFromFeed } from '@/domain/usecases/streak';
@@ -40,7 +41,9 @@ export function ProfileScreen({
 }) {
   const feedRepo = useFeedRepository();
   const followRepo = useFollowRepository();
+  const profileRepo = useProfileRepository();
   const [items, setItems] = useState<FeedItem[]>([]);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [following, setFollowing] = useState(false);
   const [tab, setTab] = useState<Tab>('publications');
   const [loading, setLoading] = useState(true);
@@ -82,6 +85,15 @@ export function ProfileScreen({
       .catch(() => {});
   }, [targetUserId, currentUserId, followRepo]);
 
+  useEffect(() => {
+    profileRepo
+      .getProfile(targetUserId)
+      .then((p) => {
+        if (mounted.current) setProfile(p);
+      })
+      .catch(() => {});
+  }, [profileRepo, targetUserId]);
+
   const tz = -new Date().getTimezoneOffset();
   const xp = useMemo(() => xpFromFeed(items, targetUserId), [items, targetUserId]);
   const level = levelForXp(xp);
@@ -101,7 +113,7 @@ export function ProfileScreen({
 
   const av = avatarColor(targetUserId);
   const isMe = targetUserId === currentUserId;
-  const name = isMe ? 'Moi' : targetName;
+  const name = isMe ? 'Moi' : profile?.pseudo ?? targetName;
 
   function confirmDelete(post: FeedItem) {
     Alert.alert('Supprimer ce post ?', 'Cette action est définitive.', [
@@ -193,7 +205,13 @@ export function ProfileScreen({
               </>
             ) : null}
           </View>
-          <Text style={styles.bio}>🏋️ On progresse ensemble, un palier à la fois.</Text>
+          {profile?.bio ? (
+            <Text style={styles.bio}>{profile.bio}</Text>
+          ) : isMe ? (
+            <Pressable onPress={onOpenAccount}>
+              <Text style={styles.bioAdd}>＋ Ajoute une bio</Text>
+            </Pressable>
+          ) : null}
           <View style={styles.stats}>
             <Text style={styles.statText}><Text style={styles.statNum}>{items.length}</Text> publications</Text>
             <Text style={styles.statText}><Text style={styles.statNum}>{bravos}</Text> bravos</Text>
@@ -280,6 +298,7 @@ const styles = StyleSheet.create({
   dot: { color: colors.textMuted },
   streak: { fontSize: 14, color: colors.accent, fontWeight: '700' },
   bio: { ...font.body, marginTop: 8, paddingHorizontal: 4 },
+  bioAdd: { ...font.body, color: colors.accent, fontWeight: '700', marginTop: 8, paddingHorizontal: 4 },
   stats: { flexDirection: 'row', gap: 16, marginTop: 10, paddingHorizontal: 4 },
   statText: { fontSize: 13, color: colors.textMuted },
   statNum: { color: colors.text, fontWeight: '800' },

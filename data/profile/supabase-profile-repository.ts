@@ -8,6 +8,19 @@ interface ProfileRow {
   pseudo: string;
   avatar_url: string | null;
   is_adult: boolean;
+  bio: string | null;
+}
+
+const PROFILE_SELECT = 'id, pseudo, avatar_url, is_adult, bio';
+
+function mapProfile(row: ProfileRow): Profile {
+  return {
+    id: row.id,
+    pseudo: row.pseudo,
+    avatarUrl: row.avatar_url ?? undefined,
+    isAdult: row.is_adult,
+    bio: row.bio ?? undefined,
+  };
 }
 
 /**
@@ -27,18 +40,21 @@ export class SupabaseProfileRepository implements ProfileRepository {
     if (!id) return null;
     const { data, error } = await this.client
       .from('profiles')
-      .select('id, pseudo, avatar_url, is_adult')
+      .select(PROFILE_SELECT)
       .eq('id', id)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (!data) return null;
-    const row = data as ProfileRow;
-    return {
-      id: row.id,
-      pseudo: row.pseudo,
-      avatarUrl: row.avatar_url ?? undefined,
-      isAdult: row.is_adult,
-    };
+    return data ? mapProfile(data as ProfileRow) : null;
+  }
+
+  async getProfile(userId: string): Promise<Profile | null> {
+    const { data, error } = await this.client
+      .from('profiles')
+      .select(PROFILE_SELECT)
+      .eq('id', userId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return data ? mapProfile(data as ProfileRow) : null;
   }
 
   async updateMyProfile(input: ProfileInput): Promise<Profile> {
@@ -53,19 +69,14 @@ export class SupabaseProfileRepository implements ProfileRepository {
       is_adult: input.isAdult,
     };
     if (input.avatarUrl !== undefined) payload.avatar_url = input.avatarUrl;
+    if (input.bio !== undefined) payload.bio = input.bio;
 
     const { data, error } = await this.client
       .from('profiles')
       .upsert(payload)
-      .select('id, pseudo, avatar_url, is_adult')
+      .select(PROFILE_SELECT)
       .single();
     if (error) throw new Error(error.message);
-    const row = data as ProfileRow;
-    return {
-      id: row.id,
-      pseudo: row.pseudo,
-      avatarUrl: row.avatar_url ?? undefined,
-      isAdult: row.is_adult,
-    };
+    return mapProfile(data as ProfileRow);
   }
 }

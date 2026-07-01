@@ -8,5 +8,7 @@ import type { Profile, ProfileInput } from '@/domain/entities/profile';
  */
 export interface ProfileRepository {
   getMyProfile(): Promise<Profile | null>;
+  /** Profil public d'un autre utilisateur (pseudo, bio…) — visible via RLS. */
+  getProfile(userId: string): Promise<Profile | null>;
   updateMyProfile(input: ProfileInput): Promise<Profile>;
 }
