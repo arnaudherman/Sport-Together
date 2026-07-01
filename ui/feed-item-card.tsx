@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { EMPTY_REACTIONS, type FeedItem, type ReactionKind } from '@/domain/entities/feed';
 import { xpForType } from '@/domain/usecases/gamification';
+import { avatarColor, initial, timeAgo } from '@/ui/format';
 import { colors, font, radius } from '@/ui/theme';
 
 const TYPE_LABEL: Record<FeedItem['type'], string> = {
@@ -19,20 +20,28 @@ const REACTIONS: { kind: ReactionKind; emoji: string }[] = [
 export function FeedItemCard({
   item,
   onToggleReaction,
+  onPressAuthor,
 }: {
   item: FeedItem;
   onToggleReaction?: (kind: ReactionKind) => void;
+  onPressAuthor?: () => void;
 }) {
   const reactions = item.reactions ?? EMPTY_REACTIONS;
-  const initial = (item.authorName.trim().charAt(0) || '?').toUpperCase();
+  const av = avatarColor(item.authorId || item.authorName);
 
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{initial}</Text>
-        </View>
-        <Text style={styles.author}>{item.authorName}</Text>
+        <Pressable style={styles.authorRow} onPress={onPressAuthor} hitSlop={6}>
+          <View style={[styles.avatar, { backgroundColor: av.bg }]}>
+            <Text style={[styles.avatarText, { color: av.fg }]}>{initial(item.authorName)}</Text>
+          </View>
+          <Text style={styles.author}>{item.authorName}</Text>
+        </Pressable>
+        <Text style={styles.time}>{timeAgo(item.createdAt)}</Text>
+      </View>
+
+      <View style={styles.metaRow}>
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{TYPE_LABEL[item.type]}</Text>
         </View>
@@ -69,19 +78,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: 16,
-    gap: 10,
+    gap: 8,
   },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  authorRow: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
   avatar: {
-    width: 32,
-    height: 32,
+    width: 34,
+    height: 34,
     borderRadius: radius.pill,
-    backgroundColor: colors.surfaceElevated,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { fontSize: 13, fontWeight: '700', color: colors.textMuted },
-  author: { ...font.title, flex: 1 },
+  avatarText: { fontSize: 14, fontWeight: '800' },
+  author: { ...font.title },
+  time: { fontSize: 12, color: colors.textFaint },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   badge: {
     backgroundColor: colors.surfaceElevated,
     borderRadius: radius.pill,
