@@ -46,4 +46,13 @@ describe('InMemoryFeedRepository', () => {
     const feed = await repo.listGroupFeed('g1');
     expect(feed).toHaveLength(0);
   });
+
+  it('publie en SOLO (groupId null) → post rattaché à "solo" (contrat mock, cf. Supabase qui rejette)', async () => {
+    const repo = new InMemoryFeedRepository([]);
+    await repo.logSession(null, 'Course', 30);
+    const feed = await repo.listUserFeed('local-user');
+    expect(feed).toHaveLength(1);
+    expect(feed[0].groupId).toBe('solo');
+    expect(feed[0].groupName).toBeUndefined();
+  });
 });

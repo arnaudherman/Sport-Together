@@ -35,4 +35,20 @@ describe('validateMeal (garde-fous ADR-0008)', () => {
   it('refuse une macro au-delà de la borne réaliste', () => {
     expect(validateMeal({ label: 'Repas', carbsG: MAX_MACRO_G + 1 }).ok).toBe(false);
   });
+
+  it('refuse un libellé visuellement vide (espace zéro-largeur)', () => {
+    expect(validateMeal({ label: '\u200B' }).ok).toBe(false);
+    expect(validateMeal({ label: '\uFEFF \u200D' }).ok).toBe(false);
+  });
+
+  it('refuse une incohérence grossière énergie<->macros (faute de frappe)', () => {
+    // 40/50/15 g ≈ 495 kcal ; déclarer 1 kcal est incohérent.
+    expect(validateMeal({ label: 'Bowl', caloriesKcal: 1, proteinG: 40, carbsG: 50, fatG: 15 }).ok).toBe(false);
+  });
+
+  it('n\'applique la cohérence que si tout est fourni (pas de faux positif)', () => {
+    // calories seules, ou macros seules -> toujours accepté.
+    expect(validateMeal({ label: 'Repas', caloriesKcal: 1 }).ok).toBe(true);
+    expect(validateMeal({ label: 'Repas', proteinG: 40, carbsG: 50, fatG: 15 }).ok).toBe(true);
+  });
 });

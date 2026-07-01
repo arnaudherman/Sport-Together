@@ -1,9 +1,11 @@
 import type { FeedItem } from '@/domain/entities/feed';
+import { localDayKey } from '@/domain/usecases/streak';
 
 /**
  * Arbre de compétences en HOLY GRAPH ramifié (ADR-0009) — logique pure. Les nœuds
- * portent une position (x,y) et des prérequis ; on débloque le long des branches.
- * v1 : un arbre (Corps), progression dérivée du nombre de séances loggées.
+ * portent une position (x,y) et des prérequis ; on débloque VRAIMENT le long des
+ * branches (propagation topologique respectant `requires`, pas un compteur linéaire).
+ * v1 : un arbre (Corps), progression = jours d'entraînement distincts (non farmable).
  */
 export type NodeState = 'done' | 'available' | 'locked';
 
@@ -54,31 +56,57 @@ export interface GraphState {
   edges: GraphEdge[];
 }
 
-/** Nombre de paliers débloqués = séances loggées par l'utilisateur (plafonné). */
-export function sessionsUnlocked(items: readonly FeedItem[], userId: string): number {
-  let count = 0;
-  for (const it of items) if (it.authorId === userId && it.type === 'session') count += 1;
-  return Math.min(count, MUSCU_GRAPH.nodes.length);
+/**
+ * Nombre de paliers débloqués = JOURS d'entraînement distincts de l'utilisateur
+ * (plafonné). Dédupliqué par jour local pour ne pas rendre l'arbre farmable (logger
+ * 11 séances la même minute ne débloque qu'un palier). Cohérent avec le moteur streak.
+ */
+export function sessionsUnlocked(
+  items: readonly FeedItem[],
+  userId: string,
+  tzOffsetMinutes = 0,
+): number {
+  const days = new Set<string>();
+  for (const it of items) {
+    if (it.authorId === userId && it.type === 'session') days.add(localDayKey(it.createdAt, tzOffsetMinutes));
+  }
+  return Math.min(days.size, MUSCU_GRAPH.nodes.length);
 }
 
-/** États des nœuds + arêtes pour un nombre de paliers débloqués (ordre topologique). */
+/**
+ * Ensemble des nœuds « done » : on dépense `budget` paliers en propagation sur le DAG,
+ * en ne débloquant qu'un nœud dont TOUS les `requires` sont déjà done (l'`order` ne sert
+ * qu'à départager les débloquables simultanés). Robuste aux prérequis multiples et à un
+ * `order` non topologique — contrairement à l'ancien `order < unlocked`.
+ */
+function computeDone(graph: SkillGraph, budget: number): Set<string> {
+  const done = new Set<string>();
+  let remaining = Math.min(budget, graph.nodes.length);
+  while (remaining > 0) {
+    const frontier = graph.nodes
+      .filter((n) => !done.has(n.id) && n.requires.every((rid) => done.has(rid)))
+      .sort((a, b) => a.order - b.order);
+    if (frontier.length === 0) break; // DAG bloqué (prérequis manquant/cycle)
+    done.add(frontier[0].id);
+    remaining -= 1;
+  }
+  return done;
+}
+
+/** États des nœuds + arêtes pour un nombre de paliers débloqués (le long du DAG). */
 export function graphState(graph: SkillGraph, unlocked: number): GraphState {
-  const isDone = (n: GraphNode): boolean => n.order < unlocked;
+  const done = computeDone(graph, unlocked);
   const nodes = graph.nodes.map((node) => {
     let state: NodeState;
-    if (isDone(node)) state = 'done';
-    else if (node.requires.every((rid) => {
-      const req = graph.nodes.find((r) => r.id === rid);
-      return req ? isDone(req) : true;
-    })) state = 'available';
+    if (done.has(node.id)) state = 'done';
+    else if (node.requires.every((rid) => done.has(rid))) state = 'available';
     else state = 'locked';
     return { node, state };
   });
   const edges: GraphEdge[] = [];
   for (const node of graph.nodes) {
     for (const rid of node.requires) {
-      const req = graph.nodes.find((r) => r.id === rid);
-      edges.push({ from: rid, to: node.id, active: req ? isDone(req) : false });
+      edges.push({ from: rid, to: node.id, active: done.has(rid) });
     }
   }
   return { nodes, edges };

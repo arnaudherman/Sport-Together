@@ -6,6 +6,21 @@ pas encore versionné (pré-MVP) ; entrées par date. Détail des décisions dan
 
 ## [Non publié]
 
+### 2026-07-01 — Améliorations correction métier + tests (chasse aux améliorations)
+
+- **Arbre de compétences (skill-graph)** : déblocage **topologique réel** (respecte les
+  prérequis `requires`, robuste aux prérequis multiples et à un `order` non topologique —
+  fini le compteur linéaire déguisé) ; et **non farmable** (compte les **jours**
+  d'entraînement distincts, plus les posts bruts). Tests DAG + dédup jour.
+- **Nutrition (`validateMeal`)** : borne macro par repas réaliste (5000 → **500 g**),
+  **cohérence souple énergie↔macros** (±40 %, seulement si tout est fourni), et refus des
+  **libellés visuellement vides** (espaces zéro-largeur). Tests neufs.
+- **Réactions optimistes** : logique pure extraite (`domain/usecases/reaction-toggle.ts`)
+  avec **clamp ≥ 0** (plus de compteur négatif) + tests.
+- **Filtre du fil** extrait et testé (`ui/feed-filter.ts` : Tout / Abonnements / Groupes).
+- **Couverture** : premiers tests de `ui/` (`format.ts`, filtre du fil), test du **contrat
+  « publier en solo »** (mock accepte / Supabase rejette). **44 → 70 tests.**
+
 ### 2026-07-01 — Polish premium + visibilité des abonnements (backend)
 
 - **Polish (revue polish multi-agents)** : retour **haptique** (réactions, publier,

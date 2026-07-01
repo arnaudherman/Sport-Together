@@ -101,7 +101,7 @@ export function ProfileScreen({
     () => streakFromFeed(items, targetUserId, tz, new Date().toISOString()),
     [items, targetUserId, tz],
   );
-  const unlocked = useMemo(() => sessionsUnlocked(items, targetUserId), [items, targetUserId]);
+  const unlocked = useMemo(() => sessionsUnlocked(items, targetUserId, tz), [items, targetUserId, tz]);
   const bravos = useMemo(() => {
     let n = 0;
     for (const it of items) {

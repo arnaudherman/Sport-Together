@@ -6,34 +6,20 @@ import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } fr
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useFeedRepository, useFollowRepository, useReactionRepository } from '@/core/di/repositories-context';
-import { EMPTY_REACTIONS, type FeedItem, type ReactionKind } from '@/domain/entities/feed';
+import { type FeedItem, type ReactionKind } from '@/domain/entities/feed';
+import { withToggledReaction } from '@/domain/usecases/reaction-toggle';
 import { avatarColor, initial } from '@/ui/format';
 import { FeedItemCard } from '@/ui/feed-item-card';
+import { filterFeed, type FeedTab } from '@/ui/feed-filter';
 import { LevelHeader } from '@/ui/level-header';
 import { ScreenState } from '@/ui/screen-state';
 import { colors, font, gradients, radius } from '@/ui/theme';
 
-type Tab = 'tout' | 'abonnements' | 'groupes';
-
-const TABS: { key: Tab; label: string }[] = [
+const TABS: { key: FeedTab; label: string }[] = [
   { key: 'tout', label: 'Tout' },
   { key: 'abonnements', label: 'Abonnements' },
   { key: 'groupes', label: 'Groupes' },
 ];
-
-/** Applique un toggle de réaction à un item (pour l'optimistic update). */
-function withToggledReaction(item: FeedItem, kind: ReactionKind, on: boolean): FeedItem {
-  const r = item.reactions ?? EMPTY_REACTIONS;
-  const delta = on ? 1 : -1;
-  return {
-    ...item,
-    reactions: {
-      kudos: r.kudos + (kind === 'kudos' ? delta : 0),
-      encouragement: r.encouragement + (kind === 'encouragement' ? delta : 0),
-      mine: on ? [...new Set([...r.mine, kind])] : r.mine.filter((k) => k !== kind),
-    },
-  };
-}
 
 /** Accueil solo (DA) : fil social type Twitter (toi + abonnements + groupes). */
 export function FeedView({
@@ -60,7 +46,7 @@ export function FeedView({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [tab, setTab] = useState<Tab>('tout');
+  const [tab, setTab] = useState<FeedTab>('tout');
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -103,12 +89,7 @@ export function FeedView({
     if (mounted.current) setRefreshing(false);
   }
 
-  const filtered = useMemo(() => {
-    // « Abonnements » à la Twitter : tes propres posts + ceux des gens que tu suis.
-    if (tab === 'abonnements') return items.filter((i) => i.authorId === userId || following.includes(i.authorId));
-    if (tab === 'groupes') return items.filter((i) => !!i.groupName);
-    return items;
-  }, [items, tab, following, userId]);
+  const filtered = useMemo(() => filterFeed(items, tab, userId, following), [items, tab, userId, following]);
 
   async function toggleReaction(item: FeedItem, kind: ReactionKind) {
     const active = (item.reactions?.mine ?? []).includes(kind);
