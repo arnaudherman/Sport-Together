@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import type { FeedItem } from '@/domain/entities/feed';
 import { MUSCU_GRAPH } from '@/domain/usecases/skill-graph';
+import { CommentsScreen } from '@/ui/comments-screen';
 import { FeedView } from '@/ui/feed-view';
 import { GroupScreen } from '@/ui/group-screen';
 import { HolyGraph } from '@/ui/holy-graph';
@@ -15,6 +17,16 @@ const DEMO_GROUPS = [
   { id: 'demo-group', name: 'The Crew' },
   { id: 'les-costauds', name: 'Les Costauds' },
 ];
+const DEMO_POST: FeedItem = {
+  id: 'd0-lea-s',
+  groupId: 'demo-group',
+  authorId: 'u-lea',
+  authorName: 'Léa',
+  type: 'session',
+  createdAt: new Date(Date.now() - 12 * 60_000).toISOString(),
+  summary: '30 min de renforcement',
+  groupName: 'The Crew',
+};
 
 const SCREENS: { label: string; node: ReactNode }[] = [
   {
@@ -50,6 +62,10 @@ const SCREENS: { label: string; node: ReactNode }[] = [
         </ScrollView>
       </View>
     ),
+  },
+  {
+    label: 'Réponses',
+    node: <CommentsScreen item={DEMO_POST} onBack={noop} />,
   },
   {
     label: 'Publier',

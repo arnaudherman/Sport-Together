@@ -6,6 +6,21 @@ pas encore versionné (pré-MVP) ; entrées par date. Détail des décisions dan
 
 ## [Non publié]
 
+### 2026-07-01 — Pivot solo-first + couche sociale (Twitter-like)
+
+- **Pivot solo-first** (ADR-0010, vision v2) : plus de groupe obligatoire ; l'**accueil**
+  devient un **fil social** (Tout / Abonnements / Groupes) ; les groupes sont un **add-on
+  privé** d'entraide, affichés sur le profil (badge 🔒 sur les posts de groupe).
+- **Refonte type Twitter** : posts (fil & profil), profil à **onglets** (Publications /
+  Compétences / Médias), **arbre de compétences en holy graph ramifié** (react-native-svg),
+  écran **« Publier une séance »** (composer).
+- **Abonnements** (`follows`) : suivre / ne plus suivre **persistant**, onglet
+  « Abonnements » filtré (repo mock + Supabase + migration `follows` + RLS).
+- **Commentaires** (Twitter-like) : écran **Réponses** (fil + composer), **compteur 💬**
+  sur les posts (repo mock + Supabase + migration `comments` + RLS par membre).
+- **Écran Compte** (P0 App Store) : déconnexion + suppression de compte.
+- **Fix** : retrait de la **barre blanche** en haut (header de navigation désactivé).
+
 ### 2026-07-01 — Backend prouvé sur du réel + corrections
 
 - **Vérifié de bout en bout sur un vrai Supabase** (stack local `supabase start`) :

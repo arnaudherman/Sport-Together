@@ -4,11 +4,12 @@
 > MVP · **P2** = post-MVP · **P3** = confort/polish. Ce qui est fait est dans le
 > [CHANGELOG](./CHANGELOG.md).
 
+> **Fait le 2026-07-01** (cf. CHANGELOG) : pivot solo-first + Twitter-like ; écran Compte ;
+> abonnements (`follows`) ; commentaires (`comments`) ; retrait de la barre blanche.
+
 ## P0 — Bloquants avant un vrai lancement
 
-- [ ] **Écran Compte** : déconnexion + **suppression de compte** (exigence Apple/RGPD).
-  Les méthodes existent déjà (`AuthRepository.signOut` / `deleteAccount`, Edge Function
-  `delete_account`), il manque l'UI et le câblage.
+- [x] **Écran Compte** : déconnexion + **suppression de compte** — UI + câblage faits.
 - [ ] **Déployer sur un projet Supabase cloud** : appliquer les migrations (incl.
   `090800_grants`), activer Email + `{{ .Token }}`, configurer Storage. Script turnkey
   prêt (`supabase/apply-migrations.sh`).
@@ -31,8 +32,12 @@
 
 - [ ] **Quêtes d'entraide réelles** : tables `quests` + écran (« aider Léa à 15 tractions »),
   XP de mentor. Aujourd'hui carte « Bientôt ».
-- [ ] **Amis inter-groupes (hybride)** : table `follows` + onglet « Amis » réel + bouton
-  « Suivre » persistant (aujourd'hui local/stub).
+- [~] **Abonnements (`follows`)** : table + repo + Suivre persistant + onglet Abonnements ✓.
+  **Reste** : la RLS de `feed_items` doit inclure « auteur suivi » pour voir les posts d'un
+  abonnement HORS de ses groupes (aujourd'hui l'accueil réel ne remonte que ses groupes) ;
+  et une **timeline perso** (publier « solo » sans groupe → `group_id` nullable ou groupe perso).
+- [~] **Commentaires** : écran Réponses + compteur + tables/RLS ✓ (mock complet). Reste :
+  temps réel + notifications de réponse.
 - [ ] **Arbres de compétences** : au-delà de Muscu → Souffle, Hygiène de vie, Esprit/Lecture.
   Modèle `skill_nodes` / `user_skill_progress` à matérialiser (aujourd'hui dérivé du feed).
 - [ ] **Radar de compétences** : brancher sur de vraies données de compétences (aujourd'hui
