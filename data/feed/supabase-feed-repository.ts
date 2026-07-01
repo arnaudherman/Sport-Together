@@ -18,11 +18,18 @@ interface FeedRow {
   type: FeedItemType;
   created_at: string;
   author: OneOrMany<{ pseudo: string }>;
+  group: OneOrMany<{ name: string }>;
   sessions: OneOrMany<{ activity: string; duration_min: number | null }>;
   step_logs: OneOrMany<{ steps: number }>;
   meals: OneOrMany<{ label: string; calories_kcal: number | null }>;
   reactions: { kind: ReactionKind; author_id: string | null }[] | null;
 }
+
+const FEED_SELECT =
+  'id, group_id, author_id, type, created_at, ' +
+  'author:profiles(pseudo), group:groups(name), ' +
+  'sessions(activity, duration_min), step_logs(steps), ' +
+  'meals(label, calories_kcal), reactions(kind, author_id)';
 
 function pickOne<T>(value: OneOrMany<T>): T | null {
   if (Array.isArray(value)) return value[0] ?? null;
@@ -58,6 +65,20 @@ function reactionSummary(rows: FeedRow['reactions'], viewerId: string): Reaction
   };
 }
 
+function mapRow(row: FeedRow, viewerId: string): FeedItem {
+  return {
+    id: row.id,
+    groupId: row.group_id,
+    authorId: row.author_id ?? '',
+    authorName: pickOne(row.author)?.pseudo ?? 'Membre supprimé',
+    type: row.type,
+    createdAt: row.created_at,
+    summary: summarize(row),
+    reactions: reactionSummary(row.reactions, viewerId),
+    groupName: pickOne(row.group)?.name ?? undefined,
+  };
+}
+
 /**
  * Implémentation Supabase du FeedRepository (ADR-0002 / ADR-0004). Lecture du feed
  * polymorphe (jointures auteur + détails + réactions) ; écriture via RPC atomiques
@@ -73,35 +94,27 @@ export class SupabaseFeedRepository implements FeedRepository {
     return data.session?.user.id ?? '';
   }
 
-  async listGroupFeed(groupId: string): Promise<FeedItem[]> {
+  async listHomeFeed(): Promise<FeedItem[]> {
+    // Pas de filtre groupe : la RLS ne renvoie que les entrées visibles par
+    // l'utilisateur (ses groupes ; abonnements à venir). Solo-first.
     const viewerId = await this.viewerId();
-
     const { data, error } = await this.client
       .from('feed_items')
-      .select(
-        'id, group_id, author_id, type, created_at, ' +
-          'author:profiles(pseudo), ' +
-          'sessions(activity, duration_min), ' +
-          'step_logs(steps), ' +
-          'meals(label, calories_kcal), ' +
-          'reactions(kind, author_id)',
-      )
+      .select(FEED_SELECT)
+      .order('created_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    return ((data ?? []) as unknown as FeedRow[]).map((row) => mapRow(row, viewerId));
+  }
+
+  async listGroupFeed(groupId: string): Promise<FeedItem[]> {
+    const viewerId = await this.viewerId();
+    const { data, error } = await this.client
+      .from('feed_items')
+      .select(FEED_SELECT)
       .eq('group_id', groupId)
       .order('created_at', { ascending: false });
-
     if (error) throw new Error(error.message);
-
-    const rows = (data ?? []) as unknown as FeedRow[];
-    return rows.map((row) => ({
-      id: row.id,
-      groupId: row.group_id,
-      authorId: row.author_id ?? '',
-      authorName: pickOne(row.author)?.pseudo ?? 'Membre supprimé',
-      type: row.type,
-      createdAt: row.created_at,
-      summary: summarize(row),
-      reactions: reactionSummary(row.reactions, viewerId),
-    }));
+    return ((data ?? []) as unknown as FeedRow[]).map((row) => mapRow(row, viewerId));
   }
 
   async logSession(groupId: string, activity: string, durationMin?: number): Promise<void> {

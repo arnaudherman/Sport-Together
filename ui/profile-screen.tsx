@@ -18,17 +18,21 @@ type Tab = 'publications' | 'competences' | 'medias';
 
 /** Profil type Twitter : fil de posts + arbre de compétences (holy graph). */
 export function ProfileScreen({
-  groupId,
   targetUserId,
   targetName,
   currentUserId,
+  groups,
   onBack,
+  onOpenGroup,
+  onJoinGroup,
 }: {
-  groupId: string;
   targetUserId: string;
   targetName: string;
   currentUserId: string;
+  groups: { id: string; name: string }[];
   onBack: () => void;
+  onOpenGroup: (id: string) => void;
+  onJoinGroup: () => void;
 }) {
   const feedRepo = useFeedRepository();
   const [items, setItems] = useState<FeedItem[]>([]);
@@ -47,7 +51,7 @@ export function ProfileScreen({
 
   const load = useCallback(async () => {
     try {
-      const data = await feedRepo.listGroupFeed(groupId);
+      const data = await feedRepo.listHomeFeed();
       if (mounted.current) {
         setItems(data.filter((it) => it.authorId === targetUserId));
         setError(null);
@@ -57,7 +61,7 @@ export function ProfileScreen({
     } finally {
       if (mounted.current) setLoading(false);
     }
-  }, [feedRepo, groupId, targetUserId]);
+  }, [feedRepo, targetUserId]);
 
   useEffect(() => {
     load();
@@ -149,6 +153,18 @@ export function ProfileScreen({
             <Text style={styles.statText}><Text style={styles.statNum}>{xp}</Text> XP</Text>
           </View>
 
+          <View style={styles.grp}>
+            <Text style={styles.grpLabel}>Groupes</Text>
+            {groups.map((g) => (
+              <Pressable key={g.id} onPress={() => onOpenGroup(g.id)} style={styles.gcard}>
+                <Text style={styles.gcardText}>🔒 {g.name}</Text>
+              </Pressable>
+            ))}
+            <Pressable onPress={onJoinGroup} style={[styles.gcard, styles.gcardAdd]}>
+              <Text style={styles.gcardAddText}>＋ Rejoindre</Text>
+            </Pressable>
+          </View>
+
           <View style={styles.tabs}>
             {TABS.map((t) => (
               <Pressable key={t.key} onPress={() => setTab(t.key)} style={styles.tab}>
@@ -213,6 +229,12 @@ const styles = StyleSheet.create({
   stats: { flexDirection: 'row', gap: 16, marginTop: 10, paddingHorizontal: 4 },
   statText: { fontSize: 13, color: colors.textMuted },
   statNum: { color: colors.text, fontWeight: '800' },
+  grp: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 12, paddingHorizontal: 4 },
+  grpLabel: { ...font.label, marginRight: 2 },
+  gcard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 7 },
+  gcardText: { fontSize: 13, fontWeight: '700', color: colors.text },
+  gcardAdd: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
+  gcardAddText: { fontSize: 13, fontWeight: '700', color: colors.accent },
   tabs: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.border, marginTop: 16 },
   tab: { flex: 1, alignItems: 'center', paddingVertical: 12 },
   tabText: { fontSize: 14, fontWeight: '700', color: colors.textMuted },

@@ -20,13 +20,11 @@ export function GroupScreen({
   groupId,
   userId,
   onBack,
-  onChangeGroup,
   onOpenProfile,
 }: {
   groupId: string;
   userId: string;
   onBack: () => void;
-  onChangeGroup: () => void;
   onOpenProfile: (id: string, name: string) => void;
 }) {
   const groupRepo = useGroupRepository();
@@ -115,9 +113,7 @@ export function GroupScreen({
           <Text style={styles.back}>Retour</Text>
         </Pressable>
         <Text style={styles.title}>Ton groupe</Text>
-        <Pressable onPress={onChangeGroup} hitSlop={{ top: 12, bottom: 12, left: 16, right: 8 }}>
-          <Text style={styles.link}>Changer</Text>
-        </Pressable>
+        <View style={styles.backRow} />
       </View>
 
       <ScreenState loading={loading} error={error} hasData={members.length > 0} onRetry={load}>

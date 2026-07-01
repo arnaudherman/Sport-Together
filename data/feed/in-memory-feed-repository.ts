@@ -25,9 +25,16 @@ export class InMemoryFeedRepository implements FeedRepository {
     this.items = [...seed];
   }
 
+  async listHomeFeed(): Promise<FeedItem[]> {
+    return this.withReactions(this.items);
+  }
+
   async listGroupFeed(groupId: string): Promise<FeedItem[]> {
-    return this.items
-      .filter((item) => item.groupId === groupId)
+    return this.withReactions(this.items.filter((item) => item.groupId === groupId));
+  }
+
+  private withReactions(items: readonly FeedItem[]): FeedItem[] {
+    return [...items]
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .map((item) => ({
         ...item,
@@ -79,25 +86,28 @@ function demoItem(
   type: FeedItemType,
   createdAt: string,
   summary: string,
+  groupName?: string,
 ): FeedItem {
-  return { id, groupId: 'demo-group', authorId, authorName, type, createdAt, summary };
+  return { id, groupId: 'demo-group', authorId, authorName, type, createdAt, summary, groupName };
 }
 
+// Solo-first : Moi = posts perso, Sam = abonnement (pas de groupe), Léa/Noa =
+// activité de groupes privés (badge). Alimente les segments Tout/Abonnements/Groupes.
 export const DEMO_FEED: readonly FeedItem[] = [
-  // Aujourd'hui — les 4 membres ont loggé (journée parfaite).
+  // Aujourd'hui
   demoItem('d0-moi-s', 'local-user', 'Moi', 'session', at(0, 40), '45 min de course — plus longue série cette semaine'),
-  demoItem('d0-lea-s', 'u-lea', 'Léa', 'session', at(0, 12), '30 min de renforcement'),
+  demoItem('d0-lea-s', 'u-lea', 'Léa', 'session', at(0, 12), '30 min de renforcement', 'The Crew'),
   demoItem('d0-sam-st', 'u-sam', 'Sam', 'steps', at(0, 74), '10 248 pas'),
-  demoItem('d0-noa-m', 'u-noa', 'Noa', 'meal', at(0, 150), 'Salade César · 480 kcal'),
-  // Hier — les 4 membres aussi (2e journée parfaite → streak groupe = 2).
+  demoItem('d0-noa-m', 'u-noa', 'Noa', 'meal', at(0, 150), 'Salade César · 480 kcal', 'Les Costauds'),
+  // Hier
   demoItem('d1-moi-s', 'local-user', 'Moi', 'session', at(1, 60), 'Muscu haut du corps'),
   demoItem('d1-moi-m', 'local-user', 'Moi', 'meal', at(1, 200), 'Poulet-riz · 640 kcal'),
-  demoItem('d1-lea-s', 'u-lea', 'Léa', 'session', at(1, 30), 'Course 5 km'),
+  demoItem('d1-lea-s', 'u-lea', 'Léa', 'session', at(1, 30), 'Course 5 km', 'The Crew'),
   demoItem('d1-sam-s', 'u-sam', 'Sam', 'session', at(1, 90), 'Vélo 40 min'),
-  demoItem('d1-noa-st', 'u-noa', 'Noa', 'steps', at(1, 120), '8 430 pas'),
-  // Avant-hier — partiel (le streak groupe s'arrête ici).
+  demoItem('d1-noa-st', 'u-noa', 'Noa', 'steps', at(1, 120), '8 430 pas', 'Les Costauds'),
+  // Avant-hier
   demoItem('d2-moi-s', 'local-user', 'Moi', 'session', at(2, 50), 'Gainage + pompes'),
-  demoItem('d2-lea-m', 'u-lea', 'Léa', 'meal', at(2, 180), 'Buddha bowl · 550 kcal'),
+  demoItem('d2-lea-m', 'u-lea', 'Léa', 'meal', at(2, 180), 'Buddha bowl · 550 kcal', 'The Crew'),
 ];
 
 /** Réactions de démonstration (mode hors-ligne). Viewer = 'local-user'. */

@@ -3,9 +3,12 @@ import type { GroupRepository } from '@/domain/repositories/group-repository';
 
 /** Mock de GroupRepository (hors-ligne / tests). Garde les groupes en mémoire. */
 export class InMemoryGroupRepository implements GroupRepository {
-  // Pré-seedé avec le groupe de démo (id = 'demo-group', celui de DEMO_FEED) pour
-  // qu'en mode faux-user on atterrisse directement dans un feed peuplé.
-  private readonly groups: Group[] = [{ id: 'demo-group', name: 'The Crew' }];
+  // Pré-seedé avec des groupes de démo (solo-first : add-on). 'demo-group' porte
+  // DEMO_FEED ; 'les-costauds' illustre l'appartenance à plusieurs cercles.
+  private readonly groups: Group[] = [
+    { id: 'demo-group', name: 'The Crew' },
+    { id: 'les-costauds', name: 'Les Costauds' },
+  ];
 
   async listMyGroups(): Promise<Group[]> {
     return this.groups.map((g) => ({ id: g.id, name: g.name }));

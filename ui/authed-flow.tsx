@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+import { useGroupRepository } from '@/core/di/repositories-context';
+import type { Group } from '@/domain/entities/group';
 import { ErrorRetry } from '@/ui/error-retry';
 import { FeedView } from '@/ui/feed-view';
 import { GroupGate } from '@/ui/group-gate';
@@ -8,21 +10,38 @@ import { GroupScreen } from '@/ui/group-screen';
 import { LogScreen } from '@/ui/log-screen';
 import { ProfileOnboarding } from '@/ui/profile-onboarding';
 import { ProfileScreen } from '@/ui/profile-screen';
-import { SkillTreeScreen } from '@/ui/skill-tree-screen';
 import { colors } from '@/ui/theme';
 import { useProfile } from '@/ui/use-profile';
 
-type Screen = 'feed' | 'group' | 'skills' | 'log' | { profile: { id: string; name: string } };
+type Screen =
+  | 'home'
+  | 'log'
+  | 'groups'
+  | { profile: { id: string; name: string } }
+  | { group: { id: string } };
 
 /**
- * Flux applicatif une fois connecté : onboarding profil -> choix du groupe ->
- * feed <-> groupe / profil / progression / log. Monté avec `key={userId}` par
- * l'écran racine : tout l'état est remis à zéro au changement de compte.
+ * Flux applicatif (solo-first) : onboarding -> accueil (fil social). Les groupes
+ * sont un add-on optionnel (rejoindre/créer, écran d'entraide), accessibles depuis
+ * le profil. Plus de gate groupe obligatoire. Monté avec `key={userId}`.
  */
 export function AuthedFlow({ userId }: { userId: string }) {
   const { profile, loading, error, reload, applyProfile } = useProfile();
-  const [groupId, setGroupId] = useState<string | null>(null);
-  const [view, setView] = useState<Screen>('feed');
+  const groupRepo = useGroupRepository();
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [view, setView] = useState<Screen>('home');
+
+  const loadGroups = useCallback(async () => {
+    try {
+      setGroups(await groupRepo.listMyGroups());
+    } catch {
+      /* les groupes sont optionnels : on n'échoue pas l'accueil pour autant */
+    }
+  }, [groupRepo]);
+
+  useEffect(() => {
+    loadGroups();
+  }, [loadGroups]);
 
   if (loading) {
     return (
@@ -40,71 +59,71 @@ export function AuthedFlow({ userId }: { userId: string }) {
     return <ProfileOnboarding onDone={applyProfile} />;
   }
 
-  if (!groupId) {
-    return (
-      <GroupGate
-        onReady={(id) => {
-          setGroupId(id);
-          setView('feed');
-        }}
-      />
-    );
-  }
+  const groupList = groups.map((g) => ({ id: g.id, name: g.name }));
+  const postingGroupId = groups[0]?.id ?? null;
 
-  if (typeof view === 'object') {
+  if (typeof view === 'object' && 'profile' in view) {
     return (
       <ProfileScreen
-        groupId={groupId}
         targetUserId={view.profile.id}
         targetName={view.profile.name}
         currentUserId={userId}
-        onBack={() => setView('feed')}
+        groups={groupList}
+        onBack={() => setView('home')}
+        onOpenGroup={(id) => setView({ group: { id } })}
+        onJoinGroup={() => setView('groups')}
       />
     );
   }
 
-  if (view === 'group') {
+  if (typeof view === 'object' && 'group' in view) {
     return (
       <GroupScreen
-        key={groupId}
-        groupId={groupId}
+        key={view.group.id}
+        groupId={view.group.id}
         userId={userId}
-        onBack={() => setView('feed')}
-        onChangeGroup={() => {
-          setGroupId(null);
-          setView('feed');
-        }}
+        onBack={() => setView('home')}
         onOpenProfile={(id, name) => setView({ profile: { id, name } })}
       />
     );
   }
 
-  if (view === 'skills') {
+  if (view === 'groups') {
     return (
-      <SkillTreeScreen
-        key={groupId}
-        groupId={groupId}
-        userId={userId}
-        onBack={() => setView('feed')}
-        onLog={() => setView('log')}
+      <GroupGate
+        onBack={() => setView('home')}
+        onReady={(id) => {
+          loadGroups();
+          setView({ group: { id } });
+        }}
       />
     );
   }
 
   if (view === 'log') {
-    return <LogScreen key={groupId} groupId={groupId} onDone={() => setView('feed')} onCancel={() => setView('feed')} />;
+    if (!postingGroupId) {
+      // Pas encore de groupe où publier : on invite à en rejoindre / créer un.
+      return (
+        <GroupGate
+          onBack={() => setView('home')}
+          onReady={() => {
+            loadGroups();
+            setView('home');
+          }}
+        />
+      );
+    }
+    return (
+      <LogScreen groupId={postingGroupId} onDone={() => setView('home')} onCancel={() => setView('home')} />
+    );
   }
 
   return (
     <FeedView
-      key={groupId}
-      groupId={groupId}
       userId={userId}
       pseudo={profile.pseudo}
-      onOpenGroup={() => setView('group')}
       onOpenProfile={(id, name) => setView({ profile: { id, name } })}
       onOpenLog={() => setView('log')}
-      onOpenSkills={() => setView('skills')}
     />
   );
 }

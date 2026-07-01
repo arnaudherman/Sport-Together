@@ -42,9 +42,16 @@ export function FeedItemCard({
         <View style={styles.head}>
           <Pressable style={styles.who} onPress={onPressAuthor} hitSlop={6}>
             <Text style={styles.name} numberOfLines={1}>{item.authorName}</Text>
-            <Text style={styles.handle} numberOfLines={1}>
-              {handle(item.authorName)} · {timeAgo(item.createdAt)}
-            </Text>
+            <View style={styles.handleRow}>
+              <Text style={styles.handle} numberOfLines={1}>
+                {handle(item.authorName)} · {timeAgo(item.createdAt)}
+              </Text>
+              {item.groupName ? (
+                <View style={styles.gbadge}>
+                  <Text style={styles.gbadgeText}>🔒 {item.groupName}</Text>
+                </View>
+              ) : null}
+            </View>
           </Pressable>
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{TYPE_LABEL[item.type]}</Text>
@@ -96,7 +103,10 @@ const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 },
   who: { flex: 1 },
   name: { ...font.title, fontWeight: '800' },
+  handleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   handle: { fontSize: 13, color: colors.textMuted },
+  gbadge: { backgroundColor: colors.accentSoft, borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 1 },
+  gbadgeText: { fontSize: 10, fontWeight: '700', color: colors.accent },
   badge: { backgroundColor: colors.surfaceElevated, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 },
   badgeText: { fontSize: 11, fontWeight: '700', color: colors.textMuted },
   text: { ...font.body, marginTop: 2 },

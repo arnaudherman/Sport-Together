@@ -238,6 +238,7 @@ que ce soit.
 | ADR-0007 | Architecture client en couches (repositories + DI) | **accepté** |
 | ADR-0008 | Nutrition : modèle de données & garde-fous | **accepté** |
 | ADR-0009 | Gamification & progression (XP, niveaux, arbres, entraide) | **accepté** |
+| ADR-0010 | Solo-first — le groupe devient un add-on optionnel | **accepté** |
 
 > **Note :** la nutrition fait l'objet d'un ADR dédié (ADR-0008 : modèle de données
 > calories/macros + garde-fous TCA), vu sa centralité au MVP et sa sensibilité. Le
@@ -248,6 +249,14 @@ que ce soit.
 
 ## Journal des révisions
 
+- **v2.0 (2026-07-01)** — **Pivot solo-first** (ADR-0010). Le groupe n'est plus l'unité
+  de valeur ni obligatoire : l'**individu** est au cœur (progression, posts, profil), et
+  les **groupes** deviennent un **add-on privé d'entraide** (rejoignables par code,
+  remontés dans l'accueil, affichés sur le profil). L'accueil devient un **fil social
+  type Twitter** (Tout / Abonnements / Groupes) ; publier = poster. La rétention solo est
+  portée par la gamification perso (ADR-0009) et le follow. Cela **révise §2/§3** (« une
+  personne seule n'a aucune raison de rester » ne tient plus). Reste à construire :
+  abonnements (`follows`), timeline perso — cf. `docs/BACKLOG.md`.
 - **v1.2 (2026-07-01)** — Mise en œuvre & vérification. Front en DA « dark cinématique »
   (dégradés, icônes, radar, skeletons) + flux social complet (feed/groupe/profil/
   progression/log). **Backend prouvé sur un vrai Supabase** (stack local, e2e 11/11,

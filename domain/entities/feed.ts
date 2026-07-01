@@ -31,6 +31,11 @@ export interface FeedItem {
   summary: string;
   /** Présent quand l'entrée est lue via un repository ; absent ailleurs. */
   reactions?: ReactionSummary;
+  /**
+   * Nom du groupe d'où provient l'entrée, pour le badge dans l'accueil solo.
+   * Absent = post « solo » / d'un abonnement (pas via un groupe).
+   */
+  groupName?: string;
 }
 
 /** Agrégat vide réutilisable. */

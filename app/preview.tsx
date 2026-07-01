@@ -1,61 +1,56 @@
 import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { MUSCU_GRAPH } from '@/domain/usecases/skill-graph';
 import { FeedView } from '@/ui/feed-view';
 import { GroupScreen } from '@/ui/group-screen';
+import { HolyGraph } from '@/ui/holy-graph';
 import { LogScreen } from '@/ui/log-screen';
 import { ProfileScreen } from '@/ui/profile-screen';
-import { SkillTreeScreen } from '@/ui/skill-tree-screen';
 
 // Route de PREVIEW (dev-only) : rend les écrans réels avec des données mock pour
 // les captures. Non destinée à la production.
 const noop = () => {};
+const DEMO_GROUPS = [
+  { id: 'demo-group', name: 'The Crew' },
+  { id: 'les-costauds', name: 'Les Costauds' },
+];
 
 const SCREENS: { label: string; node: ReactNode }[] = [
   {
-    label: 'Feed',
-    node: (
-      <FeedView
-        groupId="demo-group"
-        userId="local-user"
-        pseudo="Toi"
-        onOpenGroup={noop}
-        onOpenProfile={noop}
-        onOpenLog={noop}
-        onOpenSkills={noop}
-      />
-    ),
+    label: 'Accueil',
+    node: <FeedView userId="local-user" pseudo="Toi" onOpenProfile={noop} onOpenLog={noop} />,
   },
   {
     label: 'Groupe',
-    node: (
-      <GroupScreen
-        groupId="demo-group"
-        userId="local-user"
-        onBack={noop}
-        onChangeGroup={noop}
-        onOpenProfile={noop}
-      />
-    ),
+    node: <GroupScreen groupId="demo-group" userId="local-user" onBack={noop} onOpenProfile={noop} />,
   },
   {
     label: 'Profil',
     node: (
       <ProfileScreen
-        groupId="demo-group"
         targetUserId="u-lea"
         targetName="Léa"
         currentUserId="local-user"
+        groups={DEMO_GROUPS}
         onBack={noop}
+        onOpenGroup={noop}
+        onJoinGroup={noop}
       />
     ),
   },
   {
-    label: 'Progression',
-    node: <SkillTreeScreen groupId="demo-group" userId="local-user" onBack={noop} onLog={noop} />,
+    label: 'Compétences',
+    node: (
+      <View style={{ flex: 1, backgroundColor: '#0B0B0D' }}>
+        <ScrollView contentContainerStyle={{ alignItems: 'center', paddingVertical: 16 }}>
+          <HolyGraph graph={MUSCU_GRAPH} unlocked={3} />
+        </ScrollView>
+      </View>
+    ),
   },
   {
-    label: 'Logger',
+    label: 'Publier',
     node: <LogScreen groupId="demo-group" onDone={noop} onCancel={noop} />,
   },
 ];

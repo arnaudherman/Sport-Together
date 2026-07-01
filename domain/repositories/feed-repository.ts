@@ -7,6 +7,11 @@ import type { MealInput } from '@/domain/entities/meal';
  * dans `data/` ; un mock en mémoire sert aux tests et au mode hors-ligne.
  */
 export interface FeedRepository {
+  /**
+   * Fil d'accueil (solo-first) : toutes les entrées que l'utilisateur peut voir
+   * (ses posts + ses abonnements + ses groupes), du plus récent au plus ancien.
+   */
+  listHomeFeed(): Promise<FeedItem[]>;
   /** Entrées du feed d'un groupe, du plus récent au plus ancien (ADR-0002). */
   listGroupFeed(groupId: string): Promise<FeedItem[]>;
   /** Logge une séance (entrée de type `session`). */

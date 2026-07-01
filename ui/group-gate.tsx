@@ -6,8 +6,14 @@ import type { Group } from '@/domain/entities/group';
 import { PrimaryButton } from '@/ui/button';
 import { colors, font, radius } from '@/ui/theme';
 
-/** Choix d'un groupe : liste de mes groupes + créer / rejoindre (ADR-0004). */
-export function GroupGate({ onReady }: { onReady: (groupId: string) => void }) {
+/** Rejoindre / créer un groupe (add-on solo-first, ADR-0004). */
+export function GroupGate({
+  onReady,
+  onBack,
+}: {
+  onReady: (groupId: string) => void;
+  onBack: () => void;
+}) {
   const groups = useGroupRepository();
   const [myGroups, setMyGroups] = useState<Group[]>([]);
   const [name, setName] = useState('');
@@ -85,6 +91,9 @@ export function GroupGate({ onReady }: { onReady: (groupId: string) => void }) {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
+      <Pressable onPress={onBack} hitSlop={10} style={styles.backRow}>
+        <Text style={styles.link}>‹ Retour</Text>
+      </Pressable>
       <Text style={styles.title}>Tes groupes</Text>
       {myGroups.length === 0 ? (
         <Text style={styles.hint}>Aucun groupe — crée-en un ou rejoins celui d'un ami.</Text>
@@ -134,6 +143,7 @@ const styles = StyleSheet.create({
   code: { ...font.display, color: colors.accent, textAlign: 'center', letterSpacing: 2 },
   hint: { ...font.body, color: colors.textMuted, textAlign: 'center' },
   link: { fontSize: 15, color: colors.accent, fontWeight: '700', textAlign: 'center' },
+  backRow: { alignSelf: 'flex-start', marginBottom: 4 },
   groupRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
