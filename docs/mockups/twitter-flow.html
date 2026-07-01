@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Sport Together — profil Twitter · holy graph · composer</title>
+<style>
+  :root{
+    --bg:#0B0B0D; --surface:#161514; --elev:#1D1B19; --border:#2A2825;
+    --text:#F5F4F2; --muted:#8A8784; --faint:#5B5854;
+    --accent:#F0652F; --soft:rgba(240,101,47,.16); --success:#4ADE80;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Inter,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:var(--font)}
+  body{background:#060608;color:var(--text);padding:36px 30px 70px;
+    background-image:radial-gradient(120% 60% at 50% -10%, rgba(240,101,47,.10), transparent 60%)}
+  h1{font-size:24px;font-weight:800;letter-spacing:-.4px}
+  p.lead{color:var(--muted);margin:6px 0 26px;max-width:900px;font-size:15px;line-height:1.5}
+  .frames{display:flex;gap:30px;align-items:flex-start;flex-wrap:wrap}
+  .col{display:flex;flex-direction:column;gap:10px}
+  .cap{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding-left:4px}
+  .phone{width:390px;height:840px;background:var(--bg);border-radius:44px;border:1px solid #222;
+    box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden;display:flex;flex-direction:column;position:relative}
+  .notch{height:28px;display:flex;align-items:center;justify-content:center}
+  .notch::after{content:"";width:120px;height:24px;background:#000;border-radius:0 0 16px 16px}
+  .scroll{flex:1;overflow:hidden}
+  .row{display:flex;align-items:center;gap:10px}
+  .between{justify-content:space-between}
+  .muted{color:var(--muted)} .faint{color:var(--faint)} .accent{color:var(--accent)}
+  .av{width:40px;height:40px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:800;flex:0 0 auto}
+  .pill{background:var(--elev);border-radius:999px;padding:3px 10px;font-size:11px;font-weight:700}
+  .btn{background:var(--accent);color:#0B0B0D;border:none;border-radius:999px;padding:9px 18px;font-weight:800;font-size:14px}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+  /* ---------- PROFIL TWITTER ---------- */
+  .cover{height:120px;background:linear-gradient(160deg,#1a2733,#3b4a3a 45%,#6b4a2a 80%,#2a1e14)}
+  .phead{padding:0 16px}
+  .prow{display:flex;justify-content:space-between;align-items:flex-end;margin-top:-34px}
+  .pav{width:76px;height:76px;border-radius:999px;border:3px solid var(--bg);background:#5a3a2d;color:#ffb894;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800}
+  .name{font-size:22px;font-weight:800;margin-top:10px}
+  .handle{color:var(--muted);font-size:14px}
+  .bio{margin-top:8px;font-size:14px;line-height:1.4}
+  .stats{display:flex;gap:16px;margin-top:10px;font-size:13px;color:var(--muted)}
+  .stats b{color:var(--text)}
+  .tabs{display:flex;border-bottom:1px solid var(--border);margin-top:14px}
+  .tab{flex:1;text-align:center;padding:12px 0;font-weight:700;font-size:14px;color:var(--muted);position:relative}
+  .tab.on{color:var(--text)}
+  .tab.on::after{content:"";position:absolute;bottom:-1px;left:25%;right:25%;height:3px;background:var(--accent);border-radius:3px}
+  .post{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;gap:12px}
+  .post .body{flex:1}
+  .phrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .phrow .n{font-weight:800}
+  .phrow .h{color:var(--muted);font-size:13px}
+  .badge{background:var(--elev);border-radius:999px;padding:2px 8px;font-size:10px;font-weight:700;color:var(--muted)}
+  .ptext{margin-top:4px;font-size:15px;line-height:1.35}
+  .pmedia{height:150px;border-radius:14px;margin-top:8px;background:linear-gradient(120deg,#3a2418,#7a3a1e 60%,#241a12)}
+  .peng{display:flex;gap:22px;margin-top:10px;color:var(--muted);font-size:13px}
+  .peng .x{display:flex;align-items:center;gap:5px}
+  .xp{color:var(--accent);font-weight:800}
+  /* ---------- COMPOSER ---------- */
+  .cbar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border)}
+  .cchips{display:flex;gap:8px;padding:14px 16px 0}
+  .chip{border:1px solid var(--border);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;color:var(--muted);display:flex;gap:6px;align-items:center}
+  .chip.on{background:var(--soft);border-color:var(--accent);color:var(--accent)}
+  .cbody{padding:14px 16px;display:flex;gap:12px}
+  .cph{color:var(--faint);font-size:19px;line-height:1.35;flex:1;padding-top:6px}
+  .cmeta{padding:0 16px;display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+  .ctool{display:flex;gap:18px;padding:14px 16px;border-top:1px solid var(--border);color:var(--accent);font-size:20px}
+  .reward{margin:14px 16px;background:linear-gradient(160deg,rgba(240,101,47,.2),rgba(240,101,47,.05));border:1px solid rgba(240,101,47,.3);border-radius:14px;padding:14px}
+  /* ---------- HOLY GRAPH ---------- */
+  .gtop{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)}
+  .gsum{padding:14px 16px;display:flex;gap:20px}
+  .gsum .big{font-size:26px;font-weight:800}
+  .gsum .lab{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-top:2px}
+  .glabel{font-size:8.5px;font-weight:700;fill:#8A8784}
+  .gvalid{fill:var(--success)}
+  .hint{color:var(--faint);font-size:12px;text-align:center;padding:8px}
+</style>
+</head>
+<body>
+  <h1>Sport Together — <span class="accent">profil Twitter · holy graph · publier une séance</span></h1>
+  <p class="lead">Nouvelle direction : tes séances sont des <b>posts</b>. Les profils ont le fil de posts + l'<b>arbre de compétences (holy graph ramifié)</b> consultable pour soi et ses amis. Logger = <b>publier</b>. DA « dark cinématique ». Contenu fictif.</p>
+
+  <div class="frames">
+
+    <!-- 1. PROFIL TWITTER -->
+    <div class="col">
+      <div class="cap">1 · Profil (type Twitter)</div>
+      <div class="phone"><div class="notch"></div><div class="scroll">
+        <div class="cover"></div>
+        <div class="phead">
+          <div class="prow">
+            <div class="pav">L</div>
+            <button class="btn ghost" style="margin-bottom:6px">✓ Suivi</button>
+          </div>
+          <div class="name">Léa <span class="pill">Niveau 12</span></div>
+          <div class="handle">@lea_run · 🔥 14 jours</div>
+          <div class="bio">Coureuse, lève-tôt. Jamais deux jours sans. 🏃‍♀️</div>
+          <div class="stats"><span><b>142</b> publications</span><span><b>67</b> abonnés</span><span><b>89</b> bravos</span></div>
+        </div>
+        <div class="tabs">
+          <div class="tab on">Publications</div>
+          <div class="tab">Compétences</div>
+          <div class="tab">Médias</div>
+        </div>
+
+        <div class="post">
+          <div class="av" style="background:#5a3a2d;color:#ffb894">L</div>
+          <div class="body">
+            <div class="phrow"><span class="n">Léa</span><span class="h">@lea_run · 12 min</span><span class="badge">Séance</span></div>
+            <div class="ptext">45 min de course 🏃‍♀️ — plus longue série cette semaine. On lâche rien 💪</div>
+            <div class="pmedia"></div>
+            <div class="peng"><span class="x">💬 3</span><span class="x accent">👏 12</span><span class="x">🔁</span><span class="xp">+50 XP</span></div>
+          </div>
+        </div>
+        <div class="post">
+          <div class="av" style="background:#5a3a2d;color:#ffb894">L</div>
+          <div class="body">
+            <div class="phrow"><span class="n">Léa</span><span class="h">@lea_run · hier</span><span class="badge">Repas</span></div>
+            <div class="ptext">Buddha bowl maison 🥗 550 kcal · 40g de prot. Simple et efficace.</div>
+            <div class="peng"><span class="x">💬 1</span><span class="x">👏 5</span><span class="x">🔁</span><span class="xp">+20 XP</span></div>
+          </div>
+        </div>
+        <div class="post" style="border:none">
+          <div class="av" style="background:#5a3a2d;color:#ffb894">L</div>
+          <div class="body">
+            <div class="phrow"><span class="n">Léa</span><span class="h">@lea_run · 2 j</span><span class="badge">Palier 🏆</span></div>
+            <div class="ptext"><span class="accent">Palier débloqué : 10 tractions strictes</span> 🔓 dans l'arbre Corps.</div>
+            <div class="peng"><span class="x">💬 4</span><span class="x accent">👏 18</span><span class="xp">+120 XP</span></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- 2. HOLY GRAPH -->
+    <div class="col">
+      <div class="cap">2 · Compétences (holy graph)</div>
+      <div class="phone"><div class="notch"></div><div class="scroll">
+        <div class="gtop"><div class="row" style="gap:8px"><span class="accent">‹</span><b style="font-size:17px">Compétences · Léa</b></div><span class="pill">Corps ▾</span></div>
+        <div class="gsum">
+          <div><div class="big accent">7<span class="muted" style="font-size:16px">/12</span></div><div class="lab">Paliers débloqués</div></div>
+          <div><div class="big">980</div><div class="lab">XP de l'arbre</div></div>
+        </div>
+        <svg width="390" height="540" viewBox="0 0 390 540">
+          <!-- edges -->
+          <g stroke-width="2" fill="none">
+            <path d="M195,470 L100,395" stroke="#F0652F"/>
+            <path d="M195,470 L280,395" stroke="#F0652F"/>
+            <path d="M100,395 L100,300" stroke="#F0652F"/>
+            <path d="M280,395 L210,300" stroke="#F0652F"/>
+            <path d="M280,395 L320,300" stroke="#F0652F"/>
+            <path d="M100,300 L75,205" stroke="#2A2825"/>
+            <path d="M100,300 L180,200" stroke="#2A2825"/>
+            <path d="M210,300 L180,200" stroke="#F0652F"/>
+            <path d="M320,300 L320,205" stroke="#2A2825"/>
+            <path d="M320,205 L315,115" stroke="#2A2825"/>
+            <path d="M315,115 L305,45" stroke="#2A2825"/>
+          </g>
+          <!-- nodes: done=plein orange, available=anneau, locked=sombre -->
+          <g>
+            <!-- base -->
+            <circle cx="195" cy="470" r="17" fill="#F0652F"/><text x="195" y="475" text-anchor="middle" font-size="14" font-weight="800" fill="#0B0B0D">✓</text><text x="195" y="500" text-anchor="middle" class="glabel">Base</text>
+            <!-- p5 -->
+            <circle cx="100" cy="395" r="16" fill="#F0652F"/><text x="100" y="400" text-anchor="middle" font-size="13" font-weight="800" fill="#0B0B0D">✓</text><text x="100" y="422" text-anchor="middle" class="glabel">5 pompes</text>
+            <!-- gainage -->
+            <circle cx="280" cy="395" r="16" fill="#F0652F"/><text x="280" y="400" text-anchor="middle" font-size="13" font-weight="800" fill="#0B0B0D">✓</text><text x="280" y="422" text-anchor="middle" class="glabel">Gainage</text>
+            <!-- p20 -->
+            <circle cx="100" cy="300" r="16" fill="#F0652F"/><text x="100" y="305" text-anchor="middle" font-size="13" font-weight="800" fill="#0B0B0D">✓</text><text x="100" y="327" text-anchor="middle" class="glabel">20 pompes</text>
+            <!-- plank available -->
+            <circle cx="210" cy="300" r="17" fill="rgba(240,101,47,.16)" stroke="#F0652F" stroke-width="2.5"/><circle cx="210" cy="300" r="5" fill="#F0652F"/><text x="210" y="278" text-anchor="middle" class="glabel" fill="#F0652F">Gainage 90s ◄</text>
+            <!-- t1 available -->
+            <circle cx="320" cy="300" r="16" fill="#F0652F"/><text x="320" y="305" text-anchor="middle" font-size="13" font-weight="800" fill="#0B0B0D">✓</text><text x="320" y="327" text-anchor="middle" class="glabel">1re traction</text>
+            <!-- p50 locked -->
+            <circle cx="75" cy="205" r="15" fill="#1D1B19" stroke="#2A2825" stroke-width="2"/><text x="75" y="209" text-anchor="middle" font-size="11" fill="#5B5854">🔒</text><text x="75" y="230" text-anchor="middle" class="glabel">50 pompes</text>
+            <!-- dc available -->
+            <circle cx="180" cy="200" r="17" fill="rgba(240,101,47,.16)" stroke="#F0652F" stroke-width="2.5"/><circle cx="180" cy="200" r="5" fill="#F0652F"/><text x="180" y="178" text-anchor="middle" class="glabel" fill="#F0652F">Développé 1×PDC ◄</text>
+            <!-- t10 done -->
+            <circle cx="320" cy="205" r="16" fill="#F0652F"/><text x="320" y="210" text-anchor="middle" font-size="13" font-weight="800" fill="#0B0B0D">✓</text><text x="320" y="227" text-anchor="middle" class="glabel">10 tractions</text>
+            <!-- t15 locked -->
+            <circle cx="315" cy="115" r="15" fill="#1D1B19" stroke="#2A2825" stroke-width="2"/><text x="315" y="119" text-anchor="middle" font-size="11" fill="#5B5854">🔒</text><text x="315" y="137" text-anchor="middle" class="glabel">15 tractions</text>
+            <!-- muscle-up locked -->
+            <circle cx="305" cy="45" r="15" fill="#1D1B19" stroke="#2A2825" stroke-width="2"/><text x="305" y="49" text-anchor="middle" font-size="11" fill="#5B5854">🔒</text><text x="305" y="30" text-anchor="middle" class="glabel">Muscle-up</text>
+          </g>
+        </svg>
+        <div class="hint">◄ prochains paliers · pince pour zoomer, glisse pour explorer</div>
+      </div></div>
+    </div>
+
+    <!-- 3. COMPOSER -->
+    <div class="col">
+      <div class="cap">3 · Publier une séance</div>
+      <div class="phone"><div class="notch"></div><div class="scroll">
+        <div class="cbar"><span class="muted">Annuler</span><b>Nouvelle publication</b><button class="btn">Publier</button></div>
+        <div class="cchips">
+          <span class="chip on">🏋️ Séance</span><span class="chip">👟 Pas</span><span class="chip">🥗 Repas</span>
+        </div>
+        <div class="cbody">
+          <div class="av" style="background:var(--soft);color:var(--accent)">T</div>
+          <div class="cph">Ta séance du jour ? Raconte…</div>
+        </div>
+        <div class="cmeta">
+          <span class="chip">⏱ 30 min</span><span class="chip on">⏱ 45 min</span><span class="chip">⏱ 60 min</span>
+        </div>
+        <div class="ctool">📷 🏃 📍 <span style="flex:1"></span></div>
+        <div class="reward">
+          <div class="row between"><span class="muted" style="font-size:13px">⚡ Récompense</span><span class="xp" style="font-size:22px">+50 XP</span></div>
+          <div class="faint" style="font-size:13px;margin-top:6px">Ta série 🔥 continue et tu approches <b class="accent">Gainage 90s</b> dans ton arbre.</div>
+        </div>
+        <div style="padding:0 16px;color:var(--faint);font-size:13px">Ta publication apparaîtra dans le fil de <b>The Crew</b>.</div>
+      </div></div>
+    </div>
+
+  </div>
+</body>
+</html>
