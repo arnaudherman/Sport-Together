@@ -6,18 +6,21 @@ import { FeedView } from '@/ui/feed-view';
 import { GroupGate } from '@/ui/group-gate';
 import { GroupScreen } from '@/ui/group-screen';
 import { ProfileOnboarding } from '@/ui/profile-onboarding';
+import { ProfileScreen } from '@/ui/profile-screen';
 import { colors } from '@/ui/theme';
 import { useProfile } from '@/ui/use-profile';
 
+type Screen = 'feed' | 'group' | { profile: { id: string; name: string } };
+
 /**
  * Flux applicatif une fois connecté : onboarding profil -> choix du groupe ->
- * feed <-> écran groupe. Monté avec `key={userId}` par l'écran racine : tout
+ * feed <-> groupe <-> profil. Monté avec `key={userId}` par l'écran racine : tout
  * l'état est remis à zéro au changement de compte (pas de fuite inter-comptes).
  */
 export function AuthedFlow({ userId }: { userId: string }) {
   const { profile, loading, error, reload, applyProfile } = useProfile();
   const [groupId, setGroupId] = useState<string | null>(null);
-  const [view, setView] = useState<'feed' | 'group'>('feed');
+  const [view, setView] = useState<Screen>('feed');
 
   if (loading) {
     return (
@@ -36,7 +39,26 @@ export function AuthedFlow({ userId }: { userId: string }) {
   }
 
   if (!groupId) {
-    return <GroupGate onReady={(id) => { setGroupId(id); setView('feed'); }} />;
+    return (
+      <GroupGate
+        onReady={(id) => {
+          setGroupId(id);
+          setView('feed');
+        }}
+      />
+    );
+  }
+
+  if (typeof view === 'object') {
+    return (
+      <ProfileScreen
+        groupId={groupId}
+        targetUserId={view.profile.id}
+        targetName={view.profile.name}
+        currentUserId={userId}
+        onBack={() => setView('feed')}
+      />
+    );
   }
 
   if (view === 'group') {
@@ -61,6 +83,7 @@ export function AuthedFlow({ userId }: { userId: string }) {
       userId={userId}
       pseudo={profile.pseudo}
       onOpenGroup={() => setView('group')}
+      onOpenProfile={(id, name) => setView({ profile: { id, name } })}
     />
   );
 }

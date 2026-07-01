@@ -18,11 +18,13 @@ export function FeedView({
   userId,
   pseudo,
   onOpenGroup,
+  onOpenProfile,
 }: {
   groupId: string;
   userId: string;
   pseudo: string;
   onOpenGroup: () => void;
+  onOpenProfile: (id: string, name: string) => void;
 }) {
   const feed = useFeedRepository();
   const reactionRepo = useReactionRepository();
@@ -119,7 +121,11 @@ export function FeedView({
           sections={sections}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <FeedItemCard item={item} onToggleReaction={(kind) => toggleReaction(item, kind)} />
+            <FeedItemCard
+              item={item}
+              onToggleReaction={(kind) => toggleReaction(item, kind)}
+              onPressAuthor={() => onOpenProfile(item.authorId, item.authorName)}
+            />
           )}
           renderSectionHeader={({ section }) => <Text style={styles.section}>{section.title}</Text>}
           stickySectionHeadersEnabled={false}
