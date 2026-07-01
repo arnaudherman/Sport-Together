@@ -42,3 +42,15 @@ export function avatarColor(seed: string): { bg: string; fg: string } {
 export function initial(name: string): string {
   return (name.trim().charAt(0) || '?').toUpperCase();
 }
+
+/** Handle @ à partir d'un pseudo (minuscules, sans espaces ni accents). */
+export function handle(name: string): string {
+  const base = name
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_|_$/g, '');
+  return `@${base || 'user'}`;
+}

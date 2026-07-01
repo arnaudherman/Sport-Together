@@ -9,17 +9,17 @@ import { xpForType } from '@/domain/usecases/gamification';
 import { validateMeal } from '@/domain/usecases/nutrition';
 import { colors, font, radius } from '@/ui/theme';
 
-const TABS: { type: FeedItemType; label: string }[] = [
-  { type: 'session', label: 'Séance' },
-  { type: 'steps', label: 'Pas' },
-  { type: 'meal', label: 'Repas' },
+const TABS: { type: FeedItemType; label: string; icon: string }[] = [
+  { type: 'session', label: 'Séance', icon: '🏋️' },
+  { type: 'steps', label: 'Pas', icon: '👟' },
+  { type: 'meal', label: 'Repas', icon: '🥗' },
 ];
 const DURATIONS = [15, 30, 45, 60];
 
 const REWARD_HINT: Record<FeedItemType, string> = {
-  session: 'Fait avancer ton streak 🔥 et débloque le prochain palier de l\'arbre Muscu.',
-  steps: 'Fait avancer ton streak 🔥.',
-  meal: 'Fait avancer ton streak 🔥. Suivi bienveillant, jamais d\'objectif de poids.',
+  session: 'Ta série 🔥 continue et tu approches un palier de ton arbre.',
+  steps: 'Ta série 🔥 continue.',
+  meal: 'Ta série 🔥 continue. Suivi bienveillant, jamais d\'objectif de poids.',
 };
 
 function toNumber(value: string): number | undefined {
@@ -28,7 +28,7 @@ function toNumber(value: string): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
-/** Écran de log dédié (DA) : séance, pas ou repas (ADR-0002 ; garde-fous ADR-0008). */
+/** Composer type Twitter : publier une séance / des pas / un repas (ADR-0002 / 0008). */
 export function LogScreen({
   groupId,
   onDone,
@@ -41,7 +41,7 @@ export function LogScreen({
   const feed = useFeedRepository();
   const [type, setType] = useState<FeedItemType>('session');
   const [activity, setActivity] = useState('');
-  const [duration, setDuration] = useState(30);
+  const [duration, setDuration] = useState(45);
   const [steps, setSteps] = useState('');
   const [mealLabel, setMealLabel] = useState('');
   const [calories, setCalories] = useState('');
@@ -90,74 +90,85 @@ export function LogScreen({
 
   return (
     <View style={styles.container}>
-      <View style={styles.topRow}>
-        <Pressable onPress={onCancel} hitSlop={{ top: 12, bottom: 12, left: 8, right: 16 }} style={styles.backRow}>
-          <Ionicons name="close" size={22} color={colors.textMuted} />
+      <View style={styles.bar}>
+        <Pressable onPress={onCancel} hitSlop={10}>
+          <Text style={styles.cancel}>Annuler</Text>
         </Pressable>
-        <Text style={styles.title}>Logger</Text>
-        <View style={styles.spacer} />
+        <Text style={styles.barTitle}>Nouvelle publication</Text>
+        <Pressable style={[styles.publish, busy && styles.dim]} onPress={submit} disabled={busy}>
+          {busy ? <ActivityIndicator color="#0B0B0D" size="small" /> : <Text style={styles.publishText}>Publier</Text>}
+        </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.tabs}>
-          {TABS.map((tab) => {
-            const on = type === tab.type;
+        <View style={styles.chips}>
+          {TABS.map((t) => {
+            const on = type === t.type;
             return (
-              <Pressable key={tab.type} onPress={() => setType(tab.type)} style={[styles.tab, on && styles.tabOn]}>
-                <Text style={[styles.tabText, on && styles.tabTextOn]}>{tab.label}</Text>
+              <Pressable key={t.type} onPress={() => setType(t.type)} style={[styles.chip, on && styles.chipOn]}>
+                <Text style={styles.chipIcon}>{t.icon}</Text>
+                <Text style={[styles.chipText, on && styles.chipTextOn]}>{t.label}</Text>
               </Pressable>
             );
           })}
         </View>
 
-        {type === 'session' ? (
-          <>
+        <View style={styles.composeRow}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>T</Text>
+          </View>
+          {type === 'session' ? (
             <TextInput
-              style={styles.input}
-              placeholder="Type d'activité (ex. Course)"
+              style={styles.compose}
+              placeholder="Ta séance du jour ? Raconte… (ex. 45 min de course)"
               placeholderTextColor={colors.textFaint}
               value={activity}
               onChangeText={setActivity}
+              multiline
             />
-            <Text style={styles.label}>Durée</Text>
-            <View style={styles.chips}>
-              {DURATIONS.map((d) => (
-                <Pressable key={d} onPress={() => setDuration(d)} style={[styles.chip, duration === d && styles.chipOn]}>
-                  <Text style={[styles.chipText, duration === d && styles.chipTextOn]}>{d} min</Text>
-                </Pressable>
-              ))}
-            </View>
-          </>
-        ) : null}
+          ) : type === 'steps' ? (
+            <TextInput
+              style={styles.compose}
+              placeholder="Combien de pas aujourd'hui ?"
+              placeholderTextColor={colors.textFaint}
+              keyboardType="number-pad"
+              value={steps}
+              onChangeText={setSteps}
+            />
+          ) : (
+            <TextInput
+              style={styles.compose}
+              placeholder="Qu'as-tu mangé ? (ex. Buddha bowl)"
+              placeholderTextColor={colors.textFaint}
+              value={mealLabel}
+              onChangeText={setMealLabel}
+            />
+          )}
+        </View>
 
-        {type === 'steps' ? (
-          <TextInput
-            style={styles.input}
-            placeholder="Nombre de pas"
-            placeholderTextColor={colors.textFaint}
-            keyboardType="number-pad"
-            value={steps}
-            onChangeText={setSteps}
-          />
+        {type === 'session' ? (
+          <View style={styles.durations}>
+            {DURATIONS.map((d) => (
+              <Pressable key={d} onPress={() => setDuration(d)} style={[styles.dchip, duration === d && styles.dchipOn]}>
+                <Text style={[styles.dchipText, duration === d && styles.dchipTextOn]}>{d} min</Text>
+              </Pressable>
+            ))}
+          </View>
         ) : null}
 
         {type === 'meal' ? (
-          <>
-            <TextInput style={styles.input} placeholder="Nom du repas" placeholderTextColor={colors.textFaint} value={mealLabel} onChangeText={setMealLabel} />
-            <View style={styles.row}>
-              <TextInput style={[styles.input, styles.flex]} placeholder="kcal" placeholderTextColor={colors.textFaint} keyboardType="number-pad" value={calories} onChangeText={setCalories} />
-              <TextInput style={[styles.input, styles.flex]} placeholder="Prot. (g)" placeholderTextColor={colors.textFaint} keyboardType="number-pad" value={protein} onChangeText={setProtein} />
-            </View>
-            <View style={styles.row}>
-              <TextInput style={[styles.input, styles.flex]} placeholder="Gluc. (g)" placeholderTextColor={colors.textFaint} keyboardType="number-pad" value={carbs} onChangeText={setCarbs} />
-              <TextInput style={[styles.input, styles.flex]} placeholder="Lip. (g)" placeholderTextColor={colors.textFaint} keyboardType="number-pad" value={fat} onChangeText={setFat} />
-            </View>
-          </>
+          <View style={styles.macros}>
+            <TextInput style={[styles.mInput]} placeholder="kcal" placeholderTextColor={colors.textFaint} keyboardType="number-pad" value={calories} onChangeText={setCalories} />
+            <TextInput style={[styles.mInput]} placeholder="Prot." placeholderTextColor={colors.textFaint} keyboardType="number-pad" value={protein} onChangeText={setProtein} />
+            <TextInput style={[styles.mInput]} placeholder="Gluc." placeholderTextColor={colors.textFaint} keyboardType="number-pad" value={carbs} onChangeText={setCarbs} />
+            <TextInput style={[styles.mInput]} placeholder="Lip." placeholderTextColor={colors.textFaint} keyboardType="number-pad" value={fat} onChangeText={setFat} />
+          </View>
         ) : null}
 
-        <View style={styles.photo}>
-          <Ionicons name="camera-outline" size={20} color={colors.textMuted} />
-          <Text style={styles.photoText}>Ajouter une photo-preuve (bientôt)</Text>
+        <View style={styles.tools}>
+          <Ionicons name="camera-outline" size={22} color={colors.accent} />
+          <Ionicons name="location-outline" size={22} color={colors.accent} />
+          <Ionicons name="happy-outline" size={22} color={colors.accent} />
         </View>
 
         <LinearGradient
@@ -175,62 +186,56 @@ export function LogScreen({
           </View>
           <Text style={styles.rewardHint}>{REWARD_HINT[type]}</Text>
         </LinearGradient>
-      </ScrollView>
 
-      <View style={styles.footer}>
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        <Pressable style={[styles.ctaWrap, busy && styles.ctaBusy]} onPress={submit} disabled={busy}>
-          <LinearGradient
-            colors={['#F58A4C', '#F0652F']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.cta}
-          >
-            {busy ? (
-              <ActivityIndicator color="#0B0B0D" />
-            ) : (
-              <Text style={styles.ctaText}>Logger  ·  +{xpForType(type)} XP</Text>
-            )}
-          </LinearGradient>
-        </Pressable>
-      </View>
+        <Text style={styles.foot}>Ta publication apparaîtra dans le fil de ton groupe.</Text>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 16 },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, paddingBottom: 8 },
-  backRow: { width: 80 },
-  title: { ...font.h1 },
-  spacer: { width: 80 },
-  scroll: { paddingBottom: 20, gap: 12 },
-  tabs: { flexDirection: 'row', gap: 8 },
-  tab: { paddingHorizontal: 16, paddingVertical: 11, minHeight: 44, justifyContent: 'center', borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  tabOn: { backgroundColor: colors.accent, borderColor: colors.accent },
-  tabText: { color: colors.textMuted, fontWeight: '700' },
-  tabTextOn: { color: '#0B0B0D' },
-  input: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, color: colors.text },
-  label: { ...font.label, marginTop: 4 },
+  container: { flex: 1, backgroundColor: colors.bg },
+  bar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  cancel: { fontSize: 15, color: colors.textMuted, fontWeight: '600' },
+  barTitle: { ...font.title },
+  publish: { backgroundColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: 18, paddingVertical: 9, minWidth: 84, alignItems: 'center' },
+  dim: { opacity: 0.7 },
+  publishText: { color: '#0B0B0D', fontWeight: '800', fontSize: 14 },
+  scroll: { padding: 16, gap: 14 },
   chips: { flexDirection: 'row', gap: 8 },
-  chip: { paddingHorizontal: 14, paddingVertical: 11, minHeight: 44, justifyContent: 'center', borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 10, minHeight: 44, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   chipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
+  chipIcon: { fontSize: 15 },
   chipText: { color: colors.textMuted, fontWeight: '700' },
   chipTextOn: { color: colors.accent },
-  row: { flexDirection: 'row', gap: 8 },
-  flex: { flex: 1 },
-  photo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.surface, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.border, borderRadius: radius.md, padding: 22 },
-  photoText: { color: colors.textMuted, fontSize: 14 },
+  composeRow: { flexDirection: 'row', gap: 12 },
+  avatar: { width: 44, height: 44, borderRadius: radius.pill, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontSize: 18, fontWeight: '800', color: colors.accent },
+  compose: { flex: 1, fontSize: 18, color: colors.text, paddingTop: 8, minHeight: 60 },
+  durations: { flexDirection: 'row', gap: 8, paddingLeft: 56 },
+  dchip: { paddingHorizontal: 14, paddingVertical: 10, minHeight: 40, justifyContent: 'center', borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  dchipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
+  dchipText: { color: colors.textMuted, fontWeight: '700' },
+  dchipTextOn: { color: colors.accent },
+  macros: { flexDirection: 'row', gap: 8, paddingLeft: 56 },
+  mInput: { flex: 1, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: 10, paddingVertical: 12, fontSize: 14, color: colors.text, textAlign: 'center' },
+  tools: { flexDirection: 'row', gap: 20, paddingLeft: 56, paddingTop: 2 },
   reward: { borderRadius: radius.md, padding: 16, gap: 6, borderWidth: 1, borderColor: 'rgba(240,101,47,0.25)' },
   rewardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   rewardLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   rewardLabel: { ...font.label },
   rewardXp: { color: colors.accent, fontWeight: '800', fontSize: 24 },
   rewardHint: { color: colors.textFaint, fontSize: 13, lineHeight: 18 },
-  error: { color: colors.danger, fontSize: 14, marginBottom: 8 },
-  footer: { paddingVertical: 12 },
-  ctaWrap: { borderRadius: radius.pill },
-  cta: { borderRadius: radius.pill, paddingVertical: 16, alignItems: 'center' },
-  ctaBusy: { opacity: 0.7 },
-  ctaText: { ...font.title, color: '#0B0B0D' },
+  error: { color: colors.danger, fontSize: 14 },
+  foot: { color: colors.textFaint, fontSize: 13 },
 });

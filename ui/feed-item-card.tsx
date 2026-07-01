@@ -1,8 +1,9 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { EMPTY_REACTIONS, type FeedItem, type ReactionKind } from '@/domain/entities/feed';
 import { xpForType } from '@/domain/usecases/gamification';
-import { avatarColor, initial, timeAgo } from '@/ui/format';
+import { avatarColor, handle, initial, timeAgo } from '@/ui/format';
 import { colors, font, radius } from '@/ui/theme';
 
 const TYPE_LABEL: Record<FeedItem['type'], string> = {
@@ -16,7 +17,7 @@ const REACTIONS: { kind: ReactionKind; emoji: string }[] = [
   { kind: 'encouragement', emoji: '💪' },
 ];
 
-/** Carte de feed (DA) : composant présentationnel pur (ADR-0007). */
+/** Post type Twitter (DA) : composant présentationnel pur (ADR-0007). */
 export function FeedItemCard({
   item,
   onToggleReaction,
@@ -31,42 +32,49 @@ export function FeedItemCard({
 
   return (
     <View style={styles.card}>
-      <View style={styles.header}>
-        <Pressable style={styles.authorRow} onPress={onPressAuthor} hitSlop={6}>
-          <View style={[styles.avatar, { backgroundColor: av.bg }]}>
-            <Text style={[styles.avatarText, { color: av.fg }]}>{initial(item.authorName)}</Text>
-          </View>
-          <Text style={styles.author}>{item.authorName}</Text>
-        </Pressable>
-        <Text style={styles.time}>{timeAgo(item.createdAt)}</Text>
-      </View>
-
-      <View style={styles.metaRow}>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{TYPE_LABEL[item.type]}</Text>
+      <Pressable onPress={onPressAuthor} hitSlop={6}>
+        <View style={[styles.avatar, { backgroundColor: av.bg }]}>
+          <Text style={[styles.avatarText, { color: av.fg }]}>{initial(item.authorName)}</Text>
         </View>
-        <Text style={styles.xp}>+{xpForType(item.type)} XP</Text>
-      </View>
+      </Pressable>
 
-      <Text style={styles.summary}>{item.summary}</Text>
+      <View style={styles.body}>
+        <View style={styles.head}>
+          <Pressable style={styles.who} onPress={onPressAuthor} hitSlop={6}>
+            <Text style={styles.name} numberOfLines={1}>{item.authorName}</Text>
+            <Text style={styles.handle} numberOfLines={1}>
+              {handle(item.authorName)} · {timeAgo(item.createdAt)}
+            </Text>
+          </Pressable>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{TYPE_LABEL[item.type]}</Text>
+          </View>
+        </View>
 
-      <View style={styles.reactions}>
-        {REACTIONS.map(({ kind, emoji }) => {
-          const mine = reactions.mine.includes(kind);
-          const count = kind === 'kudos' ? reactions.kudos : reactions.encouragement;
-          return (
-            <Pressable
-              key={kind}
-              onPress={() => onToggleReaction?.(kind)}
-              hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-              style={[styles.chip, mine && styles.chipActive]}
-            >
-              <Text style={[styles.chipText, mine && styles.chipTextActive]}>
-                {emoji} {count}
-              </Text>
-            </Pressable>
-          );
-        })}
+        <Text style={styles.text}>{item.summary}</Text>
+
+        <View style={styles.eng}>
+          <View style={styles.engItem}>
+            <Ionicons name="chatbubble-outline" size={16} color={colors.textMuted} />
+          </View>
+          {REACTIONS.map(({ kind, emoji }) => {
+            const mine = reactions.mine.includes(kind);
+            const count = kind === 'kudos' ? reactions.kudos : reactions.encouragement;
+            return (
+              <Pressable
+                key={kind}
+                onPress={() => onToggleReaction?.(kind)}
+                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                style={styles.engItem}
+              >
+                <Text style={[styles.engEmoji, mine && styles.engActive]}>{emoji}</Text>
+                <Text style={[styles.engCount, mine && styles.engActive]}>{count}</Text>
+              </Pressable>
+            );
+          })}
+          <View style={styles.spacer} />
+          <Text style={styles.xp}>+{xpForType(item.type)} XP</Text>
+        </View>
       </View>
     </View>
   );
@@ -74,43 +82,29 @@ export function FeedItemCard({
 
 const styles = StyleSheet.create({
   card: {
+    flexDirection: 'row',
+    gap: 12,
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 16,
-    gap: 8,
+    padding: 14,
   },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  authorRow: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  avatar: {
-    width: 34,
-    height: 34,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: { fontSize: 14, fontWeight: '800' },
-  author: { ...font.title },
-  time: { fontSize: 12, color: colors.textFaint },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  badge: {
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: radius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-  },
+  avatar: { width: 42, height: 42, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontSize: 17, fontWeight: '800' },
+  body: { flex: 1, gap: 4 },
+  head: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 },
+  who: { flex: 1 },
+  name: { ...font.title, fontWeight: '800' },
+  handle: { fontSize: 13, color: colors.textMuted },
+  badge: { backgroundColor: colors.surfaceElevated, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 3 },
   badgeText: { fontSize: 11, fontWeight: '700', color: colors.textMuted },
+  text: { ...font.body, marginTop: 2 },
+  eng: { flexDirection: 'row', alignItems: 'center', gap: 18, marginTop: 8 },
+  engItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  engEmoji: { fontSize: 15 },
+  engCount: { fontSize: 13, color: colors.textMuted, fontWeight: '700' },
+  engActive: { color: colors.accent },
+  spacer: { flex: 1 },
   xp: { fontSize: 13, fontWeight: '800', color: colors.accent },
-  summary: { ...font.body },
-  reactions: { flexDirection: 'row', gap: 8, marginTop: 2 },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surfaceElevated,
-  },
-  chipActive: { backgroundColor: colors.accentSoft },
-  chipText: { fontSize: 14, color: colors.textMuted },
-  chipTextActive: { color: colors.accent, fontWeight: '700' },
 });
