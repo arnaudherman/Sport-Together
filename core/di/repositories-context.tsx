@@ -12,6 +12,8 @@ import { SupabaseFeedRepository } from '@/data/feed/supabase-feed-repository';
 import { InMemoryFollowRepository } from '@/data/follow/in-memory-follow-repository';
 import { SupabaseFollowRepository } from '@/data/follow/supabase-follow-repository';
 import { InMemoryGroupRepository } from '@/data/group/in-memory-group-repository';
+import { InMemoryModerationRepository } from '@/data/moderation/in-memory-moderation-repository';
+import { SupabaseModerationRepository } from '@/data/moderation/supabase-moderation-repository';
 import { SupabaseGroupRepository } from '@/data/group/supabase-group-repository';
 import { InMemoryNotificationRepository } from '@/data/notification/in-memory-notification-repository';
 import { SupabaseNotificationRepository } from '@/data/notification/supabase-notification-repository';
@@ -25,6 +27,7 @@ import type { CommentRepository } from '@/domain/repositories/comment-repository
 import type { FeedRepository } from '@/domain/repositories/feed-repository';
 import type { FollowRepository } from '@/domain/repositories/follow-repository';
 import type { GroupRepository } from '@/domain/repositories/group-repository';
+import type { ModerationRepository } from '@/domain/repositories/moderation-repository';
 import type { NotificationRepository } from '@/domain/repositories/notification-repository';
 import type { ProfileRepository } from '@/domain/repositories/profile-repository';
 import type { ReactionRepository } from '@/domain/repositories/reaction-repository';
@@ -43,6 +46,7 @@ export interface Repositories {
   notification: NotificationRepository;
   follow: FollowRepository;
   comment: CommentRepository;
+  moderation: ModerationRepository;
 }
 
 const RepositoriesContext = createContext<Repositories | null>(null);
@@ -59,6 +63,7 @@ function createDefaultRepositories(): Repositories {
       notification: new SupabaseNotificationRepository(client),
       follow: new SupabaseFollowRepository(client),
       comment: new SupabaseCommentRepository(client),
+      moderation: new SupabaseModerationRepository(client),
     };
   }
   // Mode hors-ligne : feed et réactions partagent le même store en mémoire.
@@ -75,6 +80,7 @@ function createDefaultRepositories(): Repositories {
     notification: new InMemoryNotificationRepository(),
     follow: new InMemoryFollowRepository(),
     comment: new InMemoryCommentRepository(commentStore),
+    moderation: new InMemoryModerationRepository(),
   };
 }
 
@@ -131,4 +137,8 @@ export function useFollowRepository(): FollowRepository {
 
 export function useCommentRepository(): CommentRepository {
   return useRepositories().comment;
+}
+
+export function useModerationRepository(): ModerationRepository {
+  return useRepositories().moderation;
 }

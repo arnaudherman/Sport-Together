@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 
-import { useCommentRepository } from '@/core/di/repositories-context';
+import { useCommentRepository, useModerationRepository } from '@/core/di/repositories-context';
 import type { Comment } from '@/domain/entities/comment';
 import type { FeedItem } from '@/domain/entities/feed';
 import { Avatar } from '@/ui/avatar';
@@ -80,6 +80,26 @@ export function CommentsScreen({
     }
   }
 
+  const moderation = useModerationRepository();
+
+  function reportComment(commentId: string) {
+    Alert.alert('Signaler cette réponse ?', 'Pourquoi la signales-tu ?', [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Contenu inapproprié', onPress: () => sendCommentReport(commentId, 'Contenu inapproprié') },
+      { text: 'Spam', onPress: () => sendCommentReport(commentId, 'Spam') },
+      { text: 'Harcèlement', onPress: () => sendCommentReport(commentId, 'Harcèlement') },
+    ]);
+  }
+
+  async function sendCommentReport(commentId: string, reason: string) {
+    try {
+      await moderation.report('comment', commentId, reason);
+      Alert.alert('Merci', 'Signalement transmis — on y jette un œil rapidement.');
+    } catch (e) {
+      if (mounted.current) setError((e as Error).message);
+    }
+  }
+
   function confirmRemove(commentId: string) {
     Alert.alert('Supprimer cette réponse ?', 'Cette action est définitive.', [
       { text: 'Annuler', style: 'cancel' },
@@ -142,7 +162,16 @@ export function CommentsScreen({
               >
                 <Ionicons name="trash-outline" size={15} color={colors.textMuted} />
               </Pressable>
-            ) : null}
+            ) : (
+              <Pressable
+                onPress={() => reportComment(c.id)}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                accessibilityRole="button"
+                accessibilityLabel="Signaler la réponse"
+              >
+                <Ionicons name="flag-outline" size={14} color={colors.textFaint} />
+              </Pressable>
+            )}
           </View>
         )}
         ListEmptyComponent={

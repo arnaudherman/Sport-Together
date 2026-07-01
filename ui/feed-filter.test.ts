@@ -42,4 +42,13 @@ describe('filterFeed', () => {
     expect(filterFeed(items, 'abonnements', me, following).some((i) => i.id === 'p-me-solo')).toBe(true);
     expect(filterFeed(items, 'groupes', me, following).some((i) => i.id === 'p-me-solo')).toBe(false);
   });
+
+  it('exclut les auteurs bloqués de TOUS les onglets (même suivis)', () => {
+    const blocked = ['u-lea'];
+    expect(filterFeed(items, 'tout', me, following, blocked).some((i) => i.authorId === 'u-lea')).toBe(false);
+    expect(filterFeed(items, 'abonnements', me, following, blocked).some((i) => i.authorId === 'u-lea')).toBe(false);
+    expect(filterFeed(items, 'groupes', me, following, blocked).some((i) => i.authorId === 'u-lea')).toBe(false);
+    // les autres restent visibles
+    expect(filterFeed(items, 'tout', me, following, blocked).some((i) => i.authorId === 'u-sam')).toBe(true);
+  });
 });

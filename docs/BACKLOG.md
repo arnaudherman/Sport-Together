@@ -1,15 +1,20 @@
 # Sport Together — Backlog (ce qui reste à faire)
 
-> État au **2026-07-01**. Priorités : **P0** = bloquant lancement · **P1** = attendu
+> État au **2026-07-02**. Priorités : **P0** = bloquant lancement · **P1** = attendu
 > MVP · **P2** = post-MVP · **P3** = confort/polish. Ce qui est fait est dans le
 > [CHANGELOG](./CHANGELOG.md).
 
-> **Fait le 2026-07-01** (cf. CHANGELOG) : pivot solo-first + Twitter-like ; écran Compte ;
-> abonnements (`follows`) ; commentaires (`comments`) ; retrait de la barre blanche.
+> **Fait les 2026-07-01/02** (cf. CHANGELOG) : pivot solo-first + Twitter-like ; timeline
+> perso backend ; jour de repos ; signaler/bloquer ; gestion de groupe ; abonnés/abonnements ;
+> partage ; suppression de commentaire ; journée parfaite ; quitter un groupe.
 
 ## P0 — Bloquants avant un vrai lancement
 
 - [x] **Écran Compte** : déconnexion + **suppression de compte** — UI + câblage faits.
+- [x] **Signaler + Bloquer (App Store 1.2 UGC)** ✓ : tables `reports` (write-only) +
+  `blocks` (self-only, coupe les follows des deux sens par trigger), menu ⋯ sur les posts
+  d'autrui (Signaler avec raison / Bloquer avec confirm), drapeau sur les commentaires,
+  fil filtré des auteurs bloqués (`filterFeed`). Harnais RLS ✓.
 - [ ] **Déployer sur un projet Supabase cloud** : appliquer les migrations (incl.
   `090800_grants`), activer Email + `{{ .Token }}`, configurer Storage. Script turnkey
   prêt (`supabase/apply-migrations.sh`).

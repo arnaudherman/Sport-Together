@@ -28,6 +28,7 @@ export function FeedItemCard({
   onOpenGroup,
   onShare,
   onDelete,
+  onModerate,
 }: {
   item: FeedItem;
   onToggleReaction?: (kind: ReactionKind) => void;
@@ -36,6 +37,8 @@ export function FeedItemCard({
   onOpenGroup?: () => void;
   onShare?: () => void;
   onDelete?: () => void;
+  /** Menu Signaler / Bloquer sur les publications d'AUTRUI (App Store 1.2). */
+  onModerate?: () => void;
 }) {
   const reactions = item.reactions ?? EMPTY_REACTIONS;
 
@@ -85,6 +88,16 @@ export function FeedItemCard({
                 accessibilityLabel="Supprimer la publication"
               >
                 <Ionicons name="trash-outline" size={17} color={colors.textMuted} />
+              </Pressable>
+            ) : onModerate ? (
+              <Pressable
+                onPress={onModerate}
+                hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
+                style={styles.menu}
+                accessibilityRole="button"
+                accessibilityLabel="Signaler ou bloquer"
+              >
+                <Ionicons name="ellipsis-horizontal" size={17} color={colors.textMuted} />
               </Pressable>
             ) : null}
           </View>

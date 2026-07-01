@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, Share, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useFeedRepository, useFollowRepository, useReactionRepository } from '@/core/di/repositories-context';
+import { useFeedRepository, useFollowRepository, useModerationRepository, useReactionRepository } from '@/core/di/repositories-context';
 import { type FeedItem, type ReactionKind } from '@/domain/entities/feed';
 import { withToggledReaction } from '@/domain/usecases/reaction-toggle';
 import { PrimaryButton } from '@/ui/button';
@@ -49,7 +49,9 @@ export function FeedView({
   const followRepo = useFollowRepository();
   const insets = useSafeAreaInsets();
   const [following, setFollowing] = useState<string[]>([]);
+  const [blocked, setBlocked] = useState<string[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const moderation = useModerationRepository();
   const [tab, setTab] = useState<FeedTab>('tout');
 
   const loader = useCallback(() => feed.listHomeFeed(), [feed]);
@@ -62,7 +64,13 @@ export function FeedView({
         if (mounted.current) setFollowing(f);
       })
       .catch(() => {});
-  }, [followRepo, mounted]);
+    moderation
+      .listBlocked()
+      .then((b) => {
+        if (mounted.current) setBlocked(b);
+      })
+      .catch(() => {});
+  }, [followRepo, moderation, mounted]);
 
   async function refresh() {
     setRefreshing(true);
@@ -70,7 +78,7 @@ export function FeedView({
     if (mounted.current) setRefreshing(false);
   }
 
-  const filtered = useMemo(() => filterFeed(items, tab, userId, following), [items, tab, userId, following]);
+  const filtered = useMemo(() => filterFeed(items, tab, userId, following, blocked), [items, tab, userId, following, blocked]);
 
   async function toggleReaction(item: FeedItem, kind: ReactionKind) {
     const active = (item.reactions?.mine ?? []).includes(kind);
@@ -106,6 +114,53 @@ export function FeedView({
         },
       },
     ]);
+  }
+
+  function moderate(item: FeedItem) {
+    // Menu Signaler / Bloquer (App Store 1.2) — Alerts natifs, iOS-first.
+    Alert.alert(`Publication de ${item.authorName}`, undefined, [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Signaler la publication',
+        onPress: () =>
+          Alert.alert('Signaler', 'Pourquoi signales-tu cette publication ?', [
+            { text: 'Annuler', style: 'cancel' },
+            { text: 'Contenu inapproprié', onPress: () => sendReport(item, 'Contenu inapproprié') },
+            { text: 'Spam', onPress: () => sendReport(item, 'Spam') },
+            { text: 'Harcèlement', onPress: () => sendReport(item, 'Harcèlement') },
+          ]),
+      },
+      {
+        text: `Bloquer ${item.authorName}`,
+        style: 'destructive',
+        onPress: () =>
+          Alert.alert(`Bloquer ${item.authorName} ?`, 'Ses publications disparaîtront de ton fil et vos abonnements seront coupés.', [
+            { text: 'Annuler', style: 'cancel' },
+            { text: 'Bloquer', style: 'destructive', onPress: () => blockAuthor(item.authorId) },
+          ]),
+      },
+    ]);
+  }
+
+  async function sendReport(item: FeedItem, reason: string) {
+    try {
+      await moderation.report('post', item.id, reason);
+      Alert.alert('Merci', 'Signalement transmis — on y jette un œil rapidement.');
+    } catch (e) {
+      if (mounted.current) setError((e as Error).message);
+    }
+  }
+
+  async function blockAuthor(authorId: string) {
+    setBlocked((prev) => [...new Set([...prev, authorId])]); // optimiste (le fil se filtre)
+    try {
+      await moderation.block(authorId);
+    } catch (e) {
+      if (mounted.current) {
+        setBlocked((prev) => prev.filter((id) => id !== authorId));
+        setError((e as Error).message);
+      }
+    }
   }
 
   function sharePost(item: FeedItem) {
@@ -195,6 +250,7 @@ export function FeedView({
               onOpenGroup={item.groupName ? () => onOpenGroup(item.groupId) : undefined}
               onShare={() => sharePost(item)}
               onDelete={item.authorId === userId ? () => confirmDelete(item) : undefined}
+              onModerate={item.authorId !== userId ? () => moderate(item) : undefined}
             />
           )}
           contentContainerStyle={[styles.list, { paddingBottom: 120 + insets.bottom }]}

@@ -58,7 +58,7 @@ async function step(name, fn) {
 async function reset() {
   await admin(`truncate auth.users, public.profiles, public.groups, public.memberships,
     public.feed_items, public.sessions, public.step_logs, public.meals, public.reactions,
-    public.follows, public.comments, public.nudges
+    public.follows, public.comments, public.nudges, public.reports, public.blocks
     restart identity cascade`);
 }
 
@@ -299,6 +299,38 @@ async function main() {
     assert.equal(feed.length, 0, 'bob ne voit plus le feed de A');
     const grp = (await asUser(BOB, `select id from public.groups where id=$1`, [A.id])).rows;
     assert.equal(grp.length, 0, 'bob ne voit plus le groupe A');
+  });
+
+  await step('modération : reports write-only, blocks self-only qui coupent les follows', async () => {
+    const anyItem = (await admin(`select id from public.feed_items limit 1`)).rows[0];
+    // Signaler : OK pour soi ; reporter_id forgé REFUSÉ ; lecture -> 0 ligne (write-only).
+    await asUser(BOB, `insert into public.reports (reporter_id, target_kind, target_id, reason) values ($1,'post',$2,'Spam')`, [BOB, anyItem.id]);
+    await expectReject(
+      asUser(BOB, `insert into public.reports (reporter_id, target_kind, target_id, reason) values ($1,'post',$2,'forgé')`, [ALICE, anyItem.id]),
+      'reporter_id forgé',
+    );
+    const readBack = (await asUser(BOB, `select id from public.reports`)).rows;
+    assert.equal(readBack.length, 0, 'les signalements ne sont pas lisibles côté client');
+    // Bloquer : coupe le follow dans les DEUX sens (trigger), self-block refusé.
+    await asUser(DAVE, `insert into public.follows (follower_id, followee_id) values ($1,$2)`, [DAVE, ALICE]);
+    await asUser(ALICE, `insert into public.follows (follower_id, followee_id) values ($1,$2)`, [ALICE, DAVE]);
+    await asUser(ALICE, `insert into public.blocks (blocker_id, blocked_id) values ($1,$2)`, [ALICE, DAVE]);
+    const follows = (await admin(
+      `select 1 from public.follows where (follower_id=$1 and followee_id=$2) or (follower_id=$2 and followee_id=$1)`,
+      [DAVE, ALICE],
+    )).rows;
+    assert.equal(follows.length, 0, 'le blocage coupe les follows dans les deux sens');
+    await expectReject(
+      asUser(ALICE, `insert into public.blocks (blocker_id, blocked_id) values ($1,$1)`, [ALICE]),
+      'self-block',
+    );
+    // Chacun ne voit et ne gère que SES blocages.
+    const daveSees = (await asUser(DAVE, `select 1 from public.blocks where blocker_id=$1`, [ALICE])).rows;
+    assert.equal(daveSees.length, 0, 'le bloqué ne voit pas le blocage');
+    const foreignDel = await asUser(DAVE, `delete from public.blocks where blocker_id=$1`, [ALICE]);
+    assert.equal(foreignDel.rowCount, 0, 'supprimer le blocage d\'autrui = 0 ligne');
+    const ownDel = await asUser(ALICE, `delete from public.blocks where blocked_id=$1`, [DAVE]);
+    assert.equal(ownDel.rowCount, 1, 'alice débloque dave');
   });
 
   await step('gestion de groupe : code aux membres seulement, renommage/suppression créateur-only', async () => {
