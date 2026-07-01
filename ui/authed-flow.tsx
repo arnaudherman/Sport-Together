@@ -9,6 +9,7 @@ import { CommentsScreen } from '@/ui/comments-screen';
 import { DiscoverScreen } from '@/ui/discover-screen';
 import { ErrorRetry } from '@/ui/error-retry';
 import { FeedView } from '@/ui/feed-view';
+import { FollowListScreen, type FollowListKind } from '@/ui/follow-list-screen';
 import { GroupGate } from '@/ui/group-gate';
 import { GroupScreen } from '@/ui/group-screen';
 import { LogScreen } from '@/ui/log-screen';
@@ -24,6 +25,7 @@ type Screen =
   | 'account'
   | 'discover'
   | { profile: { id: string; name: string } }
+  | { followList: { kind: FollowListKind } }
   | { group: { id: string } }
   | { comments: { item: FeedItem } };
 
@@ -106,6 +108,17 @@ export function AuthedFlow({ userId }: { userId: string }) {
         onJoinGroup={() => push('groups')}
         onOpenAccount={() => push('account')}
         onOpenComments={(item) => push({ comments: { item } })}
+        onOpenFollowList={(kind) => push({ followList: { kind } })}
+      />
+    );
+  }
+
+  if (typeof view === 'object' && 'followList' in view) {
+    return (
+      <FollowListScreen
+        kind={view.followList.kind}
+        onBack={pop}
+        onOpenProfile={(id, name) => push({ profile: { id, name } })}
       />
     );
   }

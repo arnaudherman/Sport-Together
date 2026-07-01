@@ -6,6 +6,8 @@
 export interface FollowRepository {
   /** Ids des utilisateurs que je suis. */
   listFollowing(): Promise<string[]>;
+  /** Ids des utilisateurs qui ME suivent (la RLS follows expose ses deux côtés). */
+  listFollowers(): Promise<string[]>;
   /** Est-ce que je suis cet utilisateur ? */
   isFollowing(userId: string): Promise<boolean>;
   /** Suivre un utilisateur (idempotent). */

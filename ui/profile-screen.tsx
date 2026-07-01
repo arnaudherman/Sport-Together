@@ -3,7 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 
-import { useFeedRepository, useProfileRepository } from '@/core/di/repositories-context';
+import { useFeedRepository, useFollowRepository, useProfileRepository } from '@/core/di/repositories-context';
 import { EMPTY_REACTIONS, type FeedItem } from '@/domain/entities/feed';
 import type { Profile } from '@/domain/entities/profile';
 import { levelForXp, xpFromFeed } from '@/domain/usecases/gamification';
@@ -12,6 +12,7 @@ import { streakFromFeed } from '@/domain/usecases/streak';
 import { avatarColor, handle, initial } from '@/ui/format';
 import { FeedItemCard } from '@/ui/feed-item-card';
 import { FollowButton } from '@/ui/follow-button';
+import type { FollowListKind } from '@/ui/follow-list-screen';
 import { HolyGraph } from '@/ui/holy-graph';
 import { ScreenState } from '@/ui/screen-state';
 import { colors, font, radius } from '@/ui/theme';
@@ -30,6 +31,7 @@ export function ProfileScreen({
   onJoinGroup,
   onOpenAccount,
   onOpenComments,
+  onOpenFollowList,
 }: {
   targetUserId: string;
   targetName: string;
@@ -40,6 +42,7 @@ export function ProfileScreen({
   onJoinGroup: () => void;
   onOpenAccount: () => void;
   onOpenComments: (item: FeedItem) => void;
+  onOpenFollowList: (kind: FollowListKind) => void;
 }) {
   const feedRepo = useFeedRepository();
   const profileRepo = useProfileRepository();
@@ -57,6 +60,18 @@ export function ProfileScreen({
       })
       .catch(() => {});
   }, [profileRepo, targetUserId, mounted]);
+
+  // Compteurs abonnements/abonnés (sur SON profil — la RLS ne montre que les siens).
+  const followRepo = useFollowRepository();
+  const [counts, setCounts] = useState<{ following: number; followers: number } | null>(null);
+  useEffect(() => {
+    if (targetUserId !== currentUserId) return;
+    Promise.all([followRepo.listFollowing(), followRepo.listFollowers()])
+      .then(([following, followers]) => {
+        if (mounted.current) setCounts({ following: following.length, followers: followers.length });
+      })
+      .catch(() => {});
+  }, [followRepo, targetUserId, currentUserId, mounted]);
 
   const tz = -new Date().getTimezoneOffset();
   const xp = useMemo(() => xpFromFeed(items, targetUserId), [items, targetUserId]);
@@ -168,6 +183,17 @@ export function ProfileScreen({
             <Text style={styles.statText}><Text style={styles.statNum}>{bravos}</Text> bravos</Text>
             <Text style={styles.statText}><Text style={styles.statNum}>{xp}</Text> XP</Text>
           </View>
+
+          {isMe ? (
+            <View style={styles.stats}>
+              <Pressable onPress={() => onOpenFollowList('following')} hitSlop={8} accessibilityRole="button" accessibilityLabel="Voir mes abonnements">
+                <Text style={styles.statText}><Text style={styles.statNum}>{counts?.following ?? 0}</Text> abonnements</Text>
+              </Pressable>
+              <Pressable onPress={() => onOpenFollowList('followers')} hitSlop={8} accessibilityRole="button" accessibilityLabel="Voir mes abonnés">
+                <Text style={styles.statText}><Text style={styles.statNum}>{counts?.followers ?? 0}</Text> abonnés</Text>
+              </Pressable>
+            </View>
+          ) : null}
 
           <View style={styles.grp}>
             <Text style={styles.grpLabel}>Groupes</Text>

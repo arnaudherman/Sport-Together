@@ -27,6 +27,17 @@ export class SupabaseFollowRepository implements FollowRepository {
     return ((data ?? []) as { followee_id: string }[]).map((r) => r.followee_id);
   }
 
+  async listFollowers(): Promise<string[]> {
+    // Autorisé par follows_select (followee_id = auth.uid()) — « qui me suit ».
+    const me = await this.uid();
+    const { data, error } = await this.client
+      .from('follows')
+      .select('follower_id')
+      .eq('followee_id', me);
+    if (error) throw new Error(error.message);
+    return ((data ?? []) as { follower_id: string }[]).map((r) => r.follower_id);
+  }
+
   async isFollowing(userId: string): Promise<boolean> {
     const me = await this.uid();
     const { data, error } = await this.client

@@ -51,6 +51,7 @@ const SCREENS: { label: string; node: ReactNode }[] = [
         onJoinGroup={noop}
         onOpenAccount={noop}
         onOpenComments={noop}
+        onOpenFollowList={noop}
       />
     ),
   },
