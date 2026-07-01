@@ -6,7 +6,15 @@ pas encore versionné (pré-MVP) ; entrées par date. Détail des décisions dan
 
 ## [Non publié]
 
-### 2026-07-01 — Améliorations correction métier + tests (chasse aux améliorations)
+### 2026-07-01 — Améliorations (chasse aux améliorations : produit + correction + tests)
+
+**Produit (profondeur / rétention)**
+- **Célébration** après un log qui fait monter de niveau ou franchir un palier d'arbre :
+  overlay animé (le pic de récompense du core loop, jusque-là muet). `celebrationFor` pur + testé.
+- **Quêtes hebdo perso** (GAMIFICATION.md) dérivées du feed, sans backend : « 3 séances »,
+  « bouge 4 jours », « publie 5 fois » avec barres de progression, sous le LevelHeader.
+
+**Correction métier + tests**
 
 - **Arbre de compétences (skill-graph)** : déblocage **topologique réel** (respecte les
   prérequis `requires`, robuste aux prérequis multiples et à un `order` non topologique —

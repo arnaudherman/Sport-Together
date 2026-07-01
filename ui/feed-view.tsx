@@ -12,6 +12,7 @@ import { avatarColor, initial } from '@/ui/format';
 import { FeedItemCard } from '@/ui/feed-item-card';
 import { filterFeed, type FeedTab } from '@/ui/feed-filter';
 import { LevelHeader } from '@/ui/level-header';
+import { QuestsStrip } from '@/ui/quests-strip';
 import { ScreenState } from '@/ui/screen-state';
 import { colors, font, gradients, radius } from '@/ui/theme';
 
@@ -167,9 +168,12 @@ export function FeedView({
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.accent} />}
           ListHeaderComponent={
             tab === 'tout' ? (
-              <Pressable onPress={() => onOpenProfile(userId, pseudo)} style={styles.headerCard}>
-                <LevelHeader pseudo={pseudo} userId={userId} items={items} />
-              </Pressable>
+              <View style={styles.headerCard}>
+                <Pressable onPress={() => onOpenProfile(userId, pseudo)}>
+                  <LevelHeader pseudo={pseudo} userId={userId} items={items} />
+                </Pressable>
+                <QuestsStrip items={items} userId={userId} />
+              </View>
             ) : tab === 'abonnements' ? (
               <Pressable
                 onPress={onOpenDiscover}

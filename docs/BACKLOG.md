@@ -31,8 +31,14 @@
 
 ## P2 — Post-MVP (gamification & social, cf. ADR-0009)
 
-- [ ] **Quêtes d'entraide réelles** : tables `quests` + écran (« aider Léa à 15 tractions »),
-  XP de mentor. Aujourd'hui carte « Bientôt ».
+- [x] **Célébration de progression** : overlay après un log qui fait monter de niveau /
+  franchir un palier d'arbre (`celebrationFor` pur + `CelebrationOverlay`) ✓.
+- [x] **Quêtes hebdo perso** : dérivées du feed (`weeklyQuests`), bande sous le LevelHeader ✓.
+  Reste : persister l'état « récompensé » (aujourd'hui recalculé à la volée).
+- [x] **Arbre de compétences** : déblocage topologique réel (respecte `requires`) + non
+  farmable (jours distincts) ✓. Reste : autres arbres, matérialisation `skill_nodes`.
+- [ ] **Quêtes d'entraide réelles** (groupe) : tables `quests` + écran (« aider Léa à 15
+  tractions »), XP de mentor. Aujourd'hui carte « Bientôt ».
 - [x] **Abonnements (`follows`)** : table + repo + Suivre persistant + onglet Abonnements +
   écran **Découvrir** ✓. **Visibilité RLS ✓** (`follow_feed_visibility` : `is_followed`/
   `can_see_item` — les posts + détails + réactions + commentaires + profil d'un auteur suivi
