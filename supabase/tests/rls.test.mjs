@@ -57,7 +57,8 @@ async function step(name, fn) {
 
 async function reset() {
   await admin(`truncate auth.users, public.profiles, public.groups, public.memberships,
-    public.feed_items, public.sessions, public.step_logs, public.meals, public.reactions
+    public.feed_items, public.sessions, public.step_logs, public.meals, public.reactions,
+    public.follows, public.comments
     restart identity cascade`);
 }
 
@@ -190,6 +191,25 @@ async function main() {
     assert.equal(feed.length, 0);
     const groups = (await asUser(DAVE, `select id from public.groups`)).rows;
     assert.equal(groups.length, 0);
+  });
+
+  await step('abonnements : suivre expose les posts d\'un non-co-membre, sans ouvrir le groupe', async () => {
+    // dave n'est dans aucun groupe et ne voit rien de A (cf. test précédent).
+    // Il suit alice -> il voit désormais ses publications + leurs détails + son profil.
+    await asUser(DAVE, `insert into public.follows (follower_id, followee_id) values ($1,$2)`, [DAVE, ALICE]);
+    const seen = (await asUser(DAVE, `select id from public.feed_items where author_id=$1`, [ALICE])).rows;
+    assert.ok(seen.length >= 1, 'dave voit les publications d\'alice qu\'il suit');
+    const sess = (await asUser(DAVE, `select feed_item_id from public.sessions`)).rows;
+    assert.ok(sess.length >= 1, 'dave voit le détail (session) d\'une publication visible');
+    const prof = (await asUser(DAVE, `select id from public.profiles where id=$1`, [ALICE])).rows;
+    assert.equal(prof.length, 1, 'dave voit le profil d\'alice qu\'il suit');
+    // Mais suivre n'ouvre PAS l'accès au groupe (visibilité, pas adhésion).
+    const grp = (await asUser(DAVE, `select id from public.groups where id=$1`, [A.id])).rows;
+    assert.equal(grp.length, 0, 'suivre n\'ouvre pas l\'accès au groupe');
+    // Ne plus suivre retire la visibilité (l'isolation revient).
+    await asUser(DAVE, `delete from public.follows where follower_id=$1 and followee_id=$2`, [DAVE, ALICE]);
+    const after = (await asUser(DAVE, `select id from public.feed_items where author_id=$1`, [ALICE])).rows;
+    assert.equal(after.length, 0, 'ne plus suivre retire la visibilité');
   });
 
   await step('invitation : rotation réservée au créateur + code expiré refusé', async () => {

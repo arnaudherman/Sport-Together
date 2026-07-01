@@ -33,10 +33,13 @@
 
 - [ ] **Quêtes d'entraide réelles** : tables `quests` + écran (« aider Léa à 15 tractions »),
   XP de mentor. Aujourd'hui carte « Bientôt ».
-- [~] **Abonnements (`follows`)** : table + repo + Suivre persistant + onglet Abonnements ✓.
-  **Reste** : la RLS de `feed_items` doit inclure « auteur suivi » pour voir les posts d'un
-  abonnement HORS de ses groupes (aujourd'hui l'accueil réel ne remonte que ses groupes) ;
-  et une **timeline perso** (publier « solo » sans groupe → `group_id` nullable ou groupe perso).
+- [x] **Abonnements (`follows`)** : table + repo + Suivre persistant + onglet Abonnements +
+  écran **Découvrir** ✓. **Visibilité RLS ✓** (`follow_feed_visibility` : `is_followed`/
+  `can_see_item` — les posts + détails + réactions + commentaires + profil d'un auteur suivi
+  HORS groupe commun sont visibles ; isolation préservée, harnais RLS **16/16**).
+- [ ] **Timeline perso backend** : publier « solo » sans groupe (`group_id` nullable ou
+  groupe perso auto-provisionné) + RLS d'insert/lecture. Front prêt (post solo en mock) ;
+  côté Supabase `logSession(null)` renvoie « bientôt » en attendant.
 - [~] **Commentaires** : écran Réponses + compteur + tables/RLS ✓ (mock complet). Reste :
   temps réel + notifications de réponse.
 - [ ] **Arbres de compétences** : au-delà de Muscu → Souffle, Hygiène de vie, Esprit/Lecture.
