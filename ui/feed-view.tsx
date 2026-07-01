@@ -25,11 +25,13 @@ export function FeedView({
   pseudo,
   onOpenProfile,
   onOpenLog,
+  onOpenComments,
 }: {
   userId: string;
   pseudo: string;
   onOpenProfile: (id: string, name: string) => void;
   onOpenLog: () => void;
+  onOpenComments: (item: FeedItem) => void;
 }) {
   const feed = useFeedRepository();
   const reactionRepo = useReactionRepository();
@@ -131,6 +133,7 @@ export function FeedView({
               item={item}
               onToggleReaction={(kind) => toggleReaction(item, kind)}
               onPressAuthor={() => onOpenProfile(item.authorId, item.authorName)}
+              onOpenComments={() => onOpenComments(item)}
             />
           )}
           contentContainerStyle={[styles.list, { paddingBottom: 120 + insets.bottom }]}

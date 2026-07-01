@@ -4,6 +4,9 @@ import { isSupabaseConfigured } from '@/core/env';
 import { getSupabaseClient } from '@/core/supabase/client';
 import { InMemoryAuthRepository } from '@/data/auth/in-memory-auth-repository';
 import { SupabaseAuthRepository } from '@/data/auth/supabase-auth-repository';
+import { InMemoryCommentRepository } from '@/data/comment/in-memory-comment-repository';
+import { DEMO_COMMENTS, InMemoryCommentStore } from '@/data/comment/in-memory-comment-store';
+import { SupabaseCommentRepository } from '@/data/comment/supabase-comment-repository';
 import { DEMO_REACTIONS, InMemoryFeedRepository } from '@/data/feed/in-memory-feed-repository';
 import { SupabaseFeedRepository } from '@/data/feed/supabase-feed-repository';
 import { InMemoryFollowRepository } from '@/data/follow/in-memory-follow-repository';
@@ -18,6 +21,7 @@ import { InMemoryReactionRepository } from '@/data/reaction/in-memory-reaction-r
 import { InMemoryReactionStore } from '@/data/reaction/in-memory-reaction-store';
 import { SupabaseReactionRepository } from '@/data/reaction/supabase-reaction-repository';
 import type { AuthRepository } from '@/domain/repositories/auth-repository';
+import type { CommentRepository } from '@/domain/repositories/comment-repository';
 import type { FeedRepository } from '@/domain/repositories/feed-repository';
 import type { FollowRepository } from '@/domain/repositories/follow-repository';
 import type { GroupRepository } from '@/domain/repositories/group-repository';
@@ -38,6 +42,7 @@ export interface Repositories {
   reaction: ReactionRepository;
   notification: NotificationRepository;
   follow: FollowRepository;
+  comment: CommentRepository;
 }
 
 const RepositoriesContext = createContext<Repositories | null>(null);
@@ -53,19 +58,23 @@ function createDefaultRepositories(): Repositories {
       reaction: new SupabaseReactionRepository(client),
       notification: new SupabaseNotificationRepository(client),
       follow: new SupabaseFollowRepository(client),
+      comment: new SupabaseCommentRepository(client),
     };
   }
   // Mode hors-ligne : feed et réactions partagent le même store en mémoire.
   const reactionStore = new InMemoryReactionStore();
   DEMO_REACTIONS.forEach((r) => reactionStore.add(r.itemId, r.kind, r.userId));
+  const commentStore = new InMemoryCommentStore();
+  DEMO_COMMENTS.forEach((c) => commentStore.add(c));
   return {
     auth: new InMemoryAuthRepository(),
     profile: new InMemoryProfileRepository(),
     group: new InMemoryGroupRepository(),
-    feed: new InMemoryFeedRepository(undefined, reactionStore),
+    feed: new InMemoryFeedRepository(undefined, reactionStore, undefined, commentStore),
     reaction: new InMemoryReactionRepository(reactionStore),
     notification: new InMemoryNotificationRepository(),
     follow: new InMemoryFollowRepository(),
+    comment: new InMemoryCommentRepository(commentStore),
   };
 }
 
@@ -118,4 +127,8 @@ export function useNotificationRepository(): NotificationRepository {
 
 export function useFollowRepository(): FollowRepository {
   return useRepositories().follow;
+}
+
+export function useCommentRepository(): CommentRepository {
+  return useRepositories().comment;
 }

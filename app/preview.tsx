@@ -19,7 +19,7 @@ const DEMO_GROUPS = [
 const SCREENS: { label: string; node: ReactNode }[] = [
   {
     label: 'Accueil',
-    node: <FeedView userId="local-user" pseudo="Toi" onOpenProfile={noop} onOpenLog={noop} />,
+    node: <FeedView userId="local-user" pseudo="Toi" onOpenProfile={noop} onOpenLog={noop} onOpenComments={noop} />,
   },
   {
     label: 'Groupe',
@@ -37,6 +37,7 @@ const SCREENS: { label: string; node: ReactNode }[] = [
         onOpenGroup={noop}
         onJoinGroup={noop}
         onOpenAccount={noop}
+        onOpenComments={noop}
       />
     ),
   },

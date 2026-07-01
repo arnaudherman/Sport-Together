@@ -7,6 +7,7 @@ import {
 import type { MealInput } from '@/domain/entities/meal';
 import type { FeedRepository } from '@/domain/repositories/feed-repository';
 
+import type { InMemoryCommentStore } from '@/data/comment/in-memory-comment-store';
 import type { InMemoryReactionStore } from '@/data/reaction/in-memory-reaction-store';
 
 /**
@@ -21,6 +22,7 @@ export class InMemoryFeedRepository implements FeedRepository {
     seed: readonly FeedItem[] = DEMO_FEED,
     private readonly reactions?: InMemoryReactionStore,
     private readonly viewerId = 'local-user',
+    private readonly comments?: InMemoryCommentStore,
   ) {
     this.items = [...seed];
   }
@@ -41,6 +43,7 @@ export class InMemoryFeedRepository implements FeedRepository {
         reactions: this.reactions
           ? this.reactions.summaryFor(item.id, this.viewerId)
           : EMPTY_REACTIONS,
+        commentCount: this.comments ? this.comments.count(item.id) : 0,
       }));
   }
 

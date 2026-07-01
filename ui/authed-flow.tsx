@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { useGroupRepository } from '@/core/di/repositories-context';
+import type { FeedItem } from '@/domain/entities/feed';
 import type { Group } from '@/domain/entities/group';
 import { AccountScreen } from '@/ui/account-screen';
+import { CommentsScreen } from '@/ui/comments-screen';
 import { ErrorRetry } from '@/ui/error-retry';
 import { FeedView } from '@/ui/feed-view';
 import { GroupGate } from '@/ui/group-gate';
@@ -20,7 +22,8 @@ type Screen =
   | 'groups'
   | 'account'
   | { profile: { id: string; name: string } }
-  | { group: { id: string } };
+  | { group: { id: string } }
+  | { comments: { item: FeedItem } };
 
 /**
  * Flux applicatif (solo-first) : onboarding -> accueil (fil social). Les groupes
@@ -75,8 +78,13 @@ export function AuthedFlow({ userId }: { userId: string }) {
         onOpenGroup={(id) => setView({ group: { id } })}
         onJoinGroup={() => setView('groups')}
         onOpenAccount={() => setView('account')}
+        onOpenComments={(item) => setView({ comments: { item } })}
       />
     );
+  }
+
+  if (typeof view === 'object' && 'comments' in view) {
+    return <CommentsScreen item={view.comments.item} onBack={() => setView('home')} />;
   }
 
   if (view === 'account') {
@@ -131,6 +139,7 @@ export function AuthedFlow({ userId }: { userId: string }) {
       pseudo={profile.pseudo}
       onOpenProfile={(id, name) => setView({ profile: { id, name } })}
       onOpenLog={() => setView('log')}
+      onOpenComments={(item) => setView({ comments: { item } })}
     />
   );
 }

@@ -19,6 +19,7 @@ interface FeedRow {
   created_at: string;
   author: OneOrMany<{ pseudo: string }>;
   group: OneOrMany<{ name: string }>;
+  comment_count: { count: number }[] | null;
   sessions: OneOrMany<{ activity: string; duration_min: number | null }>;
   step_logs: OneOrMany<{ steps: number }>;
   meals: OneOrMany<{ label: string; calories_kcal: number | null }>;
@@ -27,7 +28,7 @@ interface FeedRow {
 
 const FEED_SELECT =
   'id, group_id, author_id, type, created_at, ' +
-  'author:profiles(pseudo), group:groups(name), ' +
+  'author:profiles(pseudo), group:groups(name), comment_count:comments(count), ' +
   'sessions(activity, duration_min), step_logs(steps), ' +
   'meals(label, calories_kcal), reactions(kind, author_id)';
 
@@ -76,6 +77,7 @@ function mapRow(row: FeedRow, viewerId: string): FeedItem {
     summary: summarize(row),
     reactions: reactionSummary(row.reactions, viewerId),
     groupName: pickOne(row.group)?.name ?? undefined,
+    commentCount: row.comment_count?.[0]?.count ?? 0,
   };
 }
 

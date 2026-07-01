@@ -22,10 +22,12 @@ export function FeedItemCard({
   item,
   onToggleReaction,
   onPressAuthor,
+  onOpenComments,
 }: {
   item: FeedItem;
   onToggleReaction?: (kind: ReactionKind) => void;
   onPressAuthor?: () => void;
+  onOpenComments?: () => void;
 }) {
   const reactions = item.reactions ?? EMPTY_REACTIONS;
   const av = avatarColor(item.authorId || item.authorName);
@@ -61,9 +63,16 @@ export function FeedItemCard({
         <Text style={styles.text}>{item.summary}</Text>
 
         <View style={styles.eng}>
-          <View style={styles.engItem}>
+          <Pressable
+            style={styles.engItem}
+            onPress={onOpenComments}
+            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+          >
             <Ionicons name="chatbubble-outline" size={16} color={colors.textMuted} />
-          </View>
+            {(item.commentCount ?? 0) > 0 ? (
+              <Text style={styles.engCount}>{item.commentCount}</Text>
+            ) : null}
+          </Pressable>
           {REACTIONS.map(({ kind, emoji }) => {
             const mine = reactions.mine.includes(kind);
             const count = kind === 'kudos' ? reactions.kudos : reactions.encouragement;

@@ -26,6 +26,7 @@ export function ProfileScreen({
   onOpenGroup,
   onJoinGroup,
   onOpenAccount,
+  onOpenComments,
 }: {
   targetUserId: string;
   targetName: string;
@@ -35,6 +36,7 @@ export function ProfileScreen({
   onOpenGroup: (id: string) => void;
   onJoinGroup: () => void;
   onOpenAccount: () => void;
+  onOpenComments: (item: FeedItem) => void;
 }) {
   const feedRepo = useFeedRepository();
   const followRepo = useFollowRepository();
@@ -208,7 +210,7 @@ export function ProfileScreen({
             ) : (
               <View style={styles.posts}>
                 {items.map((it) => (
-                  <FeedItemCard key={it.id} item={it} />
+                  <FeedItemCard key={it.id} item={it} onOpenComments={() => onOpenComments(it)} />
                 ))}
               </View>
             )
