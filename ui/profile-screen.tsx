@@ -6,8 +6,10 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFeedRepository } from '@/core/di/repositories-context';
 import type { FeedItem } from '@/domain/entities/feed';
 import { levelForXp, xpFromFeed } from '@/domain/usecases/gamification';
+import { skillRadar } from '@/domain/usecases/skill-radar';
 import { localDayKey, previousDayKey, streakFromFeed } from '@/domain/usecases/streak';
 import { avatarColor, initial, timeAgo } from '@/ui/format';
+import { RadarChart } from '@/ui/radar-chart';
 import { ScreenState } from '@/ui/screen-state';
 import { colors, font, radius } from '@/ui/theme';
 
@@ -83,6 +85,8 @@ export function ProfileScreen({
     return cells.reverse();
   }, [items, tz]);
 
+  const radar = useMemo(() => skillRadar(items, targetUserId, tz), [items, targetUserId, tz]);
+
   const av = avatarColor(targetUserId);
   const isMe = targetUserId === currentUserId || targetUserId === 'local-user';
   const recent = items.slice(0, 6);
@@ -149,12 +153,17 @@ export function ProfileScreen({
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{xp}</Text>
-            <Text style={styles.statLabel}>XP · Niv. {level}</Text>
+            <Text style={styles.statLabel}>XP total</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>🔥 {streak}</Text>
             <Text style={styles.statLabel}>Série (j)</Text>
           </View>
+        </View>
+
+        <Text style={styles.section}>Compétences · 30 j</Text>
+        <View style={styles.radarCard}>
+          <RadarChart axes={radar} size={240} />
         </View>
 
         <Text style={styles.section}>Assiduité · 90 j</Text>
@@ -215,6 +224,7 @@ const styles = StyleSheet.create({
   statLabel: { ...font.label, marginTop: 4 },
   section: { ...font.label, marginTop: 20, marginBottom: 10 },
   card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 14 },
+  radarCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 14, alignItems: 'center' },
   heat: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
   cell: { width: 18, height: 18, borderRadius: 4 },
   actRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: colors.border },

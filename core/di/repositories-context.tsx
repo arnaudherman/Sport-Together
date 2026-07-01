@@ -4,7 +4,7 @@ import { isSupabaseConfigured } from '@/core/env';
 import { getSupabaseClient } from '@/core/supabase/client';
 import { InMemoryAuthRepository } from '@/data/auth/in-memory-auth-repository';
 import { SupabaseAuthRepository } from '@/data/auth/supabase-auth-repository';
-import { InMemoryFeedRepository } from '@/data/feed/in-memory-feed-repository';
+import { DEMO_REACTIONS, InMemoryFeedRepository } from '@/data/feed/in-memory-feed-repository';
 import { SupabaseFeedRepository } from '@/data/feed/supabase-feed-repository';
 import { InMemoryGroupRepository } from '@/data/group/in-memory-group-repository';
 import { SupabaseGroupRepository } from '@/data/group/supabase-group-repository';
@@ -52,6 +52,7 @@ function createDefaultRepositories(): Repositories {
   }
   // Mode hors-ligne : feed et réactions partagent le même store en mémoire.
   const reactionStore = new InMemoryReactionStore();
+  DEMO_REACTIONS.forEach((r) => reactionStore.add(r.itemId, r.kind, r.userId));
   return {
     auth: new InMemoryAuthRepository(),
     profile: new InMemoryProfileRepository(),

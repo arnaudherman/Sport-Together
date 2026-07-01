@@ -2,6 +2,7 @@ import {
   EMPTY_REACTIONS,
   type FeedItem,
   type FeedItemType,
+  type ReactionKind,
 } from '@/domain/entities/feed';
 import type { MealInput } from '@/domain/entities/meal';
 import type { FeedRepository } from '@/domain/repositories/feed-repository';
@@ -62,54 +63,51 @@ export class InMemoryFeedRepository implements FeedRepository {
   }
 }
 
-/** Données de démonstration pour le mode hors-ligne (un seul groupe). */
+/**
+ * Données de démonstration pour le mode hors-ligne. Générées sur 3 jours pour que
+ * les streaks (perso + journée parfaite du groupe) et l'assiduité soient réels.
+ */
+const DAY_MS = 86_400_000;
 const demoNow = Date.now();
-const minutesAgo = (mins: number): string => new Date(demoNow - mins * 60_000).toISOString();
+const at = (dayOffset: number, mins: number): string =>
+  new Date(demoNow - dayOffset * DAY_MS - mins * 60_000).toISOString();
+
+function demoItem(
+  id: string,
+  authorId: string,
+  authorName: string,
+  type: FeedItemType,
+  createdAt: string,
+  summary: string,
+): FeedItem {
+  return { id, groupId: 'demo-group', authorId, authorName, type, createdAt, summary };
+}
 
 export const DEMO_FEED: readonly FeedItem[] = [
-  {
-    id: 'f0',
-    groupId: 'demo-group',
-    authorId: 'local-user',
-    authorName: 'Moi',
-    type: 'session',
-    createdAt: minutesAgo(38),
-    summary: '45 min de course — plus longue série cette semaine',
-  },
-  {
-    id: 'f1',
-    groupId: 'demo-group',
-    authorId: 'u-lea',
-    authorName: 'Léa',
-    type: 'session',
-    createdAt: minutesAgo(12),
-    summary: '30 min de renforcement',
-  },
-  {
-    id: 'f2',
-    groupId: 'demo-group',
-    authorId: 'u-sam',
-    authorName: 'Sam',
-    type: 'steps',
-    createdAt: minutesAgo(74),
-    summary: '10 248 pas',
-  },
-  {
-    id: 'f3',
-    groupId: 'demo-group',
-    authorId: 'local-user',
-    authorName: 'Moi',
-    type: 'meal',
-    createdAt: minutesAgo(200),
-    summary: 'Bowl poulet-quinoa · 620 kcal',
-  },
-  {
-    id: 'f4',
-    groupId: 'demo-group',
-    authorId: 'u-noa',
-    authorName: 'Noa',
-    type: 'meal',
-    createdAt: minutesAgo(1500),
-    summary: 'Salade César · 480 kcal',
-  },
+  // Aujourd'hui — les 4 membres ont loggé (journée parfaite).
+  demoItem('d0-moi-s', 'local-user', 'Moi', 'session', at(0, 40), '45 min de course — plus longue série cette semaine'),
+  demoItem('d0-lea-s', 'u-lea', 'Léa', 'session', at(0, 12), '30 min de renforcement'),
+  demoItem('d0-sam-st', 'u-sam', 'Sam', 'steps', at(0, 74), '10 248 pas'),
+  demoItem('d0-noa-m', 'u-noa', 'Noa', 'meal', at(0, 150), 'Salade César · 480 kcal'),
+  // Hier — les 4 membres aussi (2e journée parfaite → streak groupe = 2).
+  demoItem('d1-moi-s', 'local-user', 'Moi', 'session', at(1, 60), 'Muscu haut du corps'),
+  demoItem('d1-moi-m', 'local-user', 'Moi', 'meal', at(1, 200), 'Poulet-riz · 640 kcal'),
+  demoItem('d1-lea-s', 'u-lea', 'Léa', 'session', at(1, 30), 'Course 5 km'),
+  demoItem('d1-sam-s', 'u-sam', 'Sam', 'session', at(1, 90), 'Vélo 40 min'),
+  demoItem('d1-noa-st', 'u-noa', 'Noa', 'steps', at(1, 120), '8 430 pas'),
+  // Avant-hier — partiel (le streak groupe s'arrête ici).
+  demoItem('d2-moi-s', 'local-user', 'Moi', 'session', at(2, 50), 'Gainage + pompes'),
+  demoItem('d2-lea-m', 'u-lea', 'Léa', 'meal', at(2, 180), 'Buddha bowl · 550 kcal'),
+];
+
+/** Réactions de démonstration (mode hors-ligne). Viewer = 'local-user'. */
+export const DEMO_REACTIONS: { itemId: string; kind: ReactionKind; userId: string }[] = [
+  { itemId: 'd0-lea-s', kind: 'kudos', userId: 'local-user' },
+  { itemId: 'd0-lea-s', kind: 'kudos', userId: 'u-sam' },
+  { itemId: 'd0-lea-s', kind: 'kudos', userId: 'u-noa' },
+  { itemId: 'd0-lea-s', kind: 'encouragement', userId: 'local-user' },
+  { itemId: 'd0-moi-s', kind: 'kudos', userId: 'u-lea' },
+  { itemId: 'd0-moi-s', kind: 'kudos', userId: 'u-sam' },
+  { itemId: 'd1-lea-s', kind: 'kudos', userId: 'local-user' },
+  { itemId: 'd0-noa-m', kind: 'encouragement', userId: 'u-lea' },
 ];
