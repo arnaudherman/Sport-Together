@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Button, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { useFeedRepository } from '@/core/di/repositories-context';
 import type { FeedItemType } from '@/domain/entities/feed';
 import { validateMeal } from '@/domain/usecases/nutrition';
+import { colors, font, radius } from '@/ui/theme';
 
 const TABS: { type: FeedItemType; label: string }[] = [
   { type: 'session', label: 'Séance' },
@@ -58,7 +59,6 @@ export function LogGoal({ groupId, onLogged }: { groupId: string; onLogged: () =
         const cal = toNumber(calories);
         const input = {
           label: mealLabel.trim(),
-          // calories_kcal est un entier en base -> on arrondit (comme les pas).
           caloriesKcal: cal != null ? Math.round(cal) : undefined,
           proteinG: toNumber(protein),
           carbsG: toNumber(carbs),
@@ -101,6 +101,7 @@ export function LogGoal({ groupId, onLogged }: { groupId: string; onLogged: () =
         <TextInput
           style={styles.input}
           placeholder="Type d'activité (ex. Course)"
+          placeholderTextColor={colors.textFaint}
           value={activity}
           onChangeText={setActivity}
         />
@@ -110,6 +111,7 @@ export function LogGoal({ groupId, onLogged }: { groupId: string; onLogged: () =
         <TextInput
           style={styles.input}
           placeholder="Nombre de pas"
+          placeholderTextColor={colors.textFaint}
           keyboardType="number-pad"
           value={steps}
           onChangeText={setSteps}
@@ -121,71 +123,67 @@ export function LogGoal({ groupId, onLogged }: { groupId: string; onLogged: () =
           <TextInput
             style={styles.input}
             placeholder="Nom du repas"
+            placeholderTextColor={colors.textFaint}
             value={mealLabel}
             onChangeText={setMealLabel}
           />
           <View style={styles.row}>
-            <TextInput
-              style={[styles.input, styles.flex]}
-              placeholder="kcal"
-              keyboardType="number-pad"
-              value={calories}
-              onChangeText={setCalories}
-            />
-            <TextInput
-              style={[styles.input, styles.flex]}
-              placeholder="Prot. (g)"
-              keyboardType="number-pad"
-              value={protein}
-              onChangeText={setProtein}
-            />
+            <TextInput style={[styles.input, styles.flex]} placeholder="kcal" placeholderTextColor={colors.textFaint} keyboardType="number-pad" value={calories} onChangeText={setCalories} />
+            <TextInput style={[styles.input, styles.flex]} placeholder="Prot. (g)" placeholderTextColor={colors.textFaint} keyboardType="number-pad" value={protein} onChangeText={setProtein} />
           </View>
           <View style={styles.row}>
-            <TextInput
-              style={[styles.input, styles.flex]}
-              placeholder="Gluc. (g)"
-              keyboardType="number-pad"
-              value={carbs}
-              onChangeText={setCarbs}
-            />
-            <TextInput
-              style={[styles.input, styles.flex]}
-              placeholder="Lip. (g)"
-              keyboardType="number-pad"
-              value={fat}
-              onChangeText={setFat}
-            />
+            <TextInput style={[styles.input, styles.flex]} placeholder="Gluc. (g)" placeholderTextColor={colors.textFaint} keyboardType="number-pad" value={carbs} onChangeText={setCarbs} />
+            <TextInput style={[styles.input, styles.flex]} placeholder="Lip. (g)" placeholderTextColor={colors.textFaint} keyboardType="number-pad" value={fat} onChangeText={setFat} />
           </View>
         </>
       ) : null}
 
-      <Button title="Logger" onPress={submit} disabled={busy} />
+      <Pressable style={[styles.cta, busy && styles.ctaBusy]} onPress={submit} disabled={busy}>
+        {busy ? (
+          <ActivityIndicator color="#0B0B0D" />
+        ) : (
+          <Text style={styles.ctaText}>Logger  ·  +XP</Text>
+        )}
+      </Pressable>
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 8, marginBottom: 12 },
+  container: { gap: 10 },
   tabs: { flexDirection: 'row', gap: 8 },
   tab: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: '#E5E7EB',
-  },
-  tabActive: { backgroundColor: '#1D4ED8' },
-  tabText: { color: '#374151', fontWeight: '600' },
-  tabTextActive: { color: '#FFFFFF' },
-  input: {
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderColor: colors.border,
+  },
+  tabActive: { backgroundColor: colors.accent, borderColor: colors.accent },
+  tabText: { color: colors.textMuted, fontWeight: '700' },
+  tabTextActive: { color: '#0B0B0D' },
+  input: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     fontSize: 15,
+    color: colors.text,
   },
   row: { flexDirection: 'row', gap: 8 },
   flex: { flex: 1 },
-  error: { color: '#DC2626', fontSize: 14 },
+  cta: {
+    backgroundColor: colors.accent,
+    borderRadius: radius.pill,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  ctaBusy: { opacity: 0.7 },
+  ctaText: { ...font.title, color: '#0B0B0D' },
+  error: { color: '#FCA5A5', fontSize: 14 },
 });

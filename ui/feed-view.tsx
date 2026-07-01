@@ -4,17 +4,20 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFeedRepository, useReactionRepository } from '@/core/di/repositories-context';
 import type { FeedItem, ReactionKind } from '@/domain/entities/feed';
 import { FeedItemCard } from '@/ui/feed-item-card';
+import { LevelHeader } from '@/ui/level-header';
 import { LogGoal } from '@/ui/log-goal';
-import { StreakBadge } from '@/ui/streak-badge';
+import { colors, font } from '@/ui/theme';
 
-/** Feed du groupe + streak + log d'un goal + réactions (la boucle core, ADR-0002). */
+/** Feed du groupe en DA : header gamifié + log + réactions (boucle core, ADR-0002). */
 export function FeedView({
   groupId,
   userId,
+  pseudo,
   onChangeGroup,
 }: {
   groupId: string;
   userId: string;
+  pseudo: string;
   onChangeGroup: () => void;
 }) {
   const feed = useFeedRepository();
@@ -59,17 +62,6 @@ export function FeedView({
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <Text style={styles.title}>Feed du groupe</Text>
-        <Pressable onPress={onChangeGroup} hitSlop={8}>
-          <Text style={styles.link}>Changer</Text>
-        </Pressable>
-      </View>
-
-      <StreakBadge items={items} userId={userId} />
-      <LogGoal groupId={groupId} onLogged={load} />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
@@ -77,23 +69,32 @@ export function FeedView({
           <FeedItemCard item={item} onToggleReaction={(kind) => toggleReaction(item, kind)} />
         )}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={<Text style={styles.empty}>Aucun goal pour l'instant.</Text>}
+        ListHeaderComponent={
+          <View style={styles.head}>
+            <View style={styles.topRow}>
+              <Text style={styles.title}>Feed du groupe</Text>
+              <Pressable onPress={onChangeGroup} hitSlop={8}>
+                <Text style={styles.link}>Changer</Text>
+              </Pressable>
+            </View>
+            <LevelHeader pseudo={pseudo} userId={userId} items={items} />
+            <LogGoal groupId={groupId} onLogged={load} />
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+          </View>
+        }
+        ListEmptyComponent={<Text style={styles.empty}>Aucun goal pour l'instant — logge le premier 💪</Text>}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 16, paddingTop: 8 },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  title: { fontSize: 22, fontWeight: '700' },
-  link: { fontSize: 15, color: '#1D4ED8', fontWeight: '600' },
-  list: { gap: 12, paddingBottom: 24 },
-  empty: { color: '#6B7280', textAlign: 'center', marginTop: 24 },
-  error: { color: '#DC2626', fontSize: 14, marginBottom: 8 },
+  container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 16 },
+  head: { gap: 14, paddingTop: 8, paddingBottom: 16 },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  title: { ...font.h1 },
+  link: { fontSize: 15, color: colors.accent, fontWeight: '700' },
+  list: { gap: 12, paddingBottom: 32 },
+  empty: { color: colors.textMuted, textAlign: 'center', marginTop: 24 },
+  error: { color: '#FCA5A5', fontSize: 14 },
 });

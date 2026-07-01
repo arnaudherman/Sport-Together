@@ -1,16 +1,10 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Button,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 
 import { useProfileRepository } from '@/core/di/repositories-context';
 import type { Profile } from '@/domain/entities/profile';
+import { PrimaryButton } from '@/ui/button';
+import { colors, font, radius } from '@/ui/theme';
 
 /** Onboarding minimal : pseudo + age-gating adulte (ADR-0005 / ADR-0008). */
 export function ProfileOnboarding({ onDone }: { onDone: (profile: Profile) => void }) {
@@ -50,13 +44,19 @@ export function ProfileOnboarding({ onDone }: { onDone: (profile: Profile) => vo
       <TextInput
         style={styles.input}
         placeholder="Ton pseudo"
+        placeholderTextColor={colors.textFaint}
         value={pseudo}
         onChangeText={setPseudo}
         autoCapitalize="words"
       />
 
       <View style={styles.row}>
-        <Switch value={isAdult} onValueChange={setIsAdult} />
+        <Switch
+          value={isAdult}
+          onValueChange={setIsAdult}
+          trackColor={{ true: colors.accent, false: colors.border }}
+          thumbColor={colors.text}
+        />
         <Text style={styles.switchLabel}>Je confirme être majeur·e</Text>
       </View>
       <Text style={styles.note}>
@@ -64,28 +64,29 @@ export function ProfileOnboarding({ onDone }: { onDone: (profile: Profile) => vo
         jamais d'objectif de poids.
       </Text>
 
-      <Button title="Continuer" onPress={submit} disabled={busy} />
-      {busy && <ActivityIndicator style={styles.spinner} />}
+      <PrimaryButton title="Continuer" onPress={submit} busy={busy} />
+      {busy ? <ActivityIndicator color={colors.accent} /> : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, gap: 12 },
-  title: { fontSize: 28, fontWeight: '800', textAlign: 'center' },
-  subtitle: { fontSize: 15, color: '#6B7280', textAlign: 'center', marginBottom: 12 },
+  container: { flex: 1, backgroundColor: colors.bg, justifyContent: 'center', padding: 24, gap: 12 },
+  title: { ...font.display, textAlign: 'center' },
+  subtitle: { ...font.body, color: colors.textMuted, textAlign: 'center', marginBottom: 12 },
   input: {
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 10,
+    borderColor: colors.border,
+    borderRadius: radius.md,
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 13,
     fontSize: 16,
+    color: colors.text,
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  switchLabel: { fontSize: 15 },
-  note: { fontSize: 13, color: '#6B7280' },
-  spinner: { marginTop: 8 },
-  error: { color: '#DC2626', fontSize: 14 },
+  switchLabel: { ...font.body },
+  note: { ...font.body, color: colors.textMuted, fontSize: 13 },
+  error: { color: '#FCA5A5', fontSize: 14 },
 });

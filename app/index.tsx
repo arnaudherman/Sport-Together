@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AuthedFlow } from '@/ui/authed-flow';
 import { SignInForm } from '@/ui/sign-in-form';
+import { colors } from '@/ui/theme';
 import { useSession } from '@/ui/use-session';
 
 /**
@@ -16,7 +17,7 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       {loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator />
+          <ActivityIndicator color={colors.accent} />
         </View>
       ) : userId ? (
         <AuthedFlow key={userId} userId={userId} />
@@ -28,6 +29,6 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  safe: { flex: 1, backgroundColor: colors.bg },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
 });

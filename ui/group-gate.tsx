@@ -1,17 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Button,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { useGroupRepository } from '@/core/di/repositories-context';
 import type { Group } from '@/domain/entities/group';
+import { PrimaryButton } from '@/ui/button';
+import { colors, font, radius } from '@/ui/theme';
 
 /** Choix d'un groupe : liste de mes groupes + créer / rejoindre (ADR-0004). */
 export function GroupGate({ onReady }: { onReady: (groupId: string) => void }) {
@@ -75,29 +68,26 @@ export function GroupGate({ onReady }: { onReady: (groupId: string) => void }) {
     return (
       <View style={styles.centered}>
         <Text style={styles.title}>Groupe créé 🎉</Text>
-        {created.inviteCode ? (
-          <Text style={styles.code}>Code d'invitation : {created.inviteCode}</Text>
-        ) : null}
+        {created.inviteCode ? <Text style={styles.code}>{created.inviteCode}</Text> : null}
         <Text style={styles.hint}>Partage ce code à tes amis pour qu'ils rejoignent.</Text>
-        <Button title="Continuer" onPress={() => onReady(created.id)} />
-        <Button
-          title="Retour aux groupes"
+        <PrimaryButton title="Continuer" onPress={() => onReady(created.id)} />
+        <Pressable
           onPress={() => {
             setCreated(null);
             loadMine();
           }}
-        />
+        >
+          <Text style={styles.link}>Retour aux groupes</Text>
+        </Pressable>
       </View>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
       <Text style={styles.title}>Tes groupes</Text>
       {myGroups.length === 0 ? (
-        <Text style={styles.hint}>
-          Aucun groupe pour l'instant — crée-en un ou rejoins celui d'un ami.
-        </Text>
+        <Text style={styles.hint}>Aucun groupe — crée-en un ou rejoins celui d'un ami.</Text>
       ) : (
         myGroups.map((group) => (
           <Pressable key={group.id} onPress={() => onReady(group.id)} style={styles.groupRow}>
@@ -111,54 +101,62 @@ export function GroupGate({ onReady }: { onReady: (groupId: string) => void }) {
       <TextInput
         style={styles.input}
         placeholder="Nom du groupe"
+        placeholderTextColor={colors.textFaint}
         value={name}
         onChangeText={setName}
       />
-      <Button title="Créer" onPress={create} disabled={busy} />
+      <PrimaryButton title="Créer" onPress={create} busy={busy} />
 
       <Text style={styles.section}>— ou rejoindre —</Text>
       <TextInput
         style={styles.input}
         placeholder="Code d'invitation"
+        placeholderTextColor={colors.textFaint}
         autoCapitalize="characters"
         autoCorrect={false}
         value={code}
         onChangeText={setCode}
       />
-      <Button title="Rejoindre" onPress={join} disabled={busy} />
+      <PrimaryButton title="Rejoindre" onPress={join} busy={busy} />
 
-      {busy && <ActivityIndicator style={styles.spinner} />}
+      {busy ? <ActivityIndicator color={colors.accent} style={styles.spinner} /> : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.bg },
   container: { padding: 24, gap: 10 },
-  centered: { flex: 1, justifyContent: 'center', padding: 24, gap: 10 },
-  title: { fontSize: 24, fontWeight: '800', textAlign: 'center', marginBottom: 8 },
-  section: { fontSize: 13, color: '#6B7280', marginTop: 16, textAlign: 'center' },
-  code: { fontSize: 18, fontWeight: '700', textAlign: 'center' },
-  hint: { fontSize: 14, color: '#6B7280', textAlign: 'center' },
+  centered: { flex: 1, backgroundColor: colors.bg, justifyContent: 'center', padding: 24, gap: 12 },
+  title: { ...font.h1, textAlign: 'center', marginBottom: 8 },
+  section: { ...font.label, marginTop: 16, textAlign: 'center' },
+  code: { ...font.display, color: colors.accent, textAlign: 'center', letterSpacing: 2 },
+  hint: { ...font.body, color: colors.textMuted, textAlign: 'center' },
+  link: { fontSize: 15, color: colors.accent, fontWeight: '700', textAlign: 'center' },
   groupRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#F4F5F7',
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  groupName: { fontSize: 16, fontWeight: '600' },
-  chevron: { fontSize: 22, color: '#9CA3AF' },
-  input: {
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 10,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+  },
+  groupName: { ...font.title },
+  chevron: { fontSize: 22, color: colors.textFaint },
+  input: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 13,
     fontSize: 16,
+    color: colors.text,
   },
   spinner: { marginTop: 8 },
-  error: { color: '#DC2626', fontSize: 14, textAlign: 'center' },
+  error: { color: '#FCA5A5', fontSize: 14, textAlign: 'center' },
 });

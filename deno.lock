@@ -1,0 +1,50 @@
+{
+  "version": "5",
+  "redirects": {
+    "https://esm.sh/@supabase/supabase-js@2": "https://esm.sh/@supabase/supabase-js@2.110.0"
+  },
+  "remote": {
+    "https://esm.sh/@supabase/supabase-js@2.110.0": "b99c0ce7729f9de7797f836b93ab9ec94f1cfe079b4f937fa4144fe13525e979"
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@expo/ui@~56.0.18",
+        "npm:@react-native-async-storage/async-storage@2.2.0",
+        "npm:@supabase/supabase-js@^2.110.0",
+        "npm:@types/jest@30",
+        "npm:@types/react@~19.2.2",
+        "npm:eslint-config-expo@^56.0.4",
+        "npm:eslint@^9.39.4",
+        "npm:expo-constants@~56.0.18",
+        "npm:expo-device@~56.0.4",
+        "npm:expo-font@~56.0.7",
+        "npm:expo-glass-effect@~56.0.4",
+        "npm:expo-image@~56.0.11",
+        "npm:expo-linking@~56.0.14",
+        "npm:expo-router@~56.2.11",
+        "npm:expo-secure-store@~56.0.4",
+        "npm:expo-splash-screen@~56.0.10",
+        "npm:expo-status-bar@~56.0.4",
+        "npm:expo-symbols@~56.0.6",
+        "npm:expo-system-ui@~56.0.5",
+        "npm:expo-web-browser@~56.0.5",
+        "npm:expo@~56.0.12",
+        "npm:jest-expo@^56.0.5",
+        "npm:jest@^29.7.0",
+        "npm:pg@^8.22.0",
+        "npm:react-dom@19.2.3",
+        "npm:react-native-gesture-handler@~2.31.1",
+        "npm:react-native-reanimated@4.3.1",
+        "npm:react-native-safe-area-context@5.7",
+        "npm:react-native-screens@4.25.2",
+        "npm:react-native-url-polyfill@3",
+        "npm:react-native-web@0.21",
+        "npm:react-native-worklets@0.8.3",
+        "npm:react-native@0.85.3",
+        "npm:react@19.2.3",
+        "npm:typescript@~6.0.3"
+      ]
+    }
+  }
+}

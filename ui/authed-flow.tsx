@@ -5,6 +5,7 @@ import { ErrorRetry } from '@/ui/error-retry';
 import { FeedView } from '@/ui/feed-view';
 import { GroupGate } from '@/ui/group-gate';
 import { ProfileOnboarding } from '@/ui/profile-onboarding';
+import { colors } from '@/ui/theme';
 import { useProfile } from '@/ui/use-profile';
 
 /**
@@ -19,13 +20,11 @@ export function AuthedFlow({ userId }: { userId: string }) {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator />
+        <ActivityIndicator color={colors.accent} />
       </View>
     );
   }
 
-  // Lecture ratée (réseau) : on propose un réessai au lieu de renvoyer à tort un
-  // adulte onboardé vers l'age-gate (correctif revue).
   if (error && !profile) {
     return <ErrorRetry message="Impossible de charger ton profil." onRetry={reload} />;
   }
@@ -43,11 +42,12 @@ export function AuthedFlow({ userId }: { userId: string }) {
       key={groupId}
       groupId={groupId}
       userId={userId}
+      pseudo={profile.pseudo}
       onChangeGroup={() => setGroupId(null)}
     />
   );
 }
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.bg },
 });
