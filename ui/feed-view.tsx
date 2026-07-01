@@ -5,9 +5,10 @@ import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } fr
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useFeedRepository, useFollowRepository, useReactionRepository } from '@/core/di/repositories-context';
-import type { FeedItem, ReactionKind } from '@/domain/entities/feed';
+import { EMPTY_REACTIONS, type FeedItem, type ReactionKind } from '@/domain/entities/feed';
 import { avatarColor, initial } from '@/ui/format';
 import { FeedItemCard } from '@/ui/feed-item-card';
+import { LevelHeader } from '@/ui/level-header';
 import { ScreenState } from '@/ui/screen-state';
 import { colors, font, radius } from '@/ui/theme';
 
@@ -18,6 +19,20 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'abonnements', label: 'Abonnements' },
   { key: 'groupes', label: 'Groupes' },
 ];
+
+/** Applique un toggle de réaction à un item (pour l'optimistic update). */
+function withToggledReaction(item: FeedItem, kind: ReactionKind, on: boolean): FeedItem {
+  const r = item.reactions ?? EMPTY_REACTIONS;
+  const delta = on ? 1 : -1;
+  return {
+    ...item,
+    reactions: {
+      kudos: r.kudos + (kind === 'kudos' ? delta : 0),
+      encouragement: r.encouragement + (kind === 'encouragement' ? delta : 0),
+      mine: on ? [...new Set([...r.mine, kind])] : r.mine.filter((k) => k !== kind),
+    },
+  };
+}
 
 /** Accueil solo (DA) : fil social type Twitter (toi + abonnements + groupes). */
 export function FeedView({
@@ -86,10 +101,24 @@ export function FeedView({
   }
 
   const filtered = useMemo(() => {
-    if (tab === 'abonnements') return items.filter((i) => following.includes(i.authorId));
+    // « Abonnements » à la Twitter : tes propres posts + ceux des gens que tu suis.
+    if (tab === 'abonnements') return items.filter((i) => i.authorId === userId || following.includes(i.authorId));
     if (tab === 'groupes') return items.filter((i) => !!i.groupName);
     return items;
-  }, [items, tab, following]);
+  }, [items, tab, following, userId]);
+
+  async function toggleReaction(item: FeedItem, kind: ReactionKind) {
+    const active = (item.reactions?.mine ?? []).includes(kind);
+    // Optimistic : on met à jour l'item localement tout de suite.
+    setItems((prev) => prev.map((it) => (it.id === item.id ? withToggledReaction(it, kind, !active) : it)));
+    try {
+      if (active) await reactionRepo.remove(item.id, kind);
+      else await reactionRepo.add(item.id, kind);
+    } catch (e) {
+      setItems((prev) => prev.map((it) => (it.id === item.id ? withToggledReaction(it, kind, active) : it)));
+      if (mounted.current) setError((e as Error).message);
+    }
+  }
 
   function confirmDelete(item: FeedItem) {
     Alert.alert('Supprimer ce post ?', 'Cette action est définitive.', [
@@ -98,26 +127,19 @@ export function FeedView({
         text: 'Supprimer',
         style: 'destructive',
         onPress: async () => {
+          const snapshot = items;
+          setItems((prev) => prev.filter((i) => i.id !== item.id)); // optimistic
           try {
             await feed.deletePost(item.id);
-            await load();
           } catch (e) {
-            if (mounted.current) setError((e as Error).message);
+            if (mounted.current) {
+              setItems(snapshot);
+              setError((e as Error).message);
+            }
           }
         },
       },
     ]);
-  }
-
-  async function toggleReaction(item: FeedItem, kind: ReactionKind) {
-    const active = (item.reactions?.mine ?? []).includes(kind);
-    try {
-      if (active) await reactionRepo.remove(item.id, kind);
-      else await reactionRepo.add(item.id, kind);
-      await load();
-    } catch (e) {
-      if (mounted.current) setError((e as Error).message);
-    }
   }
 
   const av = avatarColor(userId);
@@ -126,7 +148,12 @@ export function FeedView({
     <View style={styles.container}>
       <View style={styles.top}>
         <Text style={styles.brand}>Accueil</Text>
-        <Pressable onPress={() => onOpenProfile(userId, pseudo)} hitSlop={8}>
+        <Pressable
+          onPress={() => onOpenProfile(userId, pseudo)}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Mon profil"
+        >
           <View style={[styles.avatar, { backgroundColor: av.bg }]}>
             <Text style={[styles.avatarText, { color: av.fg }]}>{initial(pseudo || 'T')}</Text>
           </View>
@@ -135,7 +162,14 @@ export function FeedView({
 
       <View style={styles.seg}>
         {TABS.map((t) => (
-          <Pressable key={t.key} onPress={() => setTab(t.key)} style={[styles.schip, tab === t.key && styles.schipOn]}>
+          <Pressable
+            key={t.key}
+            onPress={() => setTab(t.key)}
+            style={[styles.schip, tab === t.key && styles.schipOn]}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: tab === t.key }}
+            accessibilityLabel={t.label}
+          >
             <Text style={[styles.schipText, tab === t.key && styles.schipTextOn]}>{t.label}</Text>
           </Pressable>
         ))}
@@ -146,6 +180,13 @@ export function FeedView({
           data={filtered}
           keyExtractor={(item) => item.id}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.accent} />}
+          ListHeaderComponent={
+            tab === 'tout' ? (
+              <Pressable onPress={() => onOpenProfile(userId, pseudo)} style={styles.headerCard}>
+                <LevelHeader pseudo={pseudo} userId={userId} items={items} />
+              </Pressable>
+            ) : null
+          }
           renderItem={({ item }) => (
             <FeedItemCard
               item={item}
@@ -168,7 +209,12 @@ export function FeedView({
         />
       </ScreenState>
 
-      <Pressable style={[styles.fabWrap, { bottom: 20 + insets.bottom }]} onPress={onOpenLog}>
+      <Pressable
+        style={[styles.fabWrap, { bottom: 20 + insets.bottom }]}
+        onPress={onOpenLog}
+        accessibilityRole="button"
+        accessibilityLabel="Publier une séance"
+      >
         <LinearGradient colors={['#F58A4C', '#F0652F']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fab}>
           <Ionicons name="add" size={22} color="#0B0B0D" />
           <Text style={styles.fabText}>Publier</Text>
@@ -187,8 +233,8 @@ const styles = StyleSheet.create({
   seg: { flexDirection: 'row', gap: 8, marginBottom: 8 },
   schip: {
     paddingHorizontal: 16,
-    paddingVertical: 9,
-    minHeight: 40,
+    paddingVertical: 10,
+    minHeight: 44,
     justifyContent: 'center',
     borderRadius: radius.pill,
     backgroundColor: colors.surface,
@@ -198,6 +244,7 @@ const styles = StyleSheet.create({
   schipOn: { backgroundColor: colors.accent, borderColor: colors.accent },
   schipText: { color: colors.textMuted, fontWeight: '700', fontSize: 14 },
   schipTextOn: { color: '#0B0B0D' },
+  headerCard: { marginBottom: 12 },
   list: { gap: 12, paddingTop: 4 },
   empty: { color: colors.textMuted, textAlign: 'center', marginTop: 30 },
   fabWrap: {

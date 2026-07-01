@@ -10,7 +10,7 @@ import {
 } from '@/core/di/repositories-context';
 import type { FeedItem } from '@/domain/entities/feed';
 import type { GroupMember } from '@/domain/entities/group';
-import { currentStreak, localDayKey, perfectDays } from '@/domain/usecases/streak';
+import { currentStreak, localDayKey } from '@/domain/usecases/streak';
 import { avatarColor, initial, timeAgo } from '@/ui/format';
 import { ScreenState } from '@/ui/screen-state';
 import { colors, font, radius } from '@/ui/theme';
@@ -83,16 +83,13 @@ export function GroupScreen({
     return map;
   }, [items]);
 
+  // Streak = jours consécutifs où le groupe a de l'activité (≥ 1 membre a loggé) —
+  // motivant et atteignable, vs « tout le monde chaque jour » qui reste collé à 0.
   const groupStreak = useMemo(() => {
-    const byDay = new Map<string, Set<string>>();
-    for (const it of items) {
-      const key = localDayKey(it.createdAt, tz);
-      const s = byDay.get(key) ?? new Set<string>();
-      s.add(it.authorId);
-      byDay.set(key, s);
-    }
-    return currentStreak(perfectDays(members.map((m) => m.id), byDay), todayKey);
-  }, [items, members, tz, todayKey]);
+    const activeDays = new Set<string>();
+    for (const it of items) activeDays.add(localDayKey(it.createdAt, tz));
+    return currentStreak(activeDays, todayKey);
+  }, [items, tz, todayKey]);
 
   const perfectCount = members.filter((m) => loggedToday.has(m.id)).length;
 
@@ -160,7 +157,7 @@ export function GroupScreen({
           <View style={styles.card}>
             {members.map((m, i) => {
               const done = loggedToday.has(m.id);
-              const isMe = m.id === userId || m.id === 'local-user';
+              const isMe = m.id === userId;
               const av = avatarColor(m.id);
               const last = lastByAuthor.get(m.id);
               return (

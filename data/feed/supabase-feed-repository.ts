@@ -119,26 +119,46 @@ export class SupabaseFeedRepository implements FeedRepository {
     return ((data ?? []) as unknown as FeedRow[]).map((row) => mapRow(row, viewerId));
   }
 
-  async logSession(groupId: string, activity: string, durationMin?: number): Promise<void> {
+  async listUserFeed(userId: string): Promise<FeedItem[]> {
+    // Posts d'un utilisateur (pour son profil) ; la RLS filtre à ce qui est visible.
+    const viewerId = await this.viewerId();
+    const { data, error } = await this.client
+      .from('feed_items')
+      .select(FEED_SELECT)
+      .eq('author_id', userId)
+      .order('created_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    return ((data ?? []) as unknown as FeedRow[]).map((row) => mapRow(row, viewerId));
+  }
+
+  // Publier en solo (group_id null) exige une timeline perso côté backend (backlog).
+  private requireGroup(groupId: string | null): string {
+    if (groupId === null) {
+      throw new Error("Publier en solo arrive bientôt — rejoins un groupe pour l'instant.");
+    }
+    return groupId;
+  }
+
+  async logSession(groupId: string | null, activity: string, durationMin?: number): Promise<void> {
     const { error } = await this.client.rpc('log_session', {
-      p_group_id: groupId,
+      p_group_id: this.requireGroup(groupId),
       p_activity: activity,
       p_duration_min: durationMin ?? null,
     });
     if (error) throw new Error(error.message);
   }
 
-  async logSteps(groupId: string, steps: number): Promise<void> {
+  async logSteps(groupId: string | null, steps: number): Promise<void> {
     const { error } = await this.client.rpc('log_steps', {
-      p_group_id: groupId,
+      p_group_id: this.requireGroup(groupId),
       p_steps: steps,
     });
     if (error) throw new Error(error.message);
   }
 
-  async logMeal(groupId: string, meal: MealInput): Promise<void> {
+  async logMeal(groupId: string | null, meal: MealInput): Promise<void> {
     const { error } = await this.client.rpc('log_meal', {
-      p_group_id: groupId,
+      p_group_id: this.requireGroup(groupId),
       p_label: meal.label,
       p_moment: meal.moment ?? null,
       p_calories_kcal: meal.caloriesKcal ?? null,

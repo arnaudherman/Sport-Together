@@ -34,7 +34,7 @@ export function LogScreen({
   onDone,
   onCancel,
 }: {
-  groupId: string;
+  groupId: string | null;
   onDone: () => void;
   onCancel: () => void;
 }) {
@@ -166,9 +166,10 @@ export function LogScreen({
         ) : null}
 
         <View style={styles.tools}>
-          <Ionicons name="camera-outline" size={22} color={colors.accent} />
-          <Ionicons name="location-outline" size={22} color={colors.accent} />
-          <Ionicons name="happy-outline" size={22} color={colors.accent} />
+          <Ionicons name="camera-outline" size={22} color={colors.textMuted} />
+          <Ionicons name="location-outline" size={22} color={colors.textMuted} />
+          <Ionicons name="happy-outline" size={22} color={colors.textMuted} />
+          <Text style={styles.toolsHint}>bientôt</Text>
         </View>
 
         <LinearGradient
@@ -188,7 +189,9 @@ export function LogScreen({
         </LinearGradient>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
-        <Text style={styles.foot}>Ta publication apparaîtra dans le fil de ton groupe.</Text>
+        <Text style={styles.foot}>
+          {groupId ? 'Ta publication apparaîtra dans le fil de ton groupe.' : 'Ta publication apparaîtra dans ton fil.'}
+        </Text>
       </ScrollView>
     </View>
   );
@@ -229,7 +232,8 @@ const styles = StyleSheet.create({
   dchipTextOn: { color: colors.accent },
   macros: { flexDirection: 'row', gap: 8, paddingLeft: 56 },
   mInput: { flex: 1, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: 10, paddingVertical: 12, fontSize: 14, color: colors.text, textAlign: 'center' },
-  tools: { flexDirection: 'row', gap: 20, paddingLeft: 56, paddingTop: 2 },
+  tools: { flexDirection: 'row', gap: 20, alignItems: 'center', paddingLeft: 56, paddingTop: 2 },
+  toolsHint: { color: colors.textFaint, fontSize: 12 },
   reward: { borderRadius: radius.md, padding: 16, gap: 6, borderWidth: 1, borderColor: 'rgba(240,101,47,0.25)' },
   rewardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   rewardLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },

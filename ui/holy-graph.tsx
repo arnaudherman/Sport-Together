@@ -36,8 +36,8 @@ export function HolyGraph({ graph, unlocked }: { graph: SkillGraph; unlocked: nu
       })}
 
       {nodes.map(({ node, state }) => {
-        const labelColor =
-          state === 'available' ? colors.accent : state === 'locked' ? colors.textFaint : colors.textMuted;
+        // Verrouillé rendu par l'opacité du cercle, pas par un texte sous-contrasté.
+        const labelColor = state === 'available' ? colors.accent : colors.textMuted;
         return (
           <Fragment key={node.id}>
             {state === 'done' ? (
@@ -55,7 +55,7 @@ export function HolyGraph({ graph, unlocked }: { graph: SkillGraph; unlocked: nu
             ) : (
               <Circle cx={node.x} cy={node.y} r={14} fill={colors.surfaceElevated} stroke={colors.border} strokeWidth={2} />
             )}
-            <SvgText x={node.x} y={node.y + 32} fontSize={9} fontWeight="700" fill={labelColor} textAnchor="middle">
+            <SvgText x={node.x} y={node.y + 32} fontSize={11} fontWeight="700" fill={labelColor} textAnchor="middle">
               {node.label}
             </SvgText>
           </Fragment>

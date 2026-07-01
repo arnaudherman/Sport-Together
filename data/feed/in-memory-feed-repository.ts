@@ -35,6 +35,10 @@ export class InMemoryFeedRepository implements FeedRepository {
     return this.withReactions(this.items.filter((item) => item.groupId === groupId));
   }
 
+  async listUserFeed(userId: string): Promise<FeedItem[]> {
+    return this.withReactions(this.items.filter((item) => item.authorId === userId));
+  }
+
   private withReactions(items: readonly FeedItem[]): FeedItem[] {
     return [...items]
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
@@ -47,10 +51,11 @@ export class InMemoryFeedRepository implements FeedRepository {
       }));
   }
 
-  private push(groupId: string, type: FeedItemType, summary: string): void {
+  private push(groupId: string | null, type: FeedItemType, summary: string): void {
+    // groupId null = post solo (timeline perso) : id de groupe personnel, pas de badge.
     this.items.push({
       id: `local-${this.items.length + 1}`,
-      groupId,
+      groupId: groupId ?? 'solo',
       authorId: this.viewerId,
       authorName: 'Moi',
       type,
@@ -59,15 +64,15 @@ export class InMemoryFeedRepository implements FeedRepository {
     });
   }
 
-  async logSession(groupId: string, activity: string, durationMin?: number): Promise<void> {
+  async logSession(groupId: string | null, activity: string, durationMin?: number): Promise<void> {
     this.push(groupId, 'session', durationMin ? `${activity} · ${durationMin} min` : activity);
   }
 
-  async logSteps(groupId: string, steps: number): Promise<void> {
+  async logSteps(groupId: string | null, steps: number): Promise<void> {
     this.push(groupId, 'steps', `${steps} pas`);
   }
 
-  async logMeal(groupId: string, meal: MealInput): Promise<void> {
+  async logMeal(groupId: string | null, meal: MealInput): Promise<void> {
     const calories = meal.caloriesKcal != null ? ` · ${meal.caloriesKcal} kcal` : '';
     this.push(groupId, 'meal', `${meal.label}${calories}`);
   }

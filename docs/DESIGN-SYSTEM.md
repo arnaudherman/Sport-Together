@@ -41,7 +41,8 @@ en 700 MAJ espacé gris.
 - **Barre d'XP / de progression** : track sombre + remplissage orange arrondi.
 - **Chips de réaction** (👏 💪) : arrondies, actives = fond accent-soft + texte orange.
 - **Badge de streak** : flamme + nombre, ton chaud.
-- **Radar de compétences** (7–8 axes) : trame sombre + polygone orange (profil).
+- **Arbre de compétences (holy graph)** : graphe ramifié SVG, nœuds débloqués en
+  orange, verrouillés sombres (onglet Compétences du profil / écran Progression).
 - **Heatmap** type contribution : cases sombres → orange (assiduité 90 j).
 - **Hero / cover** : image cinématique chaude en tête de profil.
 

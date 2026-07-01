@@ -62,8 +62,14 @@ export function FeedItemCard({
               <Text style={styles.badgeText}>{TYPE_LABEL[item.type]}</Text>
             </View>
             {onDelete ? (
-              <Pressable onPress={onDelete} hitSlop={10} style={styles.menu}>
-                <Ionicons name="ellipsis-horizontal" size={16} color={colors.textFaint} />
+              <Pressable
+                onPress={onDelete}
+                hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
+                style={styles.menu}
+                accessibilityRole="button"
+                accessibilityLabel="Options du post"
+              >
+                <Ionicons name="ellipsis-horizontal" size={18} color={colors.textMuted} />
               </Pressable>
             ) : null}
           </View>
@@ -75,7 +81,9 @@ export function FeedItemCard({
           <Pressable
             style={styles.engItem}
             onPress={onOpenComments}
-            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+            hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel={`Répondre${(item.commentCount ?? 0) > 0 ? `, ${item.commentCount} réponses` : ''}`}
           >
             <Ionicons name="chatbubble-outline" size={16} color={colors.textMuted} />
             {(item.commentCount ?? 0) > 0 ? (
@@ -89,8 +97,11 @@ export function FeedItemCard({
               <Pressable
                 key={kind}
                 onPress={() => onToggleReaction?.(kind)}
-                hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+                hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
                 style={styles.engItem}
+                accessibilityRole="button"
+                accessibilityState={{ selected: mine }}
+                accessibilityLabel={`${kind === 'kudos' ? 'Bravo' : 'Courage'}, ${count}`}
               >
                 <Text style={[styles.engEmoji, mine && styles.engActive]}>{emoji}</Text>
                 <Text style={[styles.engCount, mine && styles.engActive]}>{count}</Text>

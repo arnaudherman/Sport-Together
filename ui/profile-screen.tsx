@@ -56,9 +56,9 @@ export function ProfileScreen({
 
   const load = useCallback(async () => {
     try {
-      const data = await feedRepo.listHomeFeed();
+      const data = await feedRepo.listUserFeed(targetUserId);
       if (mounted.current) {
-        setItems(data.filter((it) => it.authorId === targetUserId));
+        setItems(data);
         setError(null);
       }
     } catch (e) {
@@ -73,8 +73,7 @@ export function ProfileScreen({
   }, [load]);
 
   useEffect(() => {
-    const isSelf = targetUserId === currentUserId || targetUserId === 'local-user';
-    if (isSelf) return;
+    if (targetUserId === currentUserId) return;
     followRepo
       .isFollowing(targetUserId)
       .then((f) => {
@@ -101,7 +100,7 @@ export function ProfileScreen({
   }, [items]);
 
   const av = avatarColor(targetUserId);
-  const isMe = targetUserId === currentUserId || targetUserId === 'local-user';
+  const isMe = targetUserId === currentUserId;
   const name = isMe ? 'Moi' : targetName;
 
   function confirmDelete(post: FeedItem) {

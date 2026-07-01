@@ -23,6 +23,7 @@ export function CommentsScreen({ item, onBack }: { item: FeedItem; onBack: () =>
   const [comments, setComments] = useState<Comment[]>([]);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -49,10 +50,13 @@ export function CommentsScreen({ item, onBack }: { item: FeedItem; onBack: () =>
     const value = text.trim();
     if (!value || busy) return;
     setBusy(true);
+    setError(null);
     try {
       await commentRepo.add(item.id, value);
       setText('');
       await load();
+    } catch (e) {
+      if (mounted.current) setError((e as Error).message);
     } finally {
       if (mounted.current) setBusy(false);
     }
@@ -110,6 +114,7 @@ export function CommentsScreen({ item, onBack }: { item: FeedItem; onBack: () =>
         ListEmptyComponent={<Text style={styles.empty}>Sois le premier à répondre 💬</Text>}
       />
 
+      {error ? <Text style={styles.error}>{error}</Text> : null}
       <View style={styles.composer}>
         <TextInput
           style={styles.input}
@@ -119,7 +124,14 @@ export function CommentsScreen({ item, onBack }: { item: FeedItem; onBack: () =>
           onChangeText={setText}
           multiline
         />
-        <Pressable style={[styles.send, (!text.trim() || busy) && styles.dim]} onPress={send} disabled={!text.trim() || busy}>
+        <Pressable
+          style={[styles.send, (!text.trim() || busy) && styles.dim]}
+          onPress={send}
+          disabled={!text.trim() || busy}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Envoyer la réponse"
+        >
           <Ionicons name="arrow-up" size={20} color="#0B0B0D" />
         </Pressable>
       </View>
@@ -149,6 +161,7 @@ const styles = StyleSheet.create({
   empty: { color: colors.textMuted, textAlign: 'center', marginTop: 24 },
   composer: { flexDirection: 'row', gap: 10, alignItems: 'flex-end', paddingVertical: 10, borderTopWidth: 1, borderTopColor: colors.border },
   input: { flex: 1, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text, maxHeight: 100 },
-  send: { width: 40, height: 40, borderRadius: radius.pill, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
+  send: { width: 44, height: 44, borderRadius: radius.pill, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
   dim: { opacity: 0.4 },
+  error: { color: colors.danger, fontSize: 13, paddingVertical: 4 },
 });

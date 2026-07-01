@@ -116,18 +116,7 @@ export function AuthedFlow({ userId }: { userId: string }) {
   }
 
   if (view === 'log') {
-    if (!postingGroupId) {
-      // Pas encore de groupe où publier : on invite à en rejoindre / créer un.
-      return (
-        <GroupGate
-          onBack={() => setView('home')}
-          onReady={() => {
-            loadGroups();
-            setView('home');
-          }}
-        />
-      );
-    }
+    // Solo-first (ADR-0010) : on publie toujours, même sans groupe (post solo).
     return (
       <LogScreen groupId={postingGroupId} onDone={() => setView('home')} onCancel={() => setView('home')} />
     );

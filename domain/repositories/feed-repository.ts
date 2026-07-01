@@ -14,12 +14,14 @@ export interface FeedRepository {
   listHomeFeed(): Promise<FeedItem[]>;
   /** Entrées du feed d'un groupe, du plus récent au plus ancien (ADR-0002). */
   listGroupFeed(groupId: string): Promise<FeedItem[]>;
-  /** Logge une séance (entrée de type `session`). */
-  logSession(groupId: string, activity: string, durationMin?: number): Promise<void>;
-  /** Logge un relevé de pas (entrée de type `steps`). */
-  logSteps(groupId: string, steps: number): Promise<void>;
-  /** Logge un repas (entrée de type `meal`) — valider avec validateMeal en amont. */
-  logMeal(groupId: string, meal: MealInput): Promise<void>;
+  /** Tous les posts d'un utilisateur (pour son profil), du plus récent au plus ancien. */
+  listUserFeed(userId: string): Promise<FeedItem[]>;
+  /** Logge une séance. `groupId` null = post solo (timeline perso, ADR-0010). */
+  logSession(groupId: string | null, activity: string, durationMin?: number): Promise<void>;
+  /** Logge un relevé de pas. `groupId` null = post solo. */
+  logSteps(groupId: string | null, steps: number): Promise<void>;
+  /** Logge un repas (valider avec validateMeal en amont). `groupId` null = post solo. */
+  logMeal(groupId: string | null, meal: MealInput): Promise<void>;
   /** Supprime un post (réservé à son auteur par la RLS). */
   deletePost(feedItemId: string): Promise<void>;
 }
