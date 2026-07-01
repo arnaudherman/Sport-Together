@@ -7,7 +7,7 @@ import type { FeedItem } from '@/domain/entities/feed';
 import { levelProgress, xpFromFeed } from '@/domain/usecases/gamification';
 import { streakFromFeed } from '@/domain/usecases/streak';
 import { initial } from '@/ui/format';
-import { colors, font, radius } from '@/ui/theme';
+import { colors, font, gradients, radius } from '@/ui/theme';
 
 /**
  * En-tête gamifié (DA) : carte dégradée cinématique, avatar, niveau, barre d'XP,
@@ -79,7 +79,7 @@ export function LevelHeader({
       <View style={styles.barTrack}>
         <Animated.View style={[styles.barFillWrap, { width: barWidth }]}>
           <LinearGradient
-            colors={['#F58A4C', '#F0652F']}
+            colors={gradients.accent}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.barFill}

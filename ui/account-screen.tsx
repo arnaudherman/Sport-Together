@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { useAuthRepository, useProfileRepository } from '@/core/di/repositories-context';
@@ -30,6 +30,13 @@ export function AccountScreen({
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const mounted = useRef(true);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   async function save() {
     const value = name.trim();

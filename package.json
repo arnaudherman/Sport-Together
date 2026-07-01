@@ -55,7 +55,8 @@
     "lint": "expo lint",
     "test": "jest",
     "test:db": "bash supabase/tests/run-local.sh",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run typecheck && npm test"
   },
   "jest": {
     "preset": "jest-expo",

@@ -17,7 +17,7 @@
 ## P1 — Attendu pour le MVP
 
 - [ ] **Notifications push reçues** : câbler `expo-notifications` côté client
-  (permission, enregistrement du token → table `push_tokens`, deep-link à l'ouverture).
+  (permission, enregistrement du token → table `device_tokens`, deep-link à l'ouverture).
   Le backend (`notify_group`, `nudge`) existe.
 - [ ] **Feed temps réel** : implémenter `FeedRepository.subscribe` via Supabase Realtime
   (aujourd'hui pull + pull-to-refresh).

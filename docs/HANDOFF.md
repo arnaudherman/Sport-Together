@@ -1,66 +1,61 @@
 # Reprise de projet — Sport Together
 
-> À lire en premier dans une nouvelle session (Claude Code). Ce brief contient
-> tout le contexte nécessaire pour reprendre sans la conversation d'origine.
+> À lire en premier dans une nouvelle session. Pour le détail : `docs/VISION-ET-CADRAGE.md`
+> (cible), `docs/adr/` (décisions), `docs/CHANGELOG.md` (ce qui est fait), `docs/BACKLOG.md`
+> (ce qui reste). En cas de doute, **le code fait foi** — ce brief peut dater.
 
 ## En une phrase
 
-App mobile sociale de motivation sportive : des groupes fermés d'amis suivent le
-sport de chacun et se poussent mutuellement. L'unité de valeur est **le groupe**,
-jamais l'individu seul.
+App mobile de **self-improvement solo-first** : chacun logge sa progression (séances, pas,
+repas) sous forme de **fil social type Twitter**, gagne de l'XP / des niveaux / un arbre de
+compétences, et peut **optionnellement** rejoindre des **groupes privés d'entraide**.
+L'individu est au cœur ; le groupe est un **add-on**, jamais un prérequis (ADR-0010).
 
 ## Où on en est
 
-**Phase 0 — cadrage.** On fige la cible *avant* de coder. Le document
-`docs/VISION-ET-CADRAGE.md` (v0.1) est un brouillon à challenger, en particulier :
+**Phase 1 — construction (mode mock avancé, backend prouvé localement).**
 
-- la section **7 (scope MVP DEDANS / DEHORS)** ;
-- l'**identité** : Sign in with Apple seul au départ, ou aussi e-mail / magic link ?
+- **Front** (Expo/RN, iOS-first, mode mock = faux user) : accueil = fil social (onglets
+  Tout / Abonnements / Groupes) avec en-tête gamifié (niveau/XP/streak) ; publier une
+  séance/pas/repas ; profil à onglets (Publications / Compétences = holy graph / Médias) ;
+  suivre / se désabonner ; **Découvrir** des gens ; commenter ; supprimer ses posts ;
+  éditer son profil (pseudo + bio) ; écran Compte (déconnexion / suppression) ; groupes
+  d'entraide en add-on.
+- **Backend** (Supabase) : 13 migrations, prouvé de bout en bout sur un Postgres local —
+  **harnais RLS 16/16** (isolation multi-tenant + visibilité des abonnements) + e2e.
+- **Qualité** : `tsc`/`lint` à zéro, ~44 tests front, archi en couches (ADR-0007)
+  verrouillée par ESLint. `npm run check` = lint + typecheck + test.
 
-Tant que la cible n'est pas validée par le porteur, **on ne rédige pas les ADR
-restants et on ne code pas**.
+## Décisions structurantes (voir `docs/adr/`)
 
-## Décisions déjà verrouillées (portes à sens unique)
-
-1. **Backend : Supabase** (PostgreSQL + Auth + Realtime + Storage + RLS).
-   → garantit l'interop iOS ↔ Android (les deux clients tapent le même schéma).
-2. **Modèle de feed polymorphe** : table `FEED_ITEMS` (avec discriminateur `type`)
-   + tables de détail (`SESSIONS` aujourd'hui ; `WEIGH_INS`, `MEALS` plus tard sans
-   migration).
-3. **Client : Expo / React Native, iOS-first** (Android certain mais post-validation).
-   → voir `docs/adr/ADR-0003-framework-client-mobile.md`.
+1. **Supabase** (PostgreSQL + Auth + Realtime + Storage + RLS) — ADR-0001.
+2. **Feed polymorphe** `feed_items` + tables de détail (`sessions`/`step_logs`/`meals`) — ADR-0002.
+3. **Expo / React Native, iOS-first** — ADR-0003.
+4. **Multi-tenant par RLS** (isolation par groupe, adhésion via RPC) — ADR-0004.
+5. **Archi client en couches** (domain pur → data ← ui + core/DI) — ADR-0007.
+6. **Gamification non-compétitive** (progression perso + entraide, pas de classement) — ADR-0009.
+7. **Pivot solo-first** (accueil = fil social, groupes = add-on privé) — ADR-0010.
 
 ## La boucle d'engagement (cœur du produit)
 
-Séance loggée (5 s) → les potes la voient → réactions (kudos / nudge) → le streak
-de **groupe** avance → envie de bouger demain → (retour). Aucune feature n'est
-ajoutée tant que cette boucle n'est pas fluide.
+Logger sa progression (5 s) → le post apparaît dans son fil + gagne de l'XP → niveau / arbre
+de compétences qui avance → abonnements et groupes d'entraide amplifient → (retour demain).
 
-## Prochaines étapes, dans l'ordre
+## Ce qui reste (voir `docs/BACKLOG.md`)
 
-1. **Peaufiner la cible** avec le porteur (scope MVP, identité) → passer v0.1 en v1.0.
-2. **Rédiger les 7 ADR** du registre (voir `VISION-ET-CADRAGE.md` §11) :
-   - ADR-0001 Backend Supabase (fait)
-   - ADR-0002 Feed polymorphe (fait)
-   - ADR-0003 Client Expo (fait)
-   - ADR-0004 Multi-tenant & RLS
-   - ADR-0005 Auth & identité
-   - ADR-0006 Notifications push (Expo Notifications)
-   - ADR-0007 Architecture client en couches (repositories + DI)
-3. **Mettre en place le dépôt** : commits des docs, conventions.
-4. **Scaffolder** l'arbo Expo (`app/`, `domain/`, `data/`, `core/`, `ui/`) avec un
-   premier repository mocké et un test, *puis* les features du MVP.
+- **Besoin de ton environnement** : déployer le Supabase cloud, notifications push (device),
+  temps réel, **timeline perso** (publier « solo » sans groupe côté serveur).
+- **Profondeur produit** : célébration de level-up / palier, quêtes hebdo, vraie
+  progression du holy graph (DAG), quêtes d'entraide, photos sur les posts.
 
 ## Conventions
 
-- Commits : `docs(adr): ADR-0004 isolation multi-tenant`, `feat(feed): log de séance`.
-- Format ADR : MADR avec front matter YAML (voir ADR-0003 comme gabarit).
-- Principe d'archi : la présentation dépend d'interfaces de repository, jamais de
-  Supabase directement (testabilité, backend remplaçable).
+- Commits : `feat(feed): …`, `fix(review): …`, `docs(adr): …`.
+- Format ADR : MADR (front matter YAML) — voir ADR-0003 comme gabarit.
+- Archi : la présentation dépend d'**interfaces de repository**, jamais de Supabase
+  directement (règle ESLint `no-restricted-imports`).
 
-## Garde-fous produit
+## Garde-fous produit (non négociables)
 
-- Ne pas dériver vers une app de nutrition / coaching diététique.
-- Nudge bienveillant, jamais punitif ; pas d'objectifs de poids agressifs.
-- Ne pas ajouter de feature avant que la boucle core soit prouvée sur le groupe
-  fondateur.
+- Pas de dérive nutrition / coaching diététique ; nudge bienveillant, jamais punitif ;
+  **aucun objectif de poids**, aucun classement compétitif entre membres.

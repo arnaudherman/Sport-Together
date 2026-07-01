@@ -178,7 +178,7 @@ $$;
 revoke all on function public.shares_group_with(uuid) from public;
 grant execute on function public.shares_group_with(uuid) to authenticated;
 
--- Code d'invitation aléatoire (10 caractères hex => ~1e12 combinaisons).
+-- Code d'invitation aléatoire (20 caractères hex => ~80 bits d'entropie, cf. substr 1,20).
 -- search_path figé + appel qualifiable pour éviter tout shadowing.
 create or replace function public.gen_invite_code()
 returns text

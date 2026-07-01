@@ -161,6 +161,6 @@ const styles = StyleSheet.create({
   handle: { fontSize: 13, color: colors.textMuted },
   follow: { backgroundColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: 20, paddingVertical: 10, minHeight: 40, justifyContent: 'center' },
   followOn: { backgroundColor: colors.surfaceElevated, borderWidth: 1, borderColor: colors.border },
-  followText: { color: '#0B0B0D', fontWeight: '800', fontSize: 14 },
+  followText: { color: colors.onAccent, fontWeight: '800', fontSize: 14 },
   followTextOn: { color: colors.text },
 });

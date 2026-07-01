@@ -19,7 +19,7 @@ pas encore versionné (pré-MVP) ; entrées par date. Détail des décisions dan
   désormais les posts (+ détails, réactions, commentaires, profil) des **utilisateurs
   suivis**, plus seulement ceux de tes groupes — l'onglet Abonnements fonctionne sur un
   vrai Supabase. Helpers `is_followed`/`can_see_item`. **Isolation préservée** (un non-membre
-  non-abonné ne voit rien) : harnais RLS **15/15**.
+  non-abonné ne voit rien) : harnais RLS **16/16**.
 
 ### 2026-07-01 — Auto-critique (revue adversariale) + améliorations
 

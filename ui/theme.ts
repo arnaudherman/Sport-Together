@@ -19,6 +19,11 @@ export const colors = {
   track: '#2A2825', // barres de progression (fond)
 } as const;
 
+/** Dégradés de la DA — centralisés pour ne pas coder les hex en dur dans les écrans. */
+export const gradients = {
+  accent: ['#F58A4C', '#F0652F'] as const, // pilule/CTA orange (FAB, barre d'XP)
+} as const;
+
 export const radius = {
   sm: 10,
   md: 14,

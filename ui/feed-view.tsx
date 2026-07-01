@@ -11,7 +11,7 @@ import { avatarColor, initial } from '@/ui/format';
 import { FeedItemCard } from '@/ui/feed-item-card';
 import { LevelHeader } from '@/ui/level-header';
 import { ScreenState } from '@/ui/screen-state';
-import { colors, font, radius } from '@/ui/theme';
+import { colors, font, gradients, radius } from '@/ui/theme';
 
 type Tab = 'tout' | 'abonnements' | 'groupes';
 
@@ -242,7 +242,7 @@ export function FeedView({
         accessibilityRole="button"
         accessibilityLabel="Publier une séance"
       >
-        <LinearGradient colors={['#F58A4C', '#F0652F']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fab}>
+        <LinearGradient colors={gradients.accent} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fab}>
           <Ionicons name="add" size={22} color={colors.onAccent} />
           <Text style={styles.fabText}>Publier</Text>
         </LinearGradient>

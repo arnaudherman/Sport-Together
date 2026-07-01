@@ -7,6 +7,8 @@ garde-fous structurels (ADR-0008).
 
 ## Migrations (ordre d'application)
 
+Les 13 migrations s'appliquent **dans l'ordre chronologique** du nom de fichier.
+
 | Fichier | Contenu |
 |---|---|
 | `20260630090000_core_schema.sql` | Types, tables, index, fonctions d'autorisation, triggers |
@@ -14,6 +16,14 @@ garde-fous structurels (ADR-0008).
 | `20260630090200_rpc_groups.sql` | `create_group`, `join_group_by_code` (seuls chemins d'écriture sur `memberships`) |
 | `20260630090300_storage_photos.sql` | Bucket privé `feed-photos` + politiques par `group_id` et auteur (chemin `<group_id>/<uid>/<feed_item_id>/<fichier>`) |
 | `20260630090400_rpc_log_goals.sql` | RPC atomiques `log_session` / `log_steps` / `log_meal` (entrée de feed + détail en une transaction, avec re-check d'appartenance) |
+| `20260630090500_notifications.sql` | Table `device_tokens` (push) + hook de notification de groupe |
+| `20260630090600_invite_hardening.sql` | Durcissement des invitations : rotation + expiration du code (`rotate_invite_code`) |
+| `20260630090700_review_fixes.sql` | Correctifs issus de la revue de sécurité (défense en profondeur RLS/triggers) |
+| `20260630090800_grants.sql` | **Droits DML** aux rôles `authenticated`/`service_role` + privilèges par défaut — **sans quoi l'app est cassée sur un vrai backend** (« permission denied »). |
+| `20260701090900_follows.sql` | Abonnements (`follows`) + RLS (chacun gère ses propres abonnements) — solo-first |
+| `20260701091000_comments.sql` | Commentaires (`comments`, mirroir de `reactions`) + RLS par membre |
+| `20260701091100_profile_bio.sql` | Colonne `profiles.bio` (bio libre du profil) |
+| `20260701091200_follow_feed_visibility.sql` | Visibilité « Abonnements » : la RLS expose les posts/détails/réactions/commentaires/profil des **auteurs suivis** (helpers `is_followed`/`can_see_item`), isolation préservée |
 
 ## Appliquer
 

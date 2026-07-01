@@ -1,12 +1,12 @@
 # Sport Together — Vision & Cadrage
 
-> **Statut : v1.1 — cible validée, élargie à la progression gamifiée.** Cadrage
-> figé après arbitrage avec le porteur (juin-juillet 2026). C'est la source de
-> vérité du *quoi* et du *pourquoi* ; les ADR couvrent le *comment*. La v1.1 acte
-> l'élargissement du produit vers un **self-improvement gamifié** (progression
-> personnelle + entraide, sans compétition — voir §3, §8 et ADR-0009). Tout
-> changement de cap passe par une révision datée de ce document (voir le journal en
-> fin de fichier).
+> **Statut : v2.0 — pivot solo-first.** Cadrage figé après arbitrage avec le porteur
+> (juin-juillet 2026). C'est la source de vérité du *quoi* et du *pourquoi* ; les ADR
+> couvrent le *comment*. La v2.0 acte le pivot vers un **self-improvement gamifié
+> solo-first** : l'individu est au cœur (fil social personnel, progression, XP, arbre de
+> compétences), et les **groupes d'entraide deviennent un add-on optionnel** (voir §2, §3,
+> §8, ADR-0009 et ADR-0010). Tout changement de cap passe par une révision datée de ce
+> document (voir le journal en fin de fichier).
 
 ---
 
@@ -24,22 +24,25 @@ régulièrement.* Tout le produit existe pour tester puis exploiter cette hypoth
 
 ## 2. Utilisateurs cibles
 
-- **Cercle 1 — le groupe d'amis fondateur (lancement).** Majoritairement sur iOS.
-  Utilisateurs captifs, indulgents, feedback direct et honnête. C'est sur eux
-  qu'on valide la rétention réelle.
-- **Cercle 2 — le public (si la rétention se confirme).** Petits groupes d'amis
-  qui se connaissent déjà hors de l'app. Android devient nécessaire à ce stade.
+- **Cercle 1 — l'individu qui veut s'améliorer (lancement).** Majoritairement sur iOS.
+  Il logge sa progression pour lui-même ; le fil, l'XP et l'arbre de compétences lui
+  donnent une raison de revenir **même seul**. C'est sur lui qu'on valide la rétention.
+- **Cercle 2 — l'individu + ses cercles d'entraide (si la rétention se confirme).**
+  Petits groupes privés d'amis qui s'entraident et se poussent. Android devient
+  nécessaire à ce stade.
 
-L'unité de valeur n'est jamais l'individu seul : c'est **le groupe**. Une personne
-seule sur l'app n'a aucune raison de rester.
+L'unité de valeur est **l'individu et sa progression** (ADR-0010). Le produit doit être
+utile et rétentif **sans jamais rejoindre de groupe** ; les groupes sont un **add-on
+d'entraide** qui amplifie la motivation, jamais un prérequis d'entrée.
 
 ## 3. Proposition de valeur & différenciateur
 
 Strava et consorts valorisent la performance individuelle et l'exploit. Sport
-Together vise l'inverse : l'**accountability de groupe bienveillante** dans un
-cercle fermé, sur l'ensemble des bonnes habitudes (mouvement *et* nutrition). Le
-ressort n'est pas « regardez ce que j'ai fait », mais « on tient le rythme
-ensemble, et on se relance quand l'un décroche ».
+Together vise l'inverse : une **progression personnelle bienveillante** (XP, niveaux,
+arbre de compétences) sur l'ensemble des bonnes habitudes (mouvement *et* nutrition),
+**amplifiée** par une **accountability d'entraide** optionnelle dans des cercles privés.
+Le ressort n'est pas « regardez ce que j'ai fait », mais « je progresse pour moi, et
+quand je rejoins un groupe on se relance quand l'un décroche ».
 
 Quatre mécaniques portent ce différenciateur :
 
@@ -255,10 +258,11 @@ que ce soit.
   remontés dans l'accueil, affichés sur le profil). L'accueil devient un **fil social
   type Twitter** (Tout / Abonnements / Groupes) ; publier = poster. La rétention solo est
   portée par la gamification perso (ADR-0009) et le follow. Cela **révise §2/§3** (« une
-  personne seule n'a aucune raison de rester » ne tient plus). Reste à construire :
-  abonnements (`follows`), timeline perso — cf. `docs/BACKLOG.md`.
+  personne seule n'a aucune raison de rester » ne tient plus). Depuis livrés : abonnements
+  (`follows`) + **Découvrir** + commentaires + édition de profil + **visibilité RLS des
+  abonnements** (harnais 16/16). Reste : **timeline perso** backend — cf. `docs/BACKLOG.md`.
 - **v1.2 (2026-07-01)** — Mise en œuvre & vérification. Front en DA « dark cinématique »
-  (dégradés, icônes, radar, skeletons) + flux social complet (feed/groupe/profil/
+  (dégradés, icônes, skeletons) + flux social complet (feed/groupe/profil/
   progression/log). **Backend prouvé sur un vrai Supabase** (stack local, e2e 11/11,
   harnais RLS 15/15) et **bug de grants corrigé** (migration `090800`, cf. ADR-0004).
   Stockage de session rendu **par plateforme** (ADR-0005). Mode faux-user (mock) par
