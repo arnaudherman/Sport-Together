@@ -74,12 +74,21 @@ export function AuthedFlow({ userId }: { userId: string }) {
           setGroupId(null);
           setView('feed');
         }}
+        onOpenProfile={(id, name) => setView({ profile: { id, name } })}
       />
     );
   }
 
   if (view === 'skills') {
-    return <SkillTreeScreen key={groupId} groupId={groupId} userId={userId} onBack={() => setView('feed')} />;
+    return (
+      <SkillTreeScreen
+        key={groupId}
+        groupId={groupId}
+        userId={userId}
+        onBack={() => setView('feed')}
+        onLog={() => setView('log')}
+      />
+    );
   }
 
   if (view === 'log') {

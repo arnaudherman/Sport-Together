@@ -58,6 +58,7 @@ export function FeedItemCard({
             <Pressable
               key={kind}
               onPress={() => onToggleReaction?.(kind)}
+              hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
               style={[styles.chip, mine && styles.chipActive]}
             >
               <Text style={[styles.chipText, mine && styles.chipTextActive]}>
@@ -104,8 +105,8 @@ const styles = StyleSheet.create({
   summary: { ...font.body },
   reactions: { flexDirection: 'row', gap: 8, marginTop: 2 },
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
     borderRadius: radius.pill,
     backgroundColor: colors.surfaceElevated,
   },

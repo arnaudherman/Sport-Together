@@ -164,11 +164,10 @@ export function LogScreen({
           </View>
           <Text style={styles.rewardHint}>{REWARD_HINT[type]}</Text>
         </View>
-
-        {error ? <Text style={styles.error}>{error}</Text> : null}
       </ScrollView>
 
       <View style={styles.footer}>
+        {error ? <Text style={styles.error}>{error}</Text> : null}
         <Pressable style={[styles.cta, busy && styles.ctaBusy]} onPress={submit} disabled={busy}>
           {busy ? <ActivityIndicator color="#0B0B0D" /> : <Text style={styles.ctaText}>Logger  ·  +{xpForType(type)} XP</Text>}
         </Pressable>
@@ -185,14 +184,14 @@ const styles = StyleSheet.create({
   spacer: { width: 80 },
   scroll: { paddingBottom: 20, gap: 12 },
   tabs: { flexDirection: 'row', gap: 8 },
-  tab: { paddingHorizontal: 16, paddingVertical: 9, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  tab: { paddingHorizontal: 16, paddingVertical: 11, minHeight: 44, justifyContent: 'center', borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   tabOn: { backgroundColor: colors.accent, borderColor: colors.accent },
   tabText: { color: colors.textMuted, fontWeight: '700' },
   tabTextOn: { color: '#0B0B0D' },
   input: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, color: colors.text },
   label: { ...font.label, marginTop: 4 },
   chips: { flexDirection: 'row', gap: 8 },
-  chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  chip: { paddingHorizontal: 14, paddingVertical: 11, minHeight: 44, justifyContent: 'center', borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   chipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
   chipText: { color: colors.textMuted, fontWeight: '700' },
   chipTextOn: { color: colors.accent },
@@ -200,12 +199,12 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   photo: { backgroundColor: colors.surface, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.border, borderRadius: radius.md, padding: 24, alignItems: 'center' },
   photoText: { color: colors.textMuted, fontSize: 14 },
-  reward: { backgroundColor: colors.accentSoft, borderRadius: radius.md, padding: 14, gap: 6 },
+  reward: { backgroundColor: colors.accentSoft, borderRadius: radius.md, padding: 16, gap: 6 },
   rewardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  rewardLabel: { color: colors.textMuted, fontSize: 14 },
-  rewardXp: { color: colors.accent, fontWeight: '800', fontSize: 16 },
+  rewardLabel: { ...font.label },
+  rewardXp: { color: colors.accent, fontWeight: '800', fontSize: 24 },
   rewardHint: { color: colors.textFaint, fontSize: 13, lineHeight: 18 },
-  error: { color: '#FCA5A5', fontSize: 14 },
+  error: { color: colors.danger, fontSize: 14, marginBottom: 8 },
   footer: { paddingVertical: 12 },
   cta: { backgroundColor: colors.accent, borderRadius: radius.pill, paddingVertical: 15, alignItems: 'center' },
   ctaBusy: { opacity: 0.7 },

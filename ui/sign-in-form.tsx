@@ -94,5 +94,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
   },
-  error: { color: '#FCA5A5', fontSize: 14, textAlign: 'center' },
+  error: { color: colors.danger, fontSize: 14, textAlign: 'center' },
 });

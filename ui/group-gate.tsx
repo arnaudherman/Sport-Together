@@ -158,5 +158,5 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   spinner: { marginTop: 8 },
-  error: { color: '#FCA5A5', fontSize: 14, textAlign: 'center' },
+  error: { color: colors.danger, fontSize: 14, textAlign: 'center' },
 });

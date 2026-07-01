@@ -13,6 +13,7 @@ export const colors = {
   accent: '#F0652F', // orange chaud
   accentSoft: 'rgba(240,101,47,0.16)',
   success: '#4ADE80',
+  danger: '#F2555A', // erreurs (corail chaud, cohérent avec la DA)
   gold: '#F5C451',
   track: '#2A2825', // barres de progression (fond)
 } as const;

@@ -6,6 +6,7 @@ import type { FeedItem } from '@/domain/entities/feed';
 import { levelForXp, xpFromFeed } from '@/domain/usecases/gamification';
 import { localDayKey, previousDayKey, streakFromFeed } from '@/domain/usecases/streak';
 import { avatarColor, initial, timeAgo } from '@/ui/format';
+import { ScreenState } from '@/ui/screen-state';
 import { colors, font, radius } from '@/ui/theme';
 
 const TYPE_LABEL: Record<FeedItem['type'], string> = { session: 'Séance', steps: 'Pas', meal: 'Repas' };
@@ -28,6 +29,8 @@ export function ProfileScreen({
   const feedRepo = useFeedRepository();
   const [items, setItems] = useState<FeedItem[]>([]);
   const [following, setFollowing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -40,9 +43,14 @@ export function ProfileScreen({
   const load = useCallback(async () => {
     try {
       const data = await feedRepo.listGroupFeed(groupId);
-      if (mounted.current) setItems(data.filter((it) => it.authorId === targetUserId));
-    } catch {
-      if (mounted.current) setItems([]);
+      if (mounted.current) {
+        setItems(data.filter((it) => it.authorId === targetUserId));
+        setError(null);
+      }
+    } catch (e) {
+      if (mounted.current) setError((e as Error).message);
+    } finally {
+      if (mounted.current) setLoading(false);
     }
   }, [feedRepo, groupId, targetUserId]);
 
@@ -94,7 +102,8 @@ export function ProfileScreen({
         <View style={styles.spacer} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScreenState loading={loading} error={error} hasData={items.length > 0} onRetry={load}>
+        <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.cover} />
         <View style={styles.headRow}>
           <View style={[styles.avatar, { backgroundColor: av.bg }]}>
@@ -160,7 +169,8 @@ export function ProfileScreen({
             ))}
           </View>
         )}
-      </ScrollView>
+        </ScrollView>
+      </ScreenState>
     </View>
   );
 }
@@ -176,7 +186,7 @@ const styles = StyleSheet.create({
   headRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: -28, paddingHorizontal: 4 },
   avatar: { width: 64, height: 64, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: colors.bg },
   avatarText: { fontSize: 24, fontWeight: '800' },
-  follow: { backgroundColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: 20, paddingVertical: 9, marginBottom: 4 },
+  follow: { backgroundColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: 22, paddingVertical: 12, minHeight: 44, justifyContent: 'center', marginBottom: 4 },
   followOn: { backgroundColor: colors.surfaceElevated },
   followText: { color: '#0B0B0D', fontWeight: '800' },
   followTextOn: { color: colors.text },

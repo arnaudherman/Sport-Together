@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, SectionList, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useFeedRepository, useReactionRepository } from '@/core/di/repositories-context';
 import type { FeedItem, ReactionKind } from '@/domain/entities/feed';
@@ -7,6 +8,7 @@ import { localDayKey } from '@/domain/usecases/streak';
 import { avatarColor, dayBucketLabel, initial } from '@/ui/format';
 import { FeedItemCard } from '@/ui/feed-item-card';
 import { LevelHeader } from '@/ui/level-header';
+import { ScreenState } from '@/ui/screen-state';
 import { colors, font, radius } from '@/ui/theme';
 
 type Tab = 'groupe' | 'amis';
@@ -31,8 +33,11 @@ export function FeedView({
 }) {
   const feed = useFeedRepository();
   const reactionRepo = useReactionRepository();
+  const insets = useSafeAreaInsets();
   const [items, setItems] = useState<FeedItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [tab, setTab] = useState<Tab>('groupe');
   const mounted = useRef(true);
 
@@ -52,12 +57,20 @@ export function FeedView({
       }
     } catch (e) {
       if (mounted.current) setError((e as Error).message);
+    } finally {
+      if (mounted.current) setLoading(false);
     }
   }, [feed, groupId]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  async function refresh() {
+    setRefreshing(true);
+    await load();
+    if (mounted.current) setRefreshing(false);
+  }
 
   const sections = useMemo(() => {
     const tz = -new Date().getTimezoneOffset();
@@ -98,7 +111,7 @@ export function FeedView({
     <View style={styles.container}>
       <View style={styles.topRow}>
         <Text style={styles.title}>Accueil</Text>
-        <Pressable onPress={onOpenGroup} hitSlop={8}>
+        <Pressable onPress={onOpenGroup} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
           <Text style={styles.link}>👥 Groupe</Text>
         </Pressable>
       </View>
@@ -120,52 +133,55 @@ export function FeedView({
           </Text>
         </View>
       ) : (
-        <SectionList
-          sections={sections}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <FeedItemCard
-              item={item}
-              onToggleReaction={(kind) => toggleReaction(item, kind)}
-              onPressAuthor={() => onOpenProfile(item.authorId, item.authorName)}
-            />
-          )}
-          renderSectionHeader={({ section }) => <Text style={styles.section}>{section.title}</Text>}
-          stickySectionHeadersEnabled={false}
-          contentContainerStyle={styles.list}
-          ListHeaderComponent={
-            <View style={styles.head}>
-              <Pressable onPress={onOpenSkills}>
-                <LevelHeader pseudo={pseudo} userId={userId} items={items} />
-                <Text style={styles.progressLink}>Voir ma progression ›</Text>
-              </Pressable>
-              {presence.length > 0 ? (
-                <View>
-                  <Text style={styles.presenceLabel}>Dernières activités</Text>
-                  <View style={styles.presenceRow}>
-                    {presence.map((p) => {
-                      const av = avatarColor(p.id);
-                      return (
-                        <Pressable key={p.id} style={styles.presenceItem} onPress={() => onOpenProfile(p.id, p.name)}>
-                          <View style={[styles.presenceAvatar, { backgroundColor: av.bg }]}>
-                            <Text style={[styles.presenceInitial, { color: av.fg }]}>{initial(p.name)}</Text>
-                            <View style={styles.presenceDot} />
-                          </View>
-                          <Text style={styles.presenceName} numberOfLines={1}>{p.name}</Text>
-                        </Pressable>
-                      );
-                    })}
+        <ScreenState loading={loading} error={error} hasData={items.length > 0} onRetry={load}>
+          <SectionList
+            sections={sections}
+            keyExtractor={(item) => item.id}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.accent} />
+            }
+            renderItem={({ item }) => (
+              <FeedItemCard
+                item={item}
+                onToggleReaction={(kind) => toggleReaction(item, kind)}
+                onPressAuthor={() => onOpenProfile(item.authorId, item.authorName)}
+              />
+            )}
+            renderSectionHeader={({ section }) => <Text style={styles.section}>{section.title}</Text>}
+            stickySectionHeadersEnabled={false}
+            contentContainerStyle={[styles.list, { paddingBottom: 120 + insets.bottom }]}
+            ListHeaderComponent={
+              <View style={styles.head}>
+                <Pressable onPress={onOpenSkills}>
+                  <LevelHeader pseudo={pseudo} userId={userId} items={items} />
+                  <Text style={styles.progressLink}>Voir ma progression ›</Text>
+                </Pressable>
+                {presence.length > 0 ? (
+                  <View>
+                    <Text style={styles.presenceLabel}>Dernières activités</Text>
+                    <View style={styles.presenceRow}>
+                      {presence.map((p) => {
+                        const av = avatarColor(p.id);
+                        return (
+                          <Pressable key={p.id} style={styles.presenceItem} onPress={() => onOpenProfile(p.id, p.name)}>
+                            <View style={[styles.presenceAvatar, { backgroundColor: av.bg }]}>
+                              <Text style={[styles.presenceInitial, { color: av.fg }]}>{initial(p.name)}</Text>
+                            </View>
+                            <Text style={styles.presenceName} numberOfLines={1}>{p.name}</Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
                   </View>
-                </View>
-              ) : null}
-              {error ? <Text style={styles.error}>{error}</Text> : null}
-            </View>
-          }
-          ListEmptyComponent={<Text style={styles.empty}>Aucun goal pour l'instant — logge le premier 💪</Text>}
-        />
+                ) : null}
+              </View>
+            }
+            ListEmptyComponent={<Text style={styles.empty}>Aucun goal pour l'instant — logge le premier 💪</Text>}
+          />
+        </ScreenState>
       )}
 
-      <Pressable style={styles.fab} onPress={onOpenLog}>
+      <Pressable style={[styles.fab, { bottom: 20 + insets.bottom }]} onPress={onOpenLog}>
         <Text style={styles.fabText}>＋  Logger</Text>
       </Pressable>
     </View>
@@ -176,11 +192,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 16 },
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8 },
   title: { ...font.h1 },
-  link: { fontSize: 14, color: colors.accent, fontWeight: '700' },
+  link: { fontSize: 14, color: colors.textMuted, fontWeight: '700' },
   tabs: { flexDirection: 'row', gap: 8, marginTop: 12, marginBottom: 4 },
   tab: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
+    minHeight: 44,
+    justifyContent: 'center',
     borderRadius: radius.pill,
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -190,28 +208,16 @@ const styles = StyleSheet.create({
   tabText: { color: colors.textMuted, fontWeight: '700', fontSize: 14 },
   tabTextOn: { color: '#0B0B0D' },
   head: { gap: 14, paddingTop: 10, paddingBottom: 6 },
-  progressLink: { fontSize: 13, color: colors.accent, fontWeight: '700', textAlign: 'right', marginTop: 8 },
+  progressLink: { fontSize: 13, color: colors.textMuted, fontWeight: '700', textAlign: 'right', marginTop: 8 },
   presenceLabel: { ...font.label, marginBottom: 10 },
   presenceRow: { flexDirection: 'row', gap: 16 },
   presenceItem: { alignItems: 'center', width: 52 },
   presenceAvatar: { width: 44, height: 44, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   presenceInitial: { fontSize: 16, fontWeight: '800' },
-  presenceDot: {
-    position: 'absolute',
-    right: 0,
-    bottom: 0,
-    width: 12,
-    height: 12,
-    borderRadius: radius.pill,
-    backgroundColor: colors.success,
-    borderWidth: 2,
-    borderColor: colors.bg,
-  },
   presenceName: { fontSize: 11, color: colors.textFaint, marginTop: 4 },
   section: { ...font.label, marginTop: 18, marginBottom: 10 },
-  list: { paddingBottom: 96, gap: 12 },
+  list: { gap: 12 },
   empty: { color: colors.textMuted, textAlign: 'center', marginTop: 24 },
-  error: { color: '#FCA5A5', fontSize: 14 },
   friendsEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 32 },
   friendsEmojiG: { fontSize: 40 },
   friendsText: { color: colors.textMuted, textAlign: 'center', fontSize: 15, lineHeight: 22 },
@@ -219,7 +225,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 16,
     right: 16,
-    bottom: 20,
     backgroundColor: colors.accent,
     borderRadius: radius.pill,
     paddingVertical: 16,
