@@ -12,4 +12,12 @@ export interface GroupRepository {
   joinByCode(code: string): Promise<Group>;
   /** Quitter un groupe (supprime SA propre appartenance — politique memberships_delete). */
   leaveGroup(groupId: string): Promise<void>;
+  /** Code d'invitation courant (membres seulement — RPC get_group_invite). */
+  getInvite(groupId: string): Promise<string>;
+  /** Régénère le code d'invitation (créateur seulement) et le renvoie. */
+  rotateInviteCode(groupId: string): Promise<string>;
+  /** Renomme le groupe (créateur seulement — RLS groups_update). */
+  renameGroup(groupId: string, name: string): Promise<void>;
+  /** Supprime le groupe (créateur seulement — RLS groups_delete, cascade). */
+  deleteGroup(groupId: string): Promise<void>;
 }

@@ -14,11 +14,11 @@ export class SupabaseGroupRepository implements GroupRepository {
   async listMyGroups(): Promise<Group[]> {
     const { data, error } = await this.client
       .from('groups')
-      .select('id, name')
+      .select('id, name, created_by')
       .order('created_at', { ascending: true });
     if (error) throw new Error(error.message);
-    const rows = (data ?? []) as { id: string; name: string }[];
-    return rows.map((row) => ({ id: row.id, name: row.name }));
+    const rows = (data ?? []) as { id: string; name: string; created_by: string | null }[];
+    return rows.map((row) => ({ id: row.id, name: row.name, createdBy: row.created_by ?? undefined }));
   }
 
   async listMembers(groupId: string): Promise<GroupMember[]> {
@@ -50,6 +50,32 @@ export class SupabaseGroupRepository implements GroupRepository {
   async leaveGroup(groupId: string): Promise<void> {
     // La RLS (memberships_delete: user_id = auth.uid()) borne à SA propre ligne.
     const { error } = await this.client.from('memberships').delete().eq('group_id', groupId);
+    if (error) throw new Error(error.message);
+  }
+
+  async getInvite(groupId: string): Promise<string> {
+    const { data, error } = await this.client.rpc('get_group_invite', { p_group_id: groupId });
+    if (error) throw new Error(error.message);
+    const row = (Array.isArray(data) ? data[0] : data) as { code: string } | undefined;
+    if (!row?.code) throw new Error('Code introuvable');
+    return row.code;
+  }
+
+  async rotateInviteCode(groupId: string): Promise<string> {
+    const { data, error } = await this.client.rpc('rotate_invite_code', { p_group_id: groupId });
+    if (error) throw new Error(error.message);
+    return data as string;
+  }
+
+  async renameGroup(groupId: string, name: string): Promise<void> {
+    // La RLS (groups_update: created_by = auth.uid()) borne au créateur.
+    const { error } = await this.client.from('groups').update({ name: name.trim() }).eq('id', groupId);
+    if (error) throw new Error(error.message);
+  }
+
+  async deleteGroup(groupId: string): Promise<void> {
+    // La RLS (groups_delete: created_by = auth.uid()) borne au créateur ; cascade en base.
+    const { error } = await this.client.from('groups').delete().eq('id', groupId);
     if (error) throw new Error(error.message);
   }
 

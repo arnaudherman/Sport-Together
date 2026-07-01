@@ -138,10 +138,13 @@ export function AuthedFlow({ userId }: { userId: string }) {
   }
 
   if (typeof view === 'object' && 'group' in view) {
+    const current = groups.find((g) => g.id === view.group.id);
     return (
       <GroupScreen
         key={view.group.id}
         groupId={view.group.id}
+        groupName={current?.name ?? 'Ton groupe'}
+        isCreator={current?.createdBy === userId}
         userId={userId}
         onBack={pop}
         onOpenProfile={(id, name) => push({ profile: { id, name } })}
@@ -149,6 +152,7 @@ export function AuthedFlow({ userId }: { userId: string }) {
           loadGroups();
           pop();
         }}
+        onChanged={loadGroups}
       />
     );
   }

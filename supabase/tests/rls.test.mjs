@@ -301,6 +301,27 @@ async function main() {
     assert.equal(grp.length, 0, 'bob ne voit plus le groupe A');
   });
 
+  await step('gestion de groupe : code aux membres seulement, renommage/suppression créateur-only', async () => {
+    // Groupe jetable (le test se nettoie lui-même).
+    const T = (await asUser(ALICE, `select * from public.create_group('Temp')`)).rows[0];
+    // Code d'invitation : membre OK, non-membre REFUSÉ.
+    const inv = (await asUser(ALICE, `select * from public.get_group_invite($1)`, [T.id])).rows[0];
+    assert.equal(inv.code, T.invite_code, 'le membre relit le code');
+    await expectReject(asUser(BOB, `select * from public.get_group_invite($1)`, [T.id]), 'code refusé à un non-membre');
+    // Renommage : non-créateur = 0 ligne ; créateur OK (RLS groups_update).
+    const foreign = await asUser(BOB, `update public.groups set name='Hack' where id=$1`, [T.id]);
+    assert.equal(foreign.rowCount, 0, 'renommer le groupe d\'autrui = 0 ligne');
+    const own = await asUser(ALICE, `update public.groups set name='Temp 2' where id=$1`, [T.id]);
+    assert.equal(own.rowCount, 1, 'la créatrice renomme');
+    // Suppression : non-créateur = 0 ligne ; créatrice OK (cascade memberships).
+    const foreignDel = await asUser(BOB, `delete from public.groups where id=$1`, [T.id]);
+    assert.equal(foreignDel.rowCount, 0, 'supprimer le groupe d\'autrui = 0 ligne');
+    const ownDel = await asUser(ALICE, `delete from public.groups where id=$1`, [T.id]);
+    assert.equal(ownDel.rowCount, 1, 'la créatrice supprime son groupe');
+    const rest = (await admin(`select 1 from public.memberships where group_id=$1`, [T.id])).rows;
+    assert.equal(rest.length, 0, 'memberships supprimés en cascade');
+  });
+
   await step('suppression de compte : anonymise le feed, retire les memberships (ADR-0005)', async () => {
     const carolItems = (await admin(`select id from public.feed_items where author_id=$1`, [CAROL])).rows;
     assert.ok(carolItems.length >= 1, 'carol a au moins un item loggé');

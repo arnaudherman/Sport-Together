@@ -14,6 +14,7 @@ import type { GroupMember } from '@/domain/entities/group';
 import { isPerfectDay } from '@/domain/usecases/perfect-day';
 import { currentStreak, localDayKey, perfectDays, previousDayKey } from '@/domain/usecases/streak';
 import { avatarColor, initial, timeAgo } from '@/ui/format';
+import { InviteCodeActions } from '@/ui/invite-code-actions';
 import { ScreenHeader } from '@/ui/screen-header';
 import { ScreenState } from '@/ui/screen-state';
 import { colors, font, radius } from '@/ui/theme';
@@ -22,22 +23,31 @@ import { useAsyncData } from '@/ui/use-async-data';
 /** Écran Groupe : présence du jour vivante + entraide + streak collectif. */
 export function GroupScreen({
   groupId,
+  groupName,
+  isCreator,
   userId,
   onBack,
   onOpenProfile,
   onLeft,
+  onChanged,
 }: {
   groupId: string;
+  groupName: string;
+  /** Créateur = droits de gestion (renommer, régénérer le code, supprimer). */
+  isCreator: boolean;
   userId: string;
   onBack: () => void;
   onOpenProfile: (id: string, name: string) => void;
-  /** Appelé après avoir quitté le groupe (recharger la liste + revenir en arrière). */
+  /** Appelé après avoir quitté OU supprimé le groupe (recharger + revenir). */
   onLeft: () => void;
+  /** Appelé après un changement de méta (renommage) pour rafraîchir la liste. */
+  onChanged: () => void;
 }) {
   const groupRepo = useGroupRepository();
   const feedRepo = useFeedRepository();
   const notif = useNotificationRepository();
   const [nudged, setNudged] = useState<Set<string>>(new Set());
+  const [invite, setInvite] = useState<string | null>(null);
 
   const loader = useCallback(async () => {
     const [members, items] = await Promise.all([
@@ -113,6 +123,63 @@ export function GroupScreen({
     }
   }
 
+  async function showInvite() {
+    try {
+      setInvite(await groupRepo.getInvite(groupId));
+    } catch (e) {
+      if (mounted.current) setError((e as Error).message);
+    }
+  }
+
+  async function rotateInvite() {
+    try {
+      setInvite(await groupRepo.rotateInviteCode(groupId));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    } catch (e) {
+      if (mounted.current) setError((e as Error).message);
+    }
+  }
+
+  function promptRename() {
+    // Alert.prompt est iOS-only — assumé (iOS-first, ADR-0003).
+    Alert.prompt('Renommer le groupe', undefined, async (name) => {
+      const value = (name ?? '').trim();
+      if (!value) return;
+      try {
+        await groupRepo.renameGroup(groupId, value);
+        onChanged();
+      } catch (e) {
+        if (mounted.current) setError((e as Error).message);
+      }
+    });
+  }
+
+  function confirmDeleteGroup() {
+    Alert.alert('Supprimer ce groupe ?', 'Tout son fil et ses appartenances seront supprimés pour tous les membres. Irréversible.', [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: () =>
+          Alert.alert('Vraiment sûr ?', `« ${groupName} » sera définitivement supprimé.`, [
+            { text: 'Annuler', style: 'cancel' },
+            {
+              text: 'Supprimer définitivement',
+              style: 'destructive',
+              onPress: async () => {
+                try {
+                  await groupRepo.deleteGroup(groupId);
+                  onLeft();
+                } catch (e) {
+                  if (mounted.current) setError((e as Error).message);
+                }
+              },
+            },
+          ]),
+      },
+    ]);
+  }
+
   function confirmLeave() {
     Alert.alert('Quitter ce groupe ?', 'Tu ne verras plus son activité. Tu pourras revenir avec un code d\'invitation.', [
       { text: 'Annuler', style: 'cancel' },
@@ -133,7 +200,7 @@ export function GroupScreen({
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="Ton groupe" onBack={onBack} />
+      <ScreenHeader title={groupName || 'Ton groupe'} onBack={onBack} />
 
       <ScreenState loading={loading} error={error} hasData={members.length > 0} onRetry={reload}>
         <ScrollView contentContainerStyle={styles.scroll}>
@@ -233,14 +300,44 @@ export function GroupScreen({
             })}
           </View>
 
+          <View style={styles.inviteCard}>
+            <Text style={styles.section}>Inviter des amis</Text>
+            {invite ? (
+              <>
+                <InviteCodeActions code={invite} />
+                {isCreator ? (
+                  <Pressable onPress={rotateInvite} hitSlop={8} accessibilityRole="button" accessibilityLabel="Régénérer le code">
+                    <Text style={styles.manageLink}>↻ Régénérer le code (invalide l&apos;ancien)</Text>
+                  </Pressable>
+                ) : null}
+              </>
+            ) : (
+              <Pressable
+                style={({ pressed }) => [styles.inviteBtn, pressed && styles.pressed]}
+                onPress={showInvite}
+                accessibilityRole="button"
+                accessibilityLabel="Afficher le code d'invitation"
+              >
+                <Ionicons name="person-add-outline" size={17} color={colors.accent} />
+                <Text style={styles.inviteBtnText}>Afficher le code d&apos;invitation</Text>
+              </Pressable>
+            )}
+          </View>
+
+          {isCreator ? (
+            <Pressable onPress={promptRename} hitSlop={8} accessibilityRole="button" accessibilityLabel="Renommer le groupe">
+              <Text style={styles.manageLink}>✏️ Renommer le groupe</Text>
+            </Pressable>
+          ) : null}
+
           <Pressable
             style={({ pressed }) => [styles.leave, pressed && styles.pressed]}
-            onPress={confirmLeave}
+            onPress={isCreator ? confirmDeleteGroup : confirmLeave}
             accessibilityRole="button"
-            accessibilityLabel="Quitter le groupe"
+            accessibilityLabel={isCreator ? 'Supprimer le groupe' : 'Quitter le groupe'}
           >
-            <Ionicons name="exit-outline" size={17} color={colors.danger} />
-            <Text style={styles.leaveText}>Quitter le groupe</Text>
+            <Ionicons name={isCreator ? 'trash-outline' : 'exit-outline'} size={17} color={colors.danger} />
+            <Text style={styles.leaveText}>{isCreator ? 'Supprimer le groupe' : 'Quitter le groupe'}</Text>
           </Pressable>
         </ScrollView>
       </ScreenState>
@@ -263,6 +360,10 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   leaveText: { color: colors.danger, fontWeight: '800', fontSize: 15 },
+  inviteCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16, gap: 12, marginTop: 18 },
+  inviteBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, minHeight: 44, borderRadius: radius.pill, backgroundColor: colors.accentSoft },
+  inviteBtnText: { color: colors.accent, fontWeight: '800', fontSize: 15 },
+  manageLink: { color: colors.textMuted, fontWeight: '700', fontSize: 14, textAlign: 'center', paddingVertical: 10 },
   perfectBanner: { backgroundColor: colors.accentSoft, borderRadius: radius.md, paddingHorizontal: 12, paddingVertical: 8, marginTop: 12 },
   perfectText: { color: colors.accent, fontWeight: '700', fontSize: 13 },
   weekRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 },
