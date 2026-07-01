@@ -1,40 +1,35 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { useAuthRepository, useProfileRepository } from '@/core/di/repositories-context';
+import type { Profile } from '@/domain/entities/profile';
 import { GhostButton, PrimaryButton } from '@/ui/button';
 import { handle, initial } from '@/ui/format';
 import { colors, font, radius } from '@/ui/theme';
 
 /** Écran Compte : éditer son profil (pseudo/bio) + déconnexion + suppression. */
-export function AccountScreen({ pseudo, onBack }: { pseudo: string; onBack: () => void }) {
+export function AccountScreen({
+  pseudo,
+  bio: initialBio,
+  isAdult,
+  onBack,
+  onSaved,
+}: {
+  pseudo: string;
+  bio: string;
+  isAdult: boolean;
+  onBack: () => void;
+  onSaved: (profile: Profile) => void;
+}) {
   const auth = useAuthRepository();
   const profileRepo = useProfileRepository();
   const [name, setName] = useState(pseudo);
-  const [bio, setBio] = useState('');
-  const [isAdult, setIsAdult] = useState(true);
+  const [bio, setBio] = useState(initialBio);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const mounted = useRef(true);
-
-  useEffect(() => {
-    mounted.current = true;
-    profileRepo
-      .getMyProfile()
-      .then((p) => {
-        if (p && mounted.current) {
-          setName(p.pseudo);
-          setBio(p.bio ?? '');
-          setIsAdult(p.isAdult);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      mounted.current = false;
-    };
-  }, [profileRepo]);
 
   async function save() {
     const value = name.trim();
@@ -46,8 +41,11 @@ export function AccountScreen({ pseudo, onBack }: { pseudo: string; onBack: () =
     setError(null);
     setSaved(false);
     try {
-      await profileRepo.updateMyProfile({ pseudo: value, isAdult, bio: bio.trim() });
-      if (mounted.current) setSaved(true);
+      const updated = await profileRepo.updateMyProfile({ pseudo: value, isAdult, bio: bio.trim() });
+      if (mounted.current) {
+        setSaved(true);
+        onSaved(updated); // propage au reste de l'app (accueil, profil…)
+      }
     } catch (e) {
       if (mounted.current) setError((e as Error).message);
     } finally {
@@ -109,12 +107,25 @@ export function AccountScreen({ pseudo, onBack }: { pseudo: string; onBack: () =
         </View>
 
         <Text style={styles.label}>Pseudo</Text>
-        <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Ton pseudo" placeholderTextColor={colors.textFaint} autoCapitalize="words" />
+        <TextInput
+          style={styles.input}
+          value={name}
+          onChangeText={(t) => {
+            setName(t);
+            setSaved(false);
+          }}
+          placeholder="Ton pseudo"
+          placeholderTextColor={colors.textFaint}
+          autoCapitalize="words"
+        />
         <Text style={styles.label}>Bio</Text>
         <TextInput
-          style={[styles.input, styles.bio]}
+          style={[styles.input, styles.bioInput]}
           value={bio}
-          onChangeText={setBio}
+          onChangeText={(t) => {
+            setBio(t);
+            setSaved(false);
+          }}
           placeholder="Parle un peu de toi…"
           placeholderTextColor={colors.textFaint}
           multiline
@@ -154,7 +165,7 @@ const styles = StyleSheet.create({
   handle: { fontSize: 13, color: colors.textMuted },
   label: { ...font.label, marginTop: 6 },
   input: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.text },
-  bio: { minHeight: 72, textAlignVertical: 'top' },
+  bioInput: { minHeight: 72, textAlignVertical: 'top' },
   error: { color: colors.danger, fontSize: 14 },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: 16 },
   actions: { gap: 12 },

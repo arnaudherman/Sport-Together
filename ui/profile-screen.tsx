@@ -122,11 +122,15 @@ export function ProfileScreen({
         text: 'Supprimer',
         style: 'destructive',
         onPress: async () => {
+          const snapshot = items;
+          setItems((prev) => prev.filter((i) => i.id !== post.id)); // optimistic
           try {
             await feedRepo.deletePost(post.id);
-            await load();
           } catch (e) {
-            if (mounted.current) setError((e as Error).message);
+            if (mounted.current) {
+              setItems(snapshot);
+              setError((e as Error).message);
+            }
           }
         },
       },

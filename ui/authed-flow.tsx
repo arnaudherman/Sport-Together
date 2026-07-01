@@ -90,7 +90,15 @@ export function AuthedFlow({ userId }: { userId: string }) {
   }
 
   if (view === 'account') {
-    return <AccountScreen pseudo={profile.pseudo} onBack={() => setView('home')} />;
+    return (
+      <AccountScreen
+        pseudo={profile.pseudo}
+        bio={profile.bio ?? ''}
+        isAdult={profile.isAdult}
+        onSaved={applyProfile}
+        onBack={() => setView('home')}
+      />
+    );
   }
 
   if (view === 'discover') {
