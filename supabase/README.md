@@ -7,7 +7,7 @@ garde-fous structurels (ADR-0008).
 
 ## Migrations (ordre d'application)
 
-Les 13 migrations s'appliquent **dans l'ordre chronologique** du nom de fichier.
+Les 14 migrations s'appliquent **dans l'ordre chronologique** du nom de fichier.
 
 | Fichier | Contenu |
 |---|---|
@@ -24,6 +24,7 @@ Les 13 migrations s'appliquent **dans l'ordre chronologique** du nom de fichier.
 | `20260701091000_comments.sql` | Commentaires (`comments`, mirroir de `reactions`) + RLS par membre |
 | `20260701091100_profile_bio.sql` | Colonne `profiles.bio` (bio libre du profil) |
 | `20260701091200_follow_feed_visibility.sql` | Visibilité « Abonnements » : la RLS expose les posts/détails/réactions/commentaires/profil des **auteurs suivis** (helpers `is_followed`/`can_see_item`), isolation préservée |
+| `20260701091300_nudge_throttle_atomic.sql` | Throttle des relances **atomique** : bucket 12h + index UNIQUE `(sender, target, bucket)` (Edge `nudge` en `ON CONFLICT`, anti-TOCTOU) |
 
 ## Appliquer
 

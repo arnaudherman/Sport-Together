@@ -6,6 +6,18 @@ pas encore versionné (pré-MVP) ; entrées par date. Détail des décisions dan
 
 ## [Non publié]
 
+### 2026-07-01 — Durcissements sécurité backend (Edge Functions)
+
+- **`nudge`** : throttle anti-harcèlement rendu **atomique** (index UNIQUE sur un bucket de
+  12h → `INSERT ... ON CONFLICT DO NOTHING`, fini le TOCTOU SELECT-puis-INSERT), + **plafond
+  global par cible** (≤ 3 relances reçues/12h tous émetteurs confondus, contre le harcèlement
+  coordonné), + **validation UUID** des entrées (payload malformé → 400, plus 500). Migration
+  `nudge_throttle_atomic` + test au harnais (**17/17** : doublon même fenêtre refusé).
+- **`notify_group`** : ne fait plus confiance au `group_id`/`author_id` du payload (un
+  détenteur du secret pouvait spammer un groupe arbitraire) — la fonction **relit la ligne
+  `feed_items` réelle** via `feed_item_id` et en tire les valeurs faisant autorité ; ligne
+  inexistante → 400. `deno check` + `deno lint` OK.
+
 ### 2026-07-01 — Améliorations UX (parcours & premier lancement)
 
 - **Navigation par pile** : Retour revient à l'écran précédent (profil → post → Retour

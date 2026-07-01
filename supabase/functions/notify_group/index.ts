@@ -32,14 +32,25 @@ Deno.serve(async (req: Request) => {
     const payload = await req.json();
     // Supporte notre trigger (corps plat) ET les Database Webhooks ({ record }).
     const rec = payload.record ?? payload;
-    const groupId: string | undefined = rec.group_id;
-    const authorId: string | null = rec.author_id ?? null;
-    if (!groupId) return new Response('missing group_id', { status: 400 });
+    const feedItemId: string | undefined = rec.feed_item_id ?? rec.id;
+    if (!feedItemId) return new Response('missing feed_item_id', { status: 400 });
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
+
+    // Valeurs FAISANT AUTORITÉ : on ne fait pas confiance au group_id/author_id du
+    // payload (un détenteur du secret pourrait les forger pour spammer un groupe
+    // arbitraire). On relit la ligne réelle ; si elle n'existe pas -> 400.
+    const { data: item } = await supabase
+      .from('feed_items')
+      .select('group_id, author_id')
+      .eq('id', feedItemId)
+      .maybeSingle();
+    if (!item) return new Response('unknown feed_item', { status: 400 });
+    const groupId: string = item.group_id;
+    const authorId: string | null = item.author_id;
 
     const { data: members } = await supabase
       .from('memberships')

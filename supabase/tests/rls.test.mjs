@@ -58,7 +58,7 @@ async function step(name, fn) {
 async function reset() {
   await admin(`truncate auth.users, public.profiles, public.groups, public.memberships,
     public.feed_items, public.sessions, public.step_logs, public.meals, public.reactions,
-    public.follows, public.comments
+    public.follows, public.comments, public.nudges
     restart identity cascade`);
 }
 
@@ -210,6 +210,22 @@ async function main() {
     await asUser(DAVE, `delete from public.follows where follower_id=$1 and followee_id=$2`, [DAVE, ALICE]);
     const after = (await asUser(DAVE, `select id from public.feed_items where author_id=$1`, [ALICE])).rows;
     assert.equal(after.length, 0, 'ne plus suivre retire la visibilité');
+  });
+
+  await step('throttle nudge : l\'index unique (émetteur, cible, bucket 12h) bloque le doublon', async () => {
+    const b0 = '2026-07-01T00:00:00.000Z';
+    const b1 = '2026-07-01T12:00:00.000Z';
+    // 1re relance alice->bob dans la fenêtre b0 : OK (service_role, bypass RLS).
+    await admin(`insert into public.nudges (sender_id,target_id,group_id,bucket) values ($1,$2,$3,$4)`, [ALICE, BOB, A.id, b0]);
+    // 2e relance MÊME fenêtre : REFUSÉE atomiquement par l'index unique (plus de TOCTOU).
+    await expectReject(
+      admin(`insert into public.nudges (sender_id,target_id,group_id,bucket) values ($1,$2,$3,$4)`, [ALICE, BOB, A.id, b0]),
+      'doublon dans la même fenêtre',
+    );
+    // Fenêtre suivante : autorisée.
+    await admin(`insert into public.nudges (sender_id,target_id,group_id,bucket) values ($1,$2,$3,$4)`, [ALICE, BOB, A.id, b1]);
+    const c = (await admin(`select count(*)::int c from public.nudges where sender_id=$1 and target_id=$2`, [ALICE, BOB])).rows[0].c;
+    assert.equal(c, 2, 'deux relances au total (une par fenêtre)');
   });
 
   await step('invitation : rotation réservée au créateur + code expiré refusé', async () => {
