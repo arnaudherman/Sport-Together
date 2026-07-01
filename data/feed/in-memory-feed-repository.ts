@@ -63,15 +63,27 @@ export class InMemoryFeedRepository implements FeedRepository {
 }
 
 /** Données de démonstration pour le mode hors-ligne (un seul groupe). */
+const demoNow = Date.now();
+const minutesAgo = (mins: number): string => new Date(demoNow - mins * 60_000).toISOString();
+
 export const DEMO_FEED: readonly FeedItem[] = [
+  {
+    id: 'f0',
+    groupId: 'demo-group',
+    authorId: 'local-user',
+    authorName: 'Moi',
+    type: 'session',
+    createdAt: minutesAgo(38),
+    summary: '45 min de course — plus longue série cette semaine',
+  },
   {
     id: 'f1',
     groupId: 'demo-group',
     authorId: 'u-lea',
     authorName: 'Léa',
     type: 'session',
-    createdAt: '2026-06-30T07:10:00.000Z',
-    summary: '30 min de course',
+    createdAt: minutesAgo(12),
+    summary: '30 min de renforcement',
   },
   {
     id: 'f2',
@@ -79,16 +91,25 @@ export const DEMO_FEED: readonly FeedItem[] = [
     authorId: 'u-sam',
     authorName: 'Sam',
     type: 'steps',
-    createdAt: '2026-06-30T06:40:00.000Z',
+    createdAt: minutesAgo(74),
     summary: '10 248 pas',
   },
   {
     id: 'f3',
     groupId: 'demo-group',
+    authorId: 'local-user',
+    authorName: 'Moi',
+    type: 'meal',
+    createdAt: minutesAgo(200),
+    summary: 'Bowl poulet-quinoa · 620 kcal',
+  },
+  {
+    id: 'f4',
+    groupId: 'demo-group',
     authorId: 'u-noa',
     authorName: 'Noa',
     type: 'meal',
-    createdAt: '2026-06-29T19:05:00.000Z',
-    summary: 'Bowl poulet-quinoa',
+    createdAt: minutesAgo(1500),
+    summary: 'Salade César · 480 kcal',
   },
 ];
