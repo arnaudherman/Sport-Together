@@ -58,7 +58,7 @@ async function step(name, fn) {
 async function reset() {
   await admin(`truncate auth.users, public.profiles, public.groups, public.memberships,
     public.feed_items, public.sessions, public.step_logs, public.meals, public.reactions,
-    public.follows, public.comments, public.nudges, public.reports, public.blocks
+    public.follows, public.comments, public.nudges, public.reports, public.blocks, public.rpc_attempts
     restart identity cascade`);
 }
 
@@ -279,8 +279,12 @@ async function main() {
     // alice (créatrice) régénère avec une expiration DANS LE PASSÉ
     const expired = (await asUser(ALICE, `select public.rotate_invite_code($1, '2000-01-01T00:00:00Z'::timestamptz) as code`, [A.id])).rows[0].code;
     assert.ok(expired && expired !== A.invite_code, 'un nouveau code est généré');
-    // un code expiré est refusé
-    await expectReject(asUser(DAVE, `select * from public.join_group_by_code($1)`, [expired]), 'join avec un code expiré');
+    // un code expiré est refusé — réponse VIDE (et non une exception : la tentative
+    // doit rester comptée par le rate limit ; pas d'oracle invalide/expiré).
+    const expiredTry = (await asUser(DAVE, `select * from public.join_group_by_code($1)`, [expired])).rows;
+    assert.equal(expiredTry.length, 0, 'join avec un code expiré = réponse vide');
+    const stillOut = (await asUser(DAVE, `select id from public.groups where id=$1`, [A.id])).rows;
+    assert.equal(stillOut.length, 0, 'dave n\'a pas rejoint A avec le code expiré');
     // régénération sans expiration -> dave peut rejoindre
     const fresh = (await asUser(ALICE, `select public.rotate_invite_code($1) as code`, [A.id])).rows[0].code;
     await asUser(DAVE, `select * from public.join_group_by_code($1)`, [fresh]);
@@ -352,6 +356,32 @@ async function main() {
     assert.equal(ownDel.rowCount, 1, 'la créatrice supprime son groupe');
     const rest = (await admin(`select 1 from public.memberships where group_id=$1`, [T.id])).rows;
     assert.equal(rest.length, 0, 'memberships supprimés en cascade');
+  });
+
+  await step('rate limits : create_group et join_group_by_code plafonnés (anti-abus)', async () => {
+    // Créations en boucle : les premières passent, le spam finit refusé (cap 10/12h).
+    let created = 0;
+    let createRejected = false;
+    for (let i = 0; i < 15 && !createRejected; i += 1) {
+      try {
+        await asUser(BOB, `select public.create_group($1)`, [`Spam ${i}`]);
+        created += 1;
+      } catch {
+        createRejected = true;
+      }
+    }
+    assert.ok(created >= 1, 'des créations légitimes passent');
+    assert.ok(createRejected, 'le spam de create_group finit refusé');
+    // Martèlement de join avec code invalide : les TENTATIVES comptent (anti brute-force).
+    let joinLimited = false;
+    for (let i = 0; i < 25 && !joinLimited; i += 1) {
+      try {
+        await asUser(DAVE, `select * from public.join_group_by_code('NOPE')`);
+      } catch (e) {
+        if (String(e.message).includes('Doucement')) joinLimited = true;
+      }
+    }
+    assert.ok(joinLimited, 'le brute-force du code finit limité (même avec des codes invalides)');
   });
 
   await step('suppression de compte : anonymise le feed, retire les memberships (ADR-0005)', async () => {

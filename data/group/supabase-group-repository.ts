@@ -88,7 +88,8 @@ export class SupabaseGroupRepository implements GroupRepository {
     const row = (Array.isArray(data) ? data[0] : data) as
       | { joined_id: string; joined_name: string }
       | undefined;
-    if (!row) throw new Error('Groupe introuvable');
+    // Réponse vide = code invalide OU expiré (message unique — pas d'oracle).
+    if (!row) throw new Error("Code d'invitation invalide ou expiré");
     return { id: row.joined_id, name: row.joined_name };
   }
 }

@@ -6,6 +6,27 @@ pas encore versionné (pré-MVP) ; entrées par date. Détail des décisions dan
 
 ## [Non publié]
 
+### 2026-07-02 — Analyse d'écarts (19 agents, contre-vérifiée) : 10 manques comblés
+
+- **Timeline perso backend** : publier en SOLO pour de vrai (`group_id` nullable, RPC
+  null-safe, triggers réécrits, réactions/commentaires partout où l'on voit le post).
+- **Jour de repos** 😴 : type de feed `rest` (+10 XP), chip dans le composer, **streak
+  protégé** (borne anti-farm 2 repos/7 j), présence groupe et journée parfaite en profitent.
+- **Signaler + Bloquer (P0 App Store 1.2)** : `reports` write-only + `blocks` (coupe les
+  follows des deux sens), menu ⋯ sur les posts d'autrui, drapeau sur les commentaires,
+  fil filtré des bloqués.
+- **Gestion de groupe** : code d'invitation re-consultable (`get_group_invite`), vrai nom
+  en titre, régénérer le code / renommer / supprimer (créateur), composant partagé
+  `InviteCodeActions` ; **quitter un groupe**.
+- **Abonnés / abonnements** : compteurs cliquables sur son profil + écran liste
+  (`listFollowers` — la RLS exposait déjà les deux côtés).
+- **Partager une publication** (icône share) · **supprimer son commentaire** (poubelle
+  optimiste + RLS) · **journée parfaite** enfin branchée (bannière ✨ + 7 jours d'étoiles).
+- **Anti-abus RPC** : `check_rate_limit` atomique — create_group 10/12 h, join 20
+  tentatives/12 h (réponse vide pour code invalide/expiré : la tentative **reste comptée**
+  — le test du harnais a attrapé le rollback du compteur — et plus d'oracle), log_* 30/h.
+- Harnais RLS : **17 → 23 tests**, front **84 tests**, 19 migrations.
+
 ### 2026-07-01 — Timeline perso (backend) : publier en solo, pour de vrai
 
 - **`group_id` nullable** sur `feed_items` (+ tables enfants) : un post solo n'a pas de
