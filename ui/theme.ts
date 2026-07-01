@@ -12,6 +12,7 @@ export const colors = {
   textFaint: '#5B5854',
   accent: '#F0652F', // orange chaud
   accentSoft: 'rgba(240,101,47,0.16)',
+  onAccent: '#0B0B0D', // encre/icône sur aplat orange (== bg)
   success: '#4ADE80',
   danger: '#F2555A', // erreurs (corail chaud, cohérent avec la DA)
   gold: '#F5C451',

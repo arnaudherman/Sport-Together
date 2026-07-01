@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -80,6 +81,7 @@ export function LogScreen({
         }
         await feed.logMeal(groupId, input);
       }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       onDone();
     } catch (e) {
       setError((e as Error).message);
@@ -91,12 +93,19 @@ export function LogScreen({
   return (
     <View style={styles.container}>
       <View style={styles.bar}>
-        <Pressable onPress={onCancel} hitSlop={10}>
+        <Pressable onPress={onCancel} hitSlop={10} accessibilityRole="button" accessibilityLabel="Annuler">
           <Text style={styles.cancel}>Annuler</Text>
         </Pressable>
         <Text style={styles.barTitle}>Nouvelle publication</Text>
-        <Pressable style={[styles.publish, busy && styles.dim]} onPress={submit} disabled={busy}>
-          {busy ? <ActivityIndicator color="#0B0B0D" size="small" /> : <Text style={styles.publishText}>Publier</Text>}
+        <Pressable
+          style={({ pressed }) => [styles.publish, busy && styles.dim, pressed && styles.pressed]}
+          onPress={submit}
+          disabled={busy}
+          accessibilityRole="button"
+          accessibilityLabel="Publier"
+          accessibilityState={{ disabled: busy, busy }}
+        >
+          {busy ? <ActivityIndicator color={colors.onAccent} size="small" /> : <Text style={styles.publishText}>Publier</Text>}
         </Pressable>
       </View>
 
@@ -105,7 +114,14 @@ export function LogScreen({
           {TABS.map((t) => {
             const on = type === t.type;
             return (
-              <Pressable key={t.type} onPress={() => setType(t.type)} style={[styles.chip, on && styles.chipOn]}>
+              <Pressable
+                key={t.type}
+                onPress={() => setType(t.type)}
+                style={({ pressed }) => [styles.chip, on && styles.chipOn, pressed && styles.pressed]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+                accessibilityLabel={t.label}
+              >
                 <Text style={styles.chipIcon}>{t.icon}</Text>
                 <Text style={[styles.chipText, on && styles.chipTextOn]}>{t.label}</Text>
               </Pressable>
@@ -149,7 +165,14 @@ export function LogScreen({
         {type === 'session' ? (
           <View style={styles.durations}>
             {DURATIONS.map((d) => (
-              <Pressable key={d} onPress={() => setDuration(d)} style={[styles.dchip, duration === d && styles.dchipOn]}>
+              <Pressable
+                key={d}
+                onPress={() => setDuration(d)}
+                style={[styles.dchip, duration === d && styles.dchipOn]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: duration === d }}
+                accessibilityLabel={`${d} minutes`}
+              >
                 <Text style={[styles.dchipText, duration === d && styles.dchipTextOn]}>{d} min</Text>
               </Pressable>
             ))}
@@ -213,7 +236,8 @@ const styles = StyleSheet.create({
   barTitle: { ...font.title },
   publish: { backgroundColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: 18, paddingVertical: 9, minWidth: 84, alignItems: 'center' },
   dim: { opacity: 0.7 },
-  publishText: { color: '#0B0B0D', fontWeight: '800', fontSize: 14 },
+  publishText: { color: colors.onAccent, fontWeight: '800', fontSize: 14 },
+  pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
   scroll: { padding: 16, gap: 14 },
   chips: { flexDirection: 'row', gap: 8 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 10, minHeight: 44, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
@@ -233,13 +257,13 @@ const styles = StyleSheet.create({
   macros: { flexDirection: 'row', gap: 8, paddingLeft: 56 },
   mInput: { flex: 1, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: 10, paddingVertical: 12, fontSize: 14, color: colors.text, textAlign: 'center' },
   tools: { flexDirection: 'row', gap: 20, alignItems: 'center', paddingLeft: 56, paddingTop: 2 },
-  toolsHint: { color: colors.textFaint, fontSize: 12 },
+  toolsHint: { color: colors.textMuted, fontSize: 12 },
   reward: { borderRadius: radius.md, padding: 16, gap: 6, borderWidth: 1, borderColor: 'rgba(240,101,47,0.25)' },
   rewardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   rewardLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   rewardLabel: { ...font.label },
   rewardXp: { color: colors.accent, fontWeight: '800', fontSize: 24 },
-  rewardHint: { color: colors.textFaint, fontSize: 13, lineHeight: 18 },
+  rewardHint: { color: colors.textMuted, fontSize: 13, lineHeight: 18 },
   error: { color: colors.danger, fontSize: 14 },
-  foot: { color: colors.textFaint, fontSize: 13 },
+  foot: { color: colors.textMuted, fontSize: 13 },
 });

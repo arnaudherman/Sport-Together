@@ -6,6 +6,21 @@ pas encore versionné (pré-MVP) ; entrées par date. Détail des décisions dan
 
 ## [Non publié]
 
+### 2026-07-01 — Polish premium + visibilité des abonnements (backend)
+
+- **Polish (revue polish multi-agents)** : retour **haptique** (réactions, publier,
+  encourager), **barre d'XP animée** (`Animated`), états **pressed** sur tous les CTA,
+  **a11y** complétée (rôles/labels/état sélectionné : boutons, onglets, chips type/durée),
+  **bandeau d'erreur** non bloquant pour les échecs d'action (réaction/suppression),
+  **états chargement/erreur** distincts de « vide » sur les Réponses, contrastes AA
+  (`textFaint`→`textMuted`), tokens `onAccent` + `font.stat` (chiffres-héros unifiés),
+  vocabulaire unifié (« publication »).
+- **Backend — visibilité « Abonnements »** (`follow_feed_visibility`) : la RLS expose
+  désormais les posts (+ détails, réactions, commentaires, profil) des **utilisateurs
+  suivis**, plus seulement ceux de tes groupes — l'onglet Abonnements fonctionne sur un
+  vrai Supabase. Helpers `is_followed`/`can_see_item`. **Isolation préservée** (un non-membre
+  non-abonné ne voit rien) : harnais RLS **15/15**.
+
 ### 2026-07-01 — Auto-critique (revue adversariale) + améliorations
 
 - **14 findings corrigés** : **publier en SOLO** (plus de gate groupe obligatoire — vraie

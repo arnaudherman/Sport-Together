@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -96,6 +97,7 @@ export function GroupScreen({
   async function nudge(memberId: string) {
     try {
       await notif.nudge(memberId, groupId);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       if (mounted.current) setNudged((prev) => new Set(prev).add(memberId));
     } catch (e) {
       if (mounted.current) setError((e as Error).message);
@@ -218,7 +220,7 @@ const styles = StyleSheet.create({
   between: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   alignEnd: { alignItems: 'flex-end' },
   label: { ...font.label, marginTop: 4 },
-  bigStat: { fontSize: 30, fontWeight: '800', color: colors.text },
+  bigStat: { ...font.stat },
   muted: { color: colors.textMuted, fontSize: 18, fontWeight: '700' },
   quest: {
     backgroundColor: colors.surface,
@@ -231,7 +233,7 @@ const styles = StyleSheet.create({
   questHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   questLabel: { ...font.label, color: colors.textMuted },
   soon: { backgroundColor: colors.surfaceElevated, borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 2 },
-  soonText: { fontSize: 10, fontWeight: '700', color: colors.textFaint, letterSpacing: 1 },
+  soonText: { fontSize: 10, fontWeight: '700', color: colors.textMuted, letterSpacing: 1 },
   questTitle: { ...font.title, marginTop: 2 },
   questSub: { fontSize: 13, color: colors.textMuted, lineHeight: 19 },
   section: { ...font.label, marginTop: 8 },

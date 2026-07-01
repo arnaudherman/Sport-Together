@@ -172,5 +172,5 @@ const styles = StyleSheet.create({
   danger: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.danger, borderRadius: radius.pill, paddingVertical: 13 },
   dim: { opacity: 0.5 },
   dangerText: { color: colors.danger, fontWeight: '800', fontSize: 16 },
-  note: { color: colors.textFaint, fontSize: 13, marginTop: 12, lineHeight: 19 },
+  note: { color: colors.textMuted, fontSize: 13, marginTop: 12, lineHeight: 19 },
 });

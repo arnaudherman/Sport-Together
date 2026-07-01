@@ -116,7 +116,7 @@ export function ProfileScreen({
   const name = isMe ? 'Moi' : profile?.pseudo ?? targetName;
 
   function confirmDelete(post: FeedItem) {
-    Alert.alert('Supprimer ce post ?', 'Cette action est définitive.', [
+    Alert.alert('Supprimer cette publication ?', 'Cette action est définitive.', [
       { text: 'Annuler', style: 'cancel' },
       {
         text: 'Supprimer',
@@ -168,7 +168,7 @@ export function ProfileScreen({
             </View>
             {!isMe ? (
               <Pressable
-                style={[styles.follow, following && styles.followOn]}
+                style={({ pressed }) => [styles.follow, following && styles.followOn, pressed && styles.pressed]}
                 onPress={async () => {
                   const next = !following;
                   setFollowing(next);
@@ -179,14 +179,17 @@ export function ProfileScreen({
                     if (mounted.current) setFollowing(!next);
                   }
                 }}
+                accessibilityRole="button"
+                accessibilityState={{ selected: following }}
+                accessibilityLabel={following ? `Ne plus suivre ${name}` : `Suivre ${name}`}
               >
-                <Ionicons name={following ? 'checkmark' : 'add'} size={16} color={following ? colors.text : '#0B0B0D'} />
+                <Ionicons name={following ? 'checkmark' : 'add'} size={16} color={following ? colors.text : colors.onAccent} />
                 <Text style={[styles.followText, following && styles.followTextOn]}>
                   {following ? 'Suivi' : 'Suivre'}
                 </Text>
               </Pressable>
             ) : (
-              <Pressable style={styles.settings} onPress={onOpenAccount}>
+              <Pressable style={styles.settings} onPress={onOpenAccount} accessibilityRole="button" accessibilityLabel="Compte">
                 <Ionicons name="settings-outline" size={16} color={colors.text} />
                 <Text style={styles.settingsText}>Compte</Text>
               </Pressable>
@@ -236,7 +239,14 @@ export function ProfileScreen({
 
           <View style={styles.tabs}>
             {TABS.map((t) => (
-              <Pressable key={t.key} onPress={() => setTab(t.key)} style={styles.tab}>
+              <Pressable
+                key={t.key}
+                onPress={() => setTab(t.key)}
+                style={styles.tab}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: tab === t.key }}
+                accessibilityLabel={t.label}
+              >
                 <Text style={[styles.tabText, tab === t.key && styles.tabTextOn]}>{t.label}</Text>
                 {tab === t.key ? <View style={styles.tabUnderline} /> : null}
               </Pressable>
@@ -289,8 +299,9 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: 27, fontWeight: '800' },
   follow: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.accent, borderRadius: radius.pill, paddingHorizontal: 20, paddingVertical: 11, minHeight: 44, justifyContent: 'center', marginBottom: 4 },
   followOn: { backgroundColor: colors.surfaceElevated },
-  followText: { color: '#0B0B0D', fontWeight: '800' },
+  followText: { color: colors.onAccent, fontWeight: '800' },
   followTextOn: { color: colors.text },
+  pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
   settings: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 10, minHeight: 44, marginBottom: 4 },
   settingsText: { color: colors.text, fontWeight: '700', fontSize: 14 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, paddingHorizontal: 4 },

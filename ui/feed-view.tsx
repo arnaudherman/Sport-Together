@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
@@ -111,6 +112,7 @@ export function FeedView({
 
   async function toggleReaction(item: FeedItem, kind: ReactionKind) {
     const active = (item.reactions?.mine ?? []).includes(kind);
+    if (!active) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     // Optimistic : on met à jour l'item localement tout de suite.
     setItems((prev) => prev.map((it) => (it.id === item.id ? withToggledReaction(it, kind, !active) : it)));
     try {
@@ -123,7 +125,7 @@ export function FeedView({
   }
 
   function confirmDelete(item: FeedItem) {
-    Alert.alert('Supprimer ce post ?', 'Cette action est définitive.', [
+    Alert.alert('Supprimer cette publication ?', 'Cette action est définitive.', [
       { text: 'Annuler', style: 'cancel' },
       {
         text: 'Supprimer',
@@ -213,7 +215,7 @@ export function FeedView({
           ListEmptyComponent={
             <Text style={styles.empty}>
               {tab === 'abonnements'
-                ? 'Suis des gens pour voir leurs posts ici.'
+                ? 'Suis des gens pour voir leurs publications ici.'
                 : tab === 'groupes'
                   ? "Rejoins un groupe pour voir son activité ici."
                   : 'Rien pour l\'instant — publie ta première séance 💪'}
@@ -222,14 +224,26 @@ export function FeedView({
         />
       </ScreenState>
 
+      {error && items.length > 0 ? (
+        <Pressable
+          style={[styles.banner, { bottom: 86 + insets.bottom }]}
+          onPress={() => setError(null)}
+          accessibilityRole="button"
+          accessibilityLabel="Erreur, toucher pour masquer"
+        >
+          <Ionicons name="alert-circle-outline" size={16} color={colors.danger} />
+          <Text style={styles.bannerText}>Action impossible pour l’instant. Réessaie.</Text>
+        </Pressable>
+      ) : null}
+
       <Pressable
-        style={[styles.fabWrap, { bottom: 20 + insets.bottom }]}
+        style={({ pressed }) => [styles.fabWrap, { bottom: 20 + insets.bottom }, pressed && styles.fabPressed]}
         onPress={onOpenLog}
         accessibilityRole="button"
         accessibilityLabel="Publier une séance"
       >
         <LinearGradient colors={['#F58A4C', '#F0652F']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fab}>
-          <Ionicons name="add" size={22} color="#0B0B0D" />
+          <Ionicons name="add" size={22} color={colors.onAccent} />
           <Text style={styles.fabText}>Publier</Text>
         </LinearGradient>
       </Pressable>
@@ -256,7 +270,7 @@ const styles = StyleSheet.create({
   },
   schipOn: { backgroundColor: colors.accent, borderColor: colors.accent },
   schipText: { color: colors.textMuted, fontWeight: '700', fontSize: 14 },
-  schipTextOn: { color: '#0B0B0D' },
+  schipTextOn: { color: colors.onAccent },
   headerCard: { marginBottom: 12 },
   discover: {
     flexDirection: 'row',
@@ -283,6 +297,22 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
   },
+  fabPressed: { opacity: 0.92, transform: [{ scale: 0.98 }] },
   fab: { flexDirection: 'row', gap: 8, borderRadius: radius.pill, paddingVertical: 16, alignItems: 'center', justifyContent: 'center' },
-  fabText: { ...font.title, color: '#0B0B0D' },
+  fabText: { ...font.title, color: colors.onAccent },
+  banner: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    borderRadius: radius.md,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  bannerText: { color: colors.text, fontSize: 14, flex: 1 },
 });

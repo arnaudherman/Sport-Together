@@ -16,8 +16,15 @@ export function PrimaryButton({
 }) {
   const off = disabled || busy;
   return (
-    <Pressable style={[styles.primary, off && styles.dim]} onPress={onPress} disabled={off}>
-      {busy ? <ActivityIndicator color="#0B0B0D" /> : <Text style={styles.primaryText}>{title}</Text>}
+    <Pressable
+      style={({ pressed }) => [styles.primary, off && styles.dim, pressed && styles.pressed]}
+      onPress={onPress}
+      disabled={off}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: !!off, busy: !!busy }}
+    >
+      {busy ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.primaryText}>{title}</Text>}
     </Pressable>
   );
 }
@@ -33,7 +40,14 @@ export function GhostButton({
   disabled?: boolean;
 }) {
   return (
-    <Pressable style={[styles.ghost, disabled && styles.dim]} onPress={onPress} disabled={disabled}>
+    <Pressable
+      style={({ pressed }) => [styles.ghost, disabled && styles.dim, pressed && styles.pressed]}
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: !!disabled }}
+    >
       <Text style={styles.ghostText}>{title}</Text>
     </Pressable>
   );
@@ -46,7 +60,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
   },
-  primaryText: { ...font.title, color: '#0B0B0D' },
+  primaryText: { ...font.title, color: colors.onAccent },
+  pressed: { opacity: 0.85, transform: [{ scale: 0.985 }] },
   ghost: {
     backgroundColor: colors.surface,
     borderWidth: 1,

@@ -24,6 +24,8 @@ export function CommentsScreen({ item, onBack }: { item: FeedItem; onBack: () =>
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -36,9 +38,14 @@ export function CommentsScreen({ item, onBack }: { item: FeedItem; onBack: () =>
   const load = useCallback(async () => {
     try {
       const data = await commentRepo.listForItem(item.id);
-      if (mounted.current) setComments(data);
+      if (mounted.current) {
+        setComments(data);
+        setLoadError(false);
+      }
     } catch {
-      if (mounted.current) setComments([]);
+      if (mounted.current) setLoadError(true); // distinct de « aucune réponse »
+    } finally {
+      if (mounted.current) setLoading(false);
     }
   }, [commentRepo, item.id]);
 
@@ -111,7 +118,25 @@ export function CommentsScreen({ item, onBack }: { item: FeedItem; onBack: () =>
             </View>
           );
         }}
-        ListEmptyComponent={<Text style={styles.empty}>Sois le premier à répondre 💬</Text>}
+        ListEmptyComponent={
+          loading ? (
+            <Text style={styles.empty}>Chargement…</Text>
+          ) : loadError ? (
+            <Pressable
+              onPress={() => {
+                setLoading(true);
+                load();
+              }}
+              style={styles.retry}
+              accessibilityRole="button"
+              accessibilityLabel="Réessayer de charger les réponses"
+            >
+              <Text style={styles.retryText}>Impossible de charger les réponses. Réessayer.</Text>
+            </Pressable>
+          ) : (
+            <Text style={styles.empty}>Sois le premier à répondre 💬</Text>
+          )
+        }
       />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -125,14 +150,14 @@ export function CommentsScreen({ item, onBack }: { item: FeedItem; onBack: () =>
           multiline
         />
         <Pressable
-          style={[styles.send, (!text.trim() || busy) && styles.dim]}
+          style={({ pressed }) => [styles.send, (!text.trim() || busy) && styles.dim, pressed && styles.pressed]}
           onPress={send}
           disabled={!text.trim() || busy}
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel="Envoyer la réponse"
         >
-          <Ionicons name="arrow-up" size={20} color="#0B0B0D" />
+          <Ionicons name="arrow-up" size={20} color={colors.onAccent} />
         </Pressable>
       </View>
     </KeyboardAvoidingView>
@@ -159,6 +184,9 @@ const styles = StyleSheet.create({
   comment: { flexDirection: 'row', gap: 10, paddingVertical: 10 },
   commentText: { ...font.body },
   empty: { color: colors.textMuted, textAlign: 'center', marginTop: 24 },
+  retry: { alignItems: 'center', marginTop: 24 },
+  retryText: { color: colors.accent, textAlign: 'center', fontWeight: '700' },
+  pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
   composer: { flexDirection: 'row', gap: 10, alignItems: 'flex-end', paddingVertical: 10, borderTopWidth: 1, borderTopColor: colors.border },
   input: { flex: 1, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text, maxHeight: 100 },
   send: { width: 44, height: 44, borderRadius: radius.pill, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },

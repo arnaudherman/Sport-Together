@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useMemo } from 'react';
-import { type DimensionValue, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef } from 'react';
+import { Animated, StyleSheet, Text, View } from 'react-native';
 
 import type { FeedItem } from '@/domain/entities/feed';
 import { levelProgress, xpFromFeed } from '@/domain/usecases/gamification';
@@ -33,6 +33,13 @@ export function LevelHeader({
   }, [items, userId]);
 
   const pct = Math.round(progress.ratio * 100);
+
+  // La barre d'XP glisse vers sa valeur (récompense visible quand l'XP monte).
+  const widthAnim = useRef(new Animated.Value(pct)).current;
+  useEffect(() => {
+    Animated.timing(widthAnim, { toValue: pct, duration: 600, useNativeDriver: false }).start();
+  }, [pct, widthAnim]);
+  const barWidth = widthAnim.interpolate({ inputRange: [0, 100], outputRange: ['0%', '100%'] });
 
   return (
     <LinearGradient
@@ -70,12 +77,14 @@ export function LevelHeader({
       </View>
 
       <View style={styles.barTrack}>
-        <LinearGradient
-          colors={['#F58A4C', '#F0652F']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={[styles.barFill, { width: `${pct}%` as DimensionValue }]}
-        />
+        <Animated.View style={[styles.barFillWrap, { width: barWidth }]}>
+          <LinearGradient
+            colors={['#F58A4C', '#F0652F']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.barFill}
+          />
+        </Animated.View>
       </View>
       <Text style={styles.barLabel}>
         {progress.into} / {progress.span} XP → Niveau {progress.level + 1}
@@ -123,7 +132,7 @@ const styles = StyleSheet.create({
   levelText: { fontSize: 12, fontWeight: '700', color: colors.text },
   subRow: { flexDirection: 'row', alignItems: 'center' },
   sub: { ...font.body, color: colors.textMuted },
-  subStrong: { fontSize: 15, color: colors.text, fontWeight: '800' },
+  subStrong: { fontSize: 18, color: colors.text, fontWeight: '800' },
   streak: { flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: 12 },
   streakText: { color: colors.accent, fontWeight: '800', fontSize: 14 },
   streakSoft: { color: colors.textMuted, fontSize: 14 },
@@ -133,6 +142,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.4)',
     overflow: 'hidden',
   },
-  barFill: { height: 10, borderRadius: radius.pill },
+  barFillWrap: { height: 10, borderRadius: radius.pill, overflow: 'hidden' },
+  barFill: { flex: 1 },
   barLabel: { ...font.label },
 });
