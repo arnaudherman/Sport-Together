@@ -71,6 +71,10 @@ export class InMemoryFeedRepository implements FeedRepository {
     const calories = meal.caloriesKcal != null ? ` · ${meal.caloriesKcal} kcal` : '';
     this.push(groupId, 'meal', `${meal.label}${calories}`);
   }
+
+  async deletePost(feedItemId: string): Promise<void> {
+    this.items = this.items.filter((item) => item.id !== feedItemId);
+  }
 }
 
 /**

@@ -23,11 +23,13 @@ export function FeedItemCard({
   onToggleReaction,
   onPressAuthor,
   onOpenComments,
+  onDelete,
 }: {
   item: FeedItem;
   onToggleReaction?: (kind: ReactionKind) => void;
   onPressAuthor?: () => void;
   onOpenComments?: () => void;
+  onDelete?: () => void;
 }) {
   const reactions = item.reactions ?? EMPTY_REACTIONS;
   const av = avatarColor(item.authorId || item.authorName);
@@ -55,8 +57,15 @@ export function FeedItemCard({
               ) : null}
             </View>
           </Pressable>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{TYPE_LABEL[item.type]}</Text>
+          <View style={styles.headRight}>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{TYPE_LABEL[item.type]}</Text>
+            </View>
+            {onDelete ? (
+              <Pressable onPress={onDelete} hitSlop={10} style={styles.menu}>
+                <Ionicons name="ellipsis-horizontal" size={16} color={colors.textFaint} />
+              </Pressable>
+            ) : null}
           </View>
         </View>
 
@@ -110,6 +119,8 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: 17, fontWeight: '800' },
   body: { flex: 1, gap: 4 },
   head: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 },
+  headRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  menu: { padding: 2 },
   who: { flex: 1 },
   name: { ...font.title, fontWeight: '800' },
   handleRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },

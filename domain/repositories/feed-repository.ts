@@ -20,4 +20,6 @@ export interface FeedRepository {
   logSteps(groupId: string, steps: number): Promise<void>;
   /** Logge un repas (entrée de type `meal`) — valider avec validateMeal en amont. */
   logMeal(groupId: string, meal: MealInput): Promise<void>;
+  /** Supprime un post (réservé à son auteur par la RLS). */
+  deletePost(feedItemId: string): Promise<void>;
 }

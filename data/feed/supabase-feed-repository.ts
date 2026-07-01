@@ -148,4 +148,11 @@ export class SupabaseFeedRepository implements FeedRepository {
     });
     if (error) throw new Error(error.message);
   }
+
+  async deletePost(feedItemId: string): Promise<void> {
+    // La RLS (feed_items_delete) n'autorise que l'auteur ; le cascade nettoie les
+    // détails (session/steps/meal), réactions et commentaires.
+    const { error } = await this.client.from('feed_items').delete().eq('id', feedItemId);
+    if (error) throw new Error(error.message);
+  }
 }

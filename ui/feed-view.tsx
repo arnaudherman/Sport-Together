@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useFeedRepository, useFollowRepository, useReactionRepository } from '@/core/di/repositories-context';
@@ -91,6 +91,24 @@ export function FeedView({
     return items;
   }, [items, tab, following]);
 
+  function confirmDelete(item: FeedItem) {
+    Alert.alert('Supprimer ce post ?', 'Cette action est définitive.', [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await feed.deletePost(item.id);
+            await load();
+          } catch (e) {
+            if (mounted.current) setError((e as Error).message);
+          }
+        },
+      },
+    ]);
+  }
+
   async function toggleReaction(item: FeedItem, kind: ReactionKind) {
     const active = (item.reactions?.mine ?? []).includes(kind);
     try {
@@ -134,6 +152,7 @@ export function FeedView({
               onToggleReaction={(kind) => toggleReaction(item, kind)}
               onPressAuthor={() => onOpenProfile(item.authorId, item.authorName)}
               onOpenComments={() => onOpenComments(item)}
+              onDelete={item.authorId === userId ? () => confirmDelete(item) : undefined}
             />
           )}
           contentContainerStyle={[styles.list, { paddingBottom: 120 + insets.bottom }]}

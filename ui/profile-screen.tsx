@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useFeedRepository, useFollowRepository } from '@/core/di/repositories-context';
 import { EMPTY_REACTIONS, type FeedItem } from '@/domain/entities/feed';
@@ -103,6 +103,24 @@ export function ProfileScreen({
   const av = avatarColor(targetUserId);
   const isMe = targetUserId === currentUserId || targetUserId === 'local-user';
   const name = isMe ? 'Moi' : targetName;
+
+  function confirmDelete(post: FeedItem) {
+    Alert.alert('Supprimer ce post ?', 'Cette action est définitive.', [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await feedRepo.deletePost(post.id);
+            await load();
+          } catch (e) {
+            if (mounted.current) setError((e as Error).message);
+          }
+        },
+      },
+    ]);
+  }
 
   const TABS: { key: Tab; label: string }[] = [
     { key: 'publications', label: 'Publications' },
@@ -210,7 +228,12 @@ export function ProfileScreen({
             ) : (
               <View style={styles.posts}>
                 {items.map((it) => (
-                  <FeedItemCard key={it.id} item={it} onOpenComments={() => onOpenComments(it)} />
+                  <FeedItemCard
+                    key={it.id}
+                    item={it}
+                    onOpenComments={() => onOpenComments(it)}
+                    onDelete={isMe ? () => confirmDelete(it) : undefined}
+                  />
                 ))}
               </View>
             )

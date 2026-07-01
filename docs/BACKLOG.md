@@ -24,7 +24,8 @@
 - [ ] **Sign in with Apple** : prévu ADR-0005, non implémenté (seul le magic-link e-mail l'est).
 - [ ] **Upload photo-preuve** : bouton « Ajouter une photo (bientôt) » à brancher sur
   Supabase Storage (bucket RLS par groupe, compression client, URLs signées — cf. vision §10).
-- [ ] **Supprimer un goal loggé par erreur** : exposé côté UI (feed) + repo/RPC.
+- [x] **Supprimer un post / goal** : bouton sur ses propres posts (feed + profil), confirm,
+  `FeedRepository.deletePost` (RLS `feed_items_delete`, cascade détails/réactions/commentaires).
 - [ ] **Câbler/déployer les Edge Functions** : `notify_group` (trigger pg_net), `nudge`
   (throttle 12h), `delete_account`. Écrites + lint OK, pas déployées.
 

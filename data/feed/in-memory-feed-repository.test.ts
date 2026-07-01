@@ -39,4 +39,11 @@ describe('InMemoryFeedRepository', () => {
     expect(dates).toEqual(expected);
     expect(feed.length).toBe(DEMO_FEED.length);
   });
+
+  it('supprime un post (deletePost)', async () => {
+    const repo = new InMemoryFeedRepository(SAMPLE);
+    await repo.deletePost('a');
+    const feed = await repo.listGroupFeed('g1');
+    expect(feed).toHaveLength(0);
+  });
 });
