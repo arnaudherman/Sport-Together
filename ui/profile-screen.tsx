@@ -7,7 +7,7 @@ import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'rea
 import { useFeedRepository, useFollowRepository, useProfileRepository } from '@/core/di/repositories-context';
 import { EMPTY_REACTIONS, type FeedItem } from '@/domain/entities/feed';
 import type { Profile } from '@/domain/entities/profile';
-import { levelForXp, xpFromFeed } from '@/domain/usecases/gamification';
+import { levelForXp, xpBreakdown } from '@/domain/usecases/gamification';
 import { MUSCU_GRAPH, sessionsUnlocked } from '@/domain/usecases/skill-graph';
 import { streakFromFeed } from '@/domain/usecases/streak';
 import { avatarColor, handle, initial } from '@/ui/format';
@@ -75,7 +75,8 @@ export function ProfileScreen({
   }, [followRepo, targetUserId, currentUserId, mounted]);
 
   const tz = -new Date().getTimezoneOffset();
-  const xp = useMemo(() => xpFromFeed(items, targetUserId), [items, targetUserId]);
+  const xpDetail = useMemo(() => xpBreakdown(items, targetUserId, tz), [items, targetUserId, tz]);
+  const xp = xpDetail.total;
   const level = levelForXp(xp);
   const streak = useMemo(
     () => streakFromFeed(items, targetUserId, tz, new Date().toISOString()),
@@ -260,6 +261,7 @@ export function ProfileScreen({
                     onOpenComments={() => onOpenComments(it)}
                     onShare={() => Share.share({ message: `${it.authorName} sur Sport Together : ${it.summary} 💪` }).catch(() => {})}
                     onDelete={isMe ? () => confirmDelete(it) : undefined}
+                    earnedXp={xpDetail.byItem.get(it.id)}
                   />
                 ))}
               </View>

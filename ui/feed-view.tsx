@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useFeedRepository, useFollowRepository, useModerationRepository, useReactionRepository } from '@/core/di/repositories-context';
 import { type FeedItem, type ReactionKind } from '@/domain/entities/feed';
+import { xpBreakdown } from '@/domain/usecases/gamification';
 import { withToggledReaction } from '@/domain/usecases/reaction-toggle';
 import { PrimaryButton } from '@/ui/button';
 import { avatarColor, initial } from '@/ui/format';
@@ -78,6 +79,19 @@ export function FeedView({
   }
 
   const filtered = useMemo(() => filterFeed(items, tab, userId, following, blocked), [items, tab, userId, following, blocked]);
+
+  // XP réellement gagné par post (moteur v2 : décroissance/plafond/bonus) — par auteur.
+  // NB : pour AUTRUI c'est une approximation (le fil ne voit qu'un sous-ensemble de ses
+  // posts via la RLS) ; sur son propre profil le calcul est exact.
+  const earnedByItem = useMemo(() => {
+    const tz = -new Date().getTimezoneOffset();
+    const authors = [...new Set(items.map((i) => i.authorId))];
+    const map = new Map<string, number>();
+    for (const a of authors) {
+      for (const [id, xp] of xpBreakdown(items, a, tz).byItem) map.set(id, xp);
+    }
+    return map;
+  }, [items]);
 
   async function toggleReaction(item: FeedItem, kind: ReactionKind) {
     const active = (item.reactions?.mine ?? []).includes(kind);
@@ -248,6 +262,7 @@ export function FeedView({
               onShare={() => sharePost(item)}
               onDelete={item.authorId === userId ? () => confirmDelete(item) : undefined}
               onModerate={item.authorId !== userId ? () => moderate(item) : undefined}
+              earnedXp={earnedByItem.get(item.id)}
             />
           )}
           contentContainerStyle={[styles.list, { paddingBottom: 120 + insets.bottom }]}

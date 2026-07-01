@@ -22,7 +22,7 @@ export function YouStrip({ items, userId }: { items: FeedItem[]; userId: string 
     const nowIso = new Date().toISOString();
     return {
       streak: streakFromFeed(items, userId, tz, nowIso),
-      progress: levelProgress(xpFromFeed(items, userId)),
+      progress: levelProgress(xpFromFeed(items, userId, tz)),
       quests: weeklyQuests(items, userId, nowIso, tz),
     };
   }, [items, userId, tz]);

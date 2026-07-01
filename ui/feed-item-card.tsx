@@ -31,6 +31,7 @@ export function FeedItemCard({
   onShare,
   onDelete,
   onModerate,
+  earnedXp,
 }: {
   item: FeedItem;
   onToggleReaction?: (kind: ReactionKind) => void;
@@ -39,6 +40,8 @@ export function FeedItemCard({
   onOpenGroup?: () => void;
   onShare?: () => void;
   onDelete?: () => void;
+  /** XP réellement gagné par CE post (moteur v2) — fallback : XP de base du type. */
+  earnedXp?: number;
   /** Menu Signaler / Bloquer sur les publications d'AUTRUI (App Store 1.2). */
   onModerate?: () => void;
 }) {
@@ -112,7 +115,7 @@ export function FeedItemCard({
 
         <View style={styles.eng}>
           <Text style={styles.xpNum}>
-            +{xpForType(item.type)} <Text style={styles.xpUnit}>XP</Text>
+            +{earnedXp ?? xpForType(item.type)} <Text style={styles.xpUnit}>XP</Text>
           </Text>
           <View style={styles.flex} />
           <Pressable

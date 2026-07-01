@@ -73,7 +73,7 @@ export function LogScreen({
     feed
       .listUserFeed(userId)
       .then((items) => {
-        before.current = { xp: xpFromFeed(items, userId), unlocked: sessionsUnlocked(items, userId, tz) };
+        before.current = { xp: xpFromFeed(items, userId, tz), unlocked: sessionsUnlocked(items, userId, tz) };
       })
       .catch(() => {});
     return () => {
@@ -85,7 +85,7 @@ export function LogScreen({
     if (!before.current) return null;
     try {
       const items = await feed.listUserFeed(userId);
-      const after = { xp: xpFromFeed(items, userId), unlocked: sessionsUnlocked(items, userId, tz) };
+      const after = { xp: xpFromFeed(items, userId, tz), unlocked: sessionsUnlocked(items, userId, tz) };
       return celebrationFor(before.current, after);
     } catch {
       return null;
@@ -301,7 +301,7 @@ export function LogScreen({
               <Ionicons name="flash" size={16} color={colors.accent} />
               <Text style={styles.rewardLabel}>Récompense</Text>
             </View>
-            <Text style={styles.rewardXp}>+{xpForType(type)} XP</Text>
+            <Text style={styles.rewardXp}>jusqu’à +{xpForType(type)} XP</Text>
           </View>
           <Text style={styles.rewardHint}>{REWARD_HINT[type]}</Text>
         </LinearGradient>

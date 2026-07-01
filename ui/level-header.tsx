@@ -23,8 +23,8 @@ export function LevelHeader({
   items: FeedItem[];
 }) {
   const { xp, progress, streak } = useMemo(() => {
-    const total = xpFromFeed(items, userId);
     const tz = -new Date().getTimezoneOffset();
+    const total = xpFromFeed(items, userId, tz);
     return {
       xp: total,
       progress: levelProgress(total),

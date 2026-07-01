@@ -1,10 +1,20 @@
 import type { FeedItem, FeedItemType } from '@/domain/entities/feed';
+import { localDayKey } from '@/domain/usecases/streak';
 
 /**
- * Moteur de gamification (voir docs/GAMIFICATION.md) — logique pure, testable.
- * Progression PERSONNELLE : XP par goal loggé, niveaux sur une courbe quadratique
- * douce. Pas de classement compétitif ici (choix produit : progresser contre
- * soi-même, pas contre les autres).
+ * Moteur de gamification v2 (docs/GAMIFICATION.md) — logique pure, testable.
+ * Progression PERSONNELLE, et surtout PAS TROP FACILE :
+ *
+ *  - XP de base par type ;
+ *  - RENDEMENTS DÉCROISSANTS par type et par jour local : 1er post d'un type =
+ *    100 %, 2e = 50 %, 3e = 20 %, ensuite 0 — spammer ne rapporte rien ;
+ *  - PLAFOND QUOTIDIEN de base (DAILY_CAP) ;
+ *  - BONUS VARIÉTÉ : ≥ 3 types différents dans la journée = petit bonus fixe
+ *    (pousse à l'équilibre de vie, pas au volume) ;
+ *  - BONUS RÉGULARITÉ : la journée rapporte +10 % à partir de 7 jours de série,
+ *    +20 % à partir de 30 (le jour de repos entretient la série, cf. streak).
+ *
+ * L'engine attribue l'XP PAR POST (byItem) pour que l'UI affiche le gain réel.
  */
 const XP_BY_TYPE: Record<FeedItemType, number> = {
   session: 50,
@@ -13,17 +23,116 @@ const XP_BY_TYPE: Record<FeedItemType, number> = {
   rest: 10, // la récup fait partie de la progression (vision §8, jamais punitif)
 };
 
+/** Décroissance du n-ième post d'un MÊME type dans la MÊME journée. */
+const REPEAT_MULTIPLIERS = [1, 0.5, 0.2];
+export const DAILY_CAP = 120; // plafond d'XP de base par jour (avant bonus)
+export const VARIETY_BONUS = 15; // ≥ 3 types distincts dans la journée
+const STREAK_BONUS_7 = 0.1;
+const STREAK_BONUS_30 = 0.2;
+
+/** XP de base (« jusqu'à ») d'un type — l'engine applique ensuite les règles. */
 export function xpForType(type: FeedItemType): number {
   return XP_BY_TYPE[type];
 }
 
-/** XP cumulé d'un utilisateur à partir de son feed. */
-export function xpFromFeed(items: readonly FeedItem[], userId: string): number {
-  let xp = 0;
-  for (const item of items) {
-    if (item.authorId === userId) xp += xpForType(item.type);
+export interface XpBreakdown {
+  total: number;
+  /** XP réellement gagné par post (après décroissance / plafond / bonus du jour). */
+  byItem: Map<string, number>;
+}
+
+/**
+ * Calcule l'XP d'un utilisateur depuis son feed, avec attribution par post.
+ * Déterministe : itère les jours chronologiquement (la série se construit au fil
+ * des jours, repos compris) puis applique décroissance → plafond → bonus.
+ */
+export function xpBreakdown(
+  items: readonly FeedItem[],
+  userId: string,
+  tzOffsetMinutes = 0,
+): XpBreakdown {
+  const mine = items
+    .filter((it) => it.authorId === userId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+
+  const byDay = new Map<string, FeedItem[]>();
+  for (const it of mine) {
+    const key = localDayKey(it.createdAt, tzOffsetMinutes);
+    const list = byDay.get(key) ?? [];
+    list.push(it);
+    byDay.set(key, list);
   }
-  return xp;
+
+  const byItem = new Map<string, number>();
+  let total = 0;
+  let streak = 0;
+  let previousDay: string | null = null;
+
+  const days = [...byDay.keys()].sort();
+  for (const day of days) {
+    // Série au fil des jours : consécutif au jour précédent actif = +1, sinon repart à 1.
+    streak = previousDay !== null && isNextDay(previousDay, day) ? streak + 1 : 1;
+    previousDay = day;
+
+    const posts = byDay.get(day) ?? [];
+    const seenOfType = new Map<FeedItemType, number>();
+    const raw: { id: string; xp: number }[] = [];
+    for (const post of posts) {
+      const nth = seenOfType.get(post.type) ?? 0;
+      seenOfType.set(post.type, nth + 1);
+      const mult = REPEAT_MULTIPLIERS[nth] ?? 0;
+      raw.push({ id: post.id, xp: XP_BY_TYPE[post.type] * mult });
+    }
+
+    // Plafond quotidien : on tronque dans l'ordre chronologique.
+    let budget = DAILY_CAP;
+    for (const entry of raw) {
+      const granted = Math.min(entry.xp, budget);
+      budget -= granted;
+      entry.xp = granted;
+    }
+
+    let dayTotal = raw.reduce((sum, entry) => sum + entry.xp, 0);
+
+    // Bonus variété (≥ 3 types distincts) — attribué au dernier post du jour.
+    if (seenOfType.size >= 3 && raw.length > 0) {
+      raw[raw.length - 1].xp += VARIETY_BONUS;
+      dayTotal += VARIETY_BONUS;
+    }
+
+    // Bonus régularité : multiplicateur du jour selon la série courante.
+    const streakMult = streak >= 30 ? 1 + STREAK_BONUS_30 : streak >= 7 ? 1 + STREAK_BONUS_7 : 1;
+    if (streakMult > 1 && dayTotal > 0) {
+      const factor = streakMult;
+      dayTotal = 0;
+      for (const entry of raw) {
+        entry.xp = Math.round(entry.xp * factor);
+        dayTotal += entry.xp;
+      }
+    } else {
+      for (const entry of raw) entry.xp = Math.round(entry.xp);
+      dayTotal = raw.reduce((sum, entry) => sum + entry.xp, 0);
+    }
+
+    for (const entry of raw) byItem.set(entry.id, entry.xp);
+    total += dayTotal;
+  }
+
+  return { total, byItem };
+}
+
+function isNextDay(prev: string, next: string): boolean {
+  const ms = new Date(`${prev}T00:00:00.000Z`).getTime() + 86_400_000;
+  return new Date(ms).toISOString().slice(0, 10) === next;
+}
+
+/** XP cumulé d'un utilisateur à partir de son feed (moteur v2). */
+export function xpFromFeed(
+  items: readonly FeedItem[],
+  userId: string,
+  tzOffsetMinutes = 0,
+): number {
+  return xpBreakdown(items, userId, tzOffsetMinutes).total;
 }
 
 /** XP total requis pour ATTEINDRE un niveau (0, 50, 200, 450, 800…). */
