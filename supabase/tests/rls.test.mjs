@@ -237,6 +237,20 @@ async function main() {
     assert.equal(after.length, 0, 'ne plus suivre retire la visibilité du post solo');
   });
 
+  await step('jour de repos : log_rest crée un post rest, idempotent sur la journée', async () => {
+    const r1 = (await asUser(ALICE, `select public.log_rest(null) as id`)).rows[0].id;
+    const row = (await admin(`select type, group_id, author_id from public.feed_items where id=$1`, [r1])).rows[0];
+    assert.equal(row.type, 'rest');
+    assert.equal(row.group_id, null);
+    assert.equal(row.author_id, ALICE);
+    // Poser deux fois le même jour = no-op (renvoie le même id, pas de doublon).
+    const r2 = (await asUser(ALICE, `select public.log_rest(null) as id`)).rows[0].id;
+    assert.equal(r2, r1, 'repos du jour idempotent');
+    // Dans un groupe : membre OK, non-membre refusé.
+    await asUser(ALICE, `select public.log_rest($1)`, [A.id]);
+    await expectReject(asUser(DAVE, `select public.log_rest($1)`, [A.id]), 'repos dans un groupe non-membre');
+  });
+
   await step('throttle nudge : l\'index unique (émetteur, cible, bucket 12h) bloque le doublon', async () => {
     const b0 = '2026-07-01T00:00:00.000Z';
     const b1 = '2026-07-01T12:00:00.000Z';

@@ -18,6 +18,7 @@ const TABS: { type: FeedItemType; label: string; icon: string }[] = [
   { type: 'session', label: 'Séance', icon: '🏋️' },
   { type: 'steps', label: 'Pas', icon: '👟' },
   { type: 'meal', label: 'Repas', icon: '🥗' },
+  { type: 'rest', label: 'Repos', icon: '😴' },
 ];
 const DURATIONS = [15, 30, 45, 60];
 
@@ -25,6 +26,7 @@ const REWARD_HINT: Record<FeedItemType, string> = {
   session: 'Ta série 🔥 continue et tu approches un palier de ton arbre.',
   steps: 'Ta série 🔥 continue.',
   meal: 'Ta série 🔥 continue. Suivi bienveillant, jamais d\'objectif de poids.',
+  rest: 'Ta série 🔥 est protégée : la récupération fait partie de la progression.',
 };
 
 function toNumber(value: string): number | undefined {
@@ -96,6 +98,8 @@ export function LogScreen({
     try {
       if (type === 'session') {
         await feed.logSession(destGroupId, activity.trim() || 'Séance', duration);
+      } else if (type === 'rest') {
+        await feed.logRest(destGroupId);
       } else if (type === 'steps') {
         const n = toNumber(steps);
         if (n == null || n < 0) {
@@ -135,7 +139,7 @@ export function LogScreen({
 
   // Publier n'est actif que si l'entrée requise du type est renseignée (guide vs erreur).
   const canPublish =
-    type === 'session'
+    type === 'session' || type === 'rest'
       ? true
       : type === 'steps'
         ? (() => {
@@ -228,6 +232,11 @@ export function LogScreen({
               onChangeText={setActivity}
               multiline
             />
+          ) : type === 'rest' ? (
+            <Text style={styles.restText}>
+              Aujourd&apos;hui, c&apos;est repos 😴{'\n'}
+              <Text style={styles.restSub}>Ton streak est protégé — reviens en forme demain.</Text>
+            </Text>
           ) : type === 'steps' ? (
             <TextInput
               style={styles.compose}
@@ -344,6 +353,8 @@ const styles = StyleSheet.create({
   avatar: { width: 44, height: 44, borderRadius: radius.pill, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 18, fontWeight: '800', color: colors.accent },
   compose: { flex: 1, fontSize: 18, color: colors.text, paddingTop: 8, minHeight: 60 },
+  restText: { flex: 1, fontSize: 18, color: colors.text, paddingTop: 8, lineHeight: 26 },
+  restSub: { fontSize: 14, color: colors.textMuted },
   durations: { flexDirection: 'row', gap: 8, paddingLeft: 56 },
   dchip: { paddingHorizontal: 14, paddingVertical: 10, minHeight: 40, justifyContent: 'center', borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   dchipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },

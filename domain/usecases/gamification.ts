@@ -10,6 +10,7 @@ const XP_BY_TYPE: Record<FeedItemType, number> = {
   session: 50,
   steps: 30,
   meal: 20,
+  rest: 10, // la récup fait partie de la progression (vision §8, jamais punitif)
 };
 
 export function xpForType(type: FeedItemType): number {

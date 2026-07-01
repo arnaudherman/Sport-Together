@@ -2,17 +2,19 @@ import { describe, expect, it } from '@jest/globals';
 
 import type { FeedItem } from '@/domain/entities/feed';
 import {
+  capRestDays,
   currentStreak,
   loggedDaysFor,
   localDayKey,
   perfectDays,
   previousDayKey,
+  restDaysFor,
   satisfiedDays,
   streakFromFeed,
 } from '@/domain/usecases/streak';
 
-function feedItem(authorId: string, createdAt: string): FeedItem {
-  return { id: createdAt, groupId: 'g', authorId, authorName: authorId, type: 'session', createdAt, summary: 's' };
+function feedItem(authorId: string, createdAt: string, type: FeedItem['type'] = 'session'): FeedItem {
+  return { id: `${createdAt}-${type}`, groupId: 'g', authorId, authorName: authorId, type, createdAt, summary: 's' };
 }
 
 describe('localDayKey', () => {
@@ -115,6 +117,48 @@ describe('streakFromFeed', () => {
     expect(streakFromFeed(items, 'u1', 0, now)).toBe(2);
     expect(streakFromFeed(items, 'u2', 0, now)).toBe(1);
     expect(streakFromFeed(items, 'inconnu', 0, now)).toBe(0);
+  });
+
+  it('un jour de repos protège le streak (vision §8, non punitif)', () => {
+    const now = '2026-06-30T12:00:00.000Z';
+    const items = [
+      feedItem('u1', '2026-06-28T08:00:00.000Z'), // séance
+      feedItem('u1', '2026-06-29T08:00:00.000Z', 'rest'), // repos posé
+      feedItem('u1', '2026-06-30T08:00:00.000Z'), // séance
+    ];
+    expect(streakFromFeed(items, 'u1', 0, now)).toBe(3); // le repos ne casse pas la série
+  });
+
+  it('les repos sont bornés (2 / 7 jours glissants) — pas de streak farmable au repos', () => {
+    const now = '2026-06-30T12:00:00.000Z';
+    const items = [
+      feedItem('u1', '2026-06-26T08:00:00.000Z'), // séance
+      feedItem('u1', '2026-06-27T08:00:00.000Z', 'rest'),
+      feedItem('u1', '2026-06-28T08:00:00.000Z', 'rest'),
+      feedItem('u1', '2026-06-29T08:00:00.000Z', 'rest'), // 3e repos de la fenêtre : ignoré
+      feedItem('u1', '2026-06-30T08:00:00.000Z'), // séance
+    ];
+    // La chaîne casse au 29 (repos non compté) : streak = 1 (aujourd'hui seulement).
+    expect(streakFromFeed(items, 'u1', 0, now)).toBe(1);
+  });
+});
+
+describe('restDaysFor / capRestDays', () => {
+  it('sépare jours de repos et jours d\'activité', () => {
+    const items = [
+      feedItem('u1', '2026-06-29T08:00:00.000Z', 'rest'),
+      feedItem('u1', '2026-06-30T08:00:00.000Z'),
+    ];
+    expect([...restDaysFor(items, 'u1', 0)]).toEqual(['2026-06-29']);
+    expect([...loggedDaysFor(items, 'u1', 0)]).toEqual(['2026-06-30']);
+  });
+
+  it('borne à 2 repos par fenêtre de 7 jours (chronologique)', () => {
+    const rest = new Set(['2026-06-25', '2026-06-26', '2026-06-28', '2026-07-03']);
+    const capped = capRestDays(rest);
+    // 25 et 26 gardés ; 28 = 3e repos dans la fenêtre [22/06..28/06] -> ignoré ;
+    // 03/07 : sa fenêtre [27/06..03/07] ne contient aucun repos gardé -> gardé.
+    expect([...capped].sort()).toEqual(['2026-06-25', '2026-06-26', '2026-07-03']);
   });
 });
 

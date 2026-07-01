@@ -77,6 +77,10 @@ export class InMemoryFeedRepository implements FeedRepository {
     this.push(groupId, 'meal', `${meal.label}${calories}`);
   }
 
+  async logRest(groupId: string | null): Promise<void> {
+    this.push(groupId, 'rest', 'Jour de repos 😴');
+  }
+
   async deletePost(feedItemId: string): Promise<void> {
     this.items = this.items.filter((item) => item.id !== feedItemId);
   }

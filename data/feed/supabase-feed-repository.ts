@@ -13,7 +13,7 @@ type OneOrMany<T> = T | T[] | null;
 
 interface FeedRow {
   id: string;
-  group_id: string;
+  group_id: string | null; // null = post solo (timeline perso)
   author_id: string | null;
   type: FeedItemType;
   created_at: string;
@@ -47,6 +47,7 @@ function summarize(row: FeedRow): string {
     const s = pickOne(row.step_logs);
     return s ? `${s.steps} pas` : 'Pas';
   }
+  if (row.type === 'rest') return 'Jour de repos 😴'; // pas de table de détail
   const m = pickOne(row.meals);
   if (!m) return 'Repas';
   return m.calories_kcal != null ? `${m.label} · ${m.calories_kcal} kcal` : m.label;
@@ -69,7 +70,7 @@ function reactionSummary(rows: FeedRow['reactions'], viewerId: string): Reaction
 function mapRow(row: FeedRow, viewerId: string): FeedItem {
   return {
     id: row.id,
-    groupId: row.group_id,
+    groupId: row.group_id ?? 'solo', // même convention que le mock (post sans groupe)
     authorId: row.author_id ?? '',
     authorName: pickOne(row.author)?.pseudo ?? 'Membre supprimé',
     type: row.type,
@@ -150,6 +151,11 @@ export class SupabaseFeedRepository implements FeedRepository {
       p_carbs_g: meal.carbsG ?? null,
       p_fat_g: meal.fatG ?? null,
     });
+    if (error) throw new Error(error.message);
+  }
+
+  async logRest(groupId: string | null): Promise<void> {
+    const { error } = await this.client.rpc('log_rest', { p_group_id: groupId });
     if (error) throw new Error(error.message);
   }
 

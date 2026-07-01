@@ -22,6 +22,8 @@ export interface FeedRepository {
   logSteps(groupId: string | null, steps: number): Promise<void>;
   /** Logge un repas (valider avec validateMeal en amont). `groupId` null = post solo. */
   logMeal(groupId: string | null, meal: MealInput): Promise<void>;
+  /** Pose un jour de repos (protège le streak — vision §8). `groupId` null = post solo. */
+  logRest(groupId: string | null): Promise<void>;
   /** Supprime un post (réservé à son auteur par la RLS). */
   deletePost(feedItemId: string): Promise<void>;
 }

@@ -51,7 +51,7 @@ export function currentStreak(
   return streak;
 }
 
-/** Jours (clés locales) où un utilisateur a loggé au moins un goal. */
+/** Jours (clés locales) où un utilisateur a loggé au moins un goal (hors repos). */
 export function loggedDaysFor(
   items: readonly FeedItem[],
   userId: string,
@@ -59,11 +59,46 @@ export function loggedDaysFor(
 ): Set<string> {
   const days = new Set<string>();
   for (const item of items) {
-    if (item.authorId === userId) {
+    if (item.authorId === userId && item.type !== 'rest') {
       days.add(localDayKey(item.createdAt, tzOffsetMinutes));
     }
   }
   return days;
+}
+
+/** Jours (clés locales) où un utilisateur a posé un jour de repos. */
+export function restDaysFor(
+  items: readonly FeedItem[],
+  userId: string,
+  tzOffsetMinutes: number,
+): Set<string> {
+  const days = new Set<string>();
+  for (const item of items) {
+    if (item.authorId === userId && item.type === 'rest') {
+      days.add(localDayKey(item.createdAt, tzOffsetMinutes));
+    }
+  }
+  return days;
+}
+
+/**
+ * Borne bienveillante des jours de repos : au plus `maxPerWindow` repos comptés
+ * par fenêtre glissante de `windowDays` jours (chronologique). Le repos protège
+ * le streak sans permettre de l'entretenir indéfiniment sans bouger.
+ */
+export function capRestDays(
+  restDays: ReadonlySet<string>,
+  maxPerWindow = 2,
+  windowDays = 7,
+): Set<string> {
+  const sorted = [...restDays].filter((d) => DAY_KEY.test(d)).sort();
+  const kept: string[] = [];
+  for (const day of sorted) {
+    const windowStartMs = new Date(`${day}T00:00:00.000Z`).getTime() - (windowDays - 1) * 86_400_000;
+    const inWindow = kept.filter((k) => new Date(`${k}T00:00:00.000Z`).getTime() >= windowStartMs);
+    if (inWindow.length < maxPerWindow) kept.push(day);
+  }
+  return new Set(kept);
 }
 
 /** Union des jours loggés et des jours de repos (jours « satisfaits »). */
@@ -75,8 +110,9 @@ export function satisfiedDays(
 }
 
 /**
- * Streak personnel calculé directement depuis un feed : nombre de jours
- * consécutifs (finissant aujourd'hui ou hier) où l'utilisateur a loggé un goal.
+ * Streak personnel calculé directement depuis un feed : jours consécutifs
+ * (finissant aujourd'hui ou hier) où l'utilisateur a loggé un goal OU posé un
+ * jour de repos (borné à 2 repos / 7 jours glissants — non punitif, non farmable).
  */
 export function streakFromFeed(
   items: readonly FeedItem[],
@@ -85,8 +121,9 @@ export function streakFromFeed(
   nowIso: string,
 ): number {
   const todayKey = localDayKey(nowIso, tzOffsetMinutes);
-  const days = loggedDaysFor(items, userId, tzOffsetMinutes);
-  return currentStreak(days, todayKey);
+  const logged = loggedDaysFor(items, userId, tzOffsetMinutes);
+  const rest = capRestDays(restDaysFor(items, userId, tzOffsetMinutes));
+  return currentStreak(satisfiedDays(logged, rest), todayKey);
 }
 
 /**

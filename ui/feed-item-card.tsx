@@ -11,6 +11,7 @@ const TYPE_LABEL: Record<FeedItem['type'], string> = {
   session: 'Séance',
   steps: 'Pas',
   meal: 'Repas',
+  rest: 'Repos',
 };
 
 const REACTIONS: { kind: ReactionKind; emoji: string }[] = [
@@ -25,6 +26,7 @@ export function FeedItemCard({
   onPressAuthor,
   onOpenComments,
   onOpenGroup,
+  onShare,
   onDelete,
 }: {
   item: FeedItem;
@@ -32,6 +34,7 @@ export function FeedItemCard({
   onPressAuthor?: () => void;
   onOpenComments?: () => void;
   onOpenGroup?: () => void;
+  onShare?: () => void;
   onDelete?: () => void;
 }) {
   const reactions = item.reactions ?? EMPTY_REACTIONS;

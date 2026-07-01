@@ -6,7 +6,8 @@
  * (séance, repas…) vivent dans des types/tables dédiés reliés à l'entrée.
  */
 
-export type FeedItemType = 'session' | 'steps' | 'meal';
+/** `rest` = jour de repos posé (vision §8 : la récup fait partie de la progression). */
+export type FeedItemType = 'session' | 'steps' | 'meal' | 'rest';
 
 /** Réactions positives uniquement (vision §8 : jamais punitif). */
 export type ReactionKind = 'kudos' | 'encouragement';

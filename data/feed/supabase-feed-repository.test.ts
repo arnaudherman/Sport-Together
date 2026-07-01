@@ -21,9 +21,11 @@ describe('SupabaseFeedRepository — contrat de publication', () => {
     const repo = new SupabaseFeedRepository(client);
     await repo.logSession(null, 'Course', 25);
     await repo.logSteps(null, 100);
-    expect(calls.map((c) => c.name)).toEqual(['log_session', 'log_steps']);
+    await repo.logRest(null);
+    expect(calls.map((c) => c.name)).toEqual(['log_session', 'log_steps', 'log_rest']);
     expect(calls[0].params).toEqual({ p_group_id: null, p_activity: 'Course', p_duration_min: 25 });
     expect(calls[1].params).toEqual({ p_group_id: null, p_steps: 100 });
+    expect(calls[2].params).toEqual({ p_group_id: null });
   });
 
   it('appelle log_session avec le bon groupe quand groupId est fourni', async () => {
