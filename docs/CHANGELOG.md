@@ -6,6 +6,19 @@ pas encore versionné (pré-MVP) ; entrées par date. Détail des décisions dan
 
 ## [Non publié]
 
+### 2026-07-01 — Maintenabilité : mutualisation (dette de l'audit qualité)
+
+- **`useAsyncData`** : hook mutualisant le cycle *mounted-ref + load + loading/erreur +
+  reload*, adopté dans **feed-view / profil / groupe / découvrir** (~120 lignes de
+  boilerplate dupliqué en moins ; le bug latent de garde de démontage devient impossible).
+- **`FollowButton`** : composant self-contained (charge son état + toggle optimiste) —
+  supprime la duplication du bouton Suivre entre profil et Découvrir.
+- **`Avatar`** + **`ScreenHeader`** : composants partagés (cercle-avatar déterministe ×5,
+  en-tête « ‹ Retour » ×3 avec largeurs homogénéisées).
+- **`SupabaseFeedRepository.listFeed(filter?)`** : les 3 quasi-clones
+  `listHome/Group/UserFeed` factorisés en une méthode (filtre typé, sans `any`).
+- Comportement inchangé partout — gate vert (78 tests + 17 RLS + bundle).
+
 ### 2026-07-01 — Durcissements sécurité backend (Edge Functions)
 
 - **`nudge`** : throttle anti-harcèlement rendu **atomique** (index UNIQUE sur un bucket de

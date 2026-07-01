@@ -96,39 +96,30 @@ export class SupabaseFeedRepository implements FeedRepository {
     return data.session?.user.id ?? '';
   }
 
-  async listHomeFeed(): Promise<FeedItem[]> {
-    // Pas de filtre groupe : la RLS ne renvoie que les entrées visibles par
-    // l'utilisateur (ses groupes ; abonnements à venir). Solo-first.
+  /**
+   * Lecture générique du feed (les 3 variantes ne diffèrent que par un `.eq()`). La RLS
+   * restreint en plus à ce qui est visible par l'utilisateur (groupes + abonnements).
+   */
+  private async listFeed(filter?: { column: 'group_id' | 'author_id'; value: string }): Promise<FeedItem[]> {
     const viewerId = await this.viewerId();
-    const { data, error } = await this.client
-      .from('feed_items')
-      .select(FEED_SELECT)
-      .order('created_at', { ascending: false });
+    let query = this.client.from('feed_items').select(FEED_SELECT);
+    if (filter) query = query.eq(filter.column, filter.value);
+    const { data, error } = await query.order('created_at', { ascending: false });
     if (error) throw new Error(error.message);
     return ((data ?? []) as unknown as FeedRow[]).map((row) => mapRow(row, viewerId));
   }
 
-  async listGroupFeed(groupId: string): Promise<FeedItem[]> {
-    const viewerId = await this.viewerId();
-    const { data, error } = await this.client
-      .from('feed_items')
-      .select(FEED_SELECT)
-      .eq('group_id', groupId)
-      .order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return ((data ?? []) as unknown as FeedRow[]).map((row) => mapRow(row, viewerId));
+  // Accueil solo-first : pas de filtre groupe, la RLS scope au visible.
+  listHomeFeed(): Promise<FeedItem[]> {
+    return this.listFeed();
   }
 
-  async listUserFeed(userId: string): Promise<FeedItem[]> {
-    // Posts d'un utilisateur (pour son profil) ; la RLS filtre à ce qui est visible.
-    const viewerId = await this.viewerId();
-    const { data, error } = await this.client
-      .from('feed_items')
-      .select(FEED_SELECT)
-      .eq('author_id', userId)
-      .order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
-    return ((data ?? []) as unknown as FeedRow[]).map((row) => mapRow(row, viewerId));
+  listGroupFeed(groupId: string): Promise<FeedItem[]> {
+    return this.listFeed({ column: 'group_id', value: groupId });
+  }
+
+  listUserFeed(userId: string): Promise<FeedItem[]> {
+    return this.listFeed({ column: 'author_id', value: userId });
   }
 
   // Publier en solo (group_id null) exige une timeline perso côté backend (backlog).
