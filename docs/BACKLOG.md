@@ -73,6 +73,21 @@
 - [ ] **CI** : ajouter un job e2e contre un Supabase éphémère (aujourd'hui : quality +
   db-tests RLS + edge-functions lint).
 
+## Reliquat de la grande autocritique du 2026-07-02 (findings non bloquants)
+
+- [ ] **Worker de purge photos** : `photo_purge_queue` est alimentée (suppression de post,
+  remplacement de photo) mais pas encore drainée — Edge Function service-role schedulée
+  (pg_cron/pg_net) qui `storage.remove` par lots ; purger aussi les photos dans
+  `delete_account`. (Les limites de bucket — 5 Mo, jpeg/png/webp — sont en place.)
+- [ ] **DST / fuseaux historiques** : les clés de jour utilisent l'offset ACTUEL du device
+  sur des timestamps passés — au changement d'heure, streak/XP/tendances peuvent bouger
+  d'un jour aux frontières de nuit. Résoudre l'offset PAR timestamp (Intl.DateTimeFormat).
+- [ ] **XP sensible à la magnitude** : proratiser les pas (`min(1, steps/4000)`), exiger un
+  contenu utile pour l'XP repas — SANS formulation punitive dans l'UI (garde-fous TCA).
+- [ ] **Composer en vraie modal sheet** (Modal pageSheet iOS) — aujourd'hui : look sheet
+  (poignée + coins 28) dans la pile.
+- [ ] **Realtime** sur le rail « En ce moment » (aujourd'hui : dérivé du fil, <1 h).
+
 ## Dette / à surveiller
 
 - Le mode **mock** est le défaut de dev (faux user) ; ne pas oublier de tester

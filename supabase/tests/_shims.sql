@@ -33,7 +33,10 @@ create schema if not exists storage;
 create table if not exists storage.buckets (
   id     text primary key,
   name   text,
-  public boolean
+  public boolean,
+  -- colonnes du vrai storage.buckets utilisées par nos migrations (limites d'upload)
+  file_size_limit    bigint,
+  allowed_mime_types text[]
 );
 create table if not exists storage.objects (
   id        uuid primary key default gen_random_uuid(),

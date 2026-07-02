@@ -4,24 +4,25 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { useFeedRepository } from '@/core/di/repositories-context';
 import type { FeedItemType } from '@/domain/entities/feed';
-import { celebrationFor, type Celebration, type ProgressSnapshot } from '@/domain/usecases/celebration';
-import { xpForType, xpFromFeed } from '@/domain/usecases/gamification';
+import { celebrationFor, progressSnapshot, type Celebration, type ProgressSnapshot } from '@/domain/usecases/celebration';
+import { levelProgress, xpForType } from '@/domain/usecases/gamification';
 import { validateMeal } from '@/domain/usecases/nutrition';
-import { sessionsUnlocked } from '@/domain/usecases/skill-graph';
 import { CelebrationOverlay } from '@/ui/celebration-overlay';
-import { avatarColor, initial } from '@/ui/format';
+import { Ring } from '@/ui/ring';
+import { Surface } from '@/ui/surface';
+import { Avatar } from '@/ui/avatar';
 import { colors, font, radius } from '@/ui/theme';
 
-const TABS: { type: FeedItemType; label: string; icon: string }[] = [
-  { type: 'session', label: 'Séance', icon: '🏋️' },
-  { type: 'steps', label: 'Pas', icon: '👟' },
-  { type: 'meal', label: 'Repas', icon: '🥗' },
-  { type: 'rest', label: 'Repos', icon: '😴' },
-  { type: 'sleep', label: 'Sommeil', icon: '🌙' },
+const TABS: { type: FeedItemType; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { type: 'session', label: 'Séance', icon: 'barbell-outline' },
+  { type: 'steps', label: 'Pas', icon: 'footsteps-outline' },
+  { type: 'meal', label: 'Repas', icon: 'restaurant-outline' },
+  { type: 'rest', label: 'Repos', icon: 'bed-outline' },
+  { type: 'sleep', label: 'Sommeil', icon: 'moon-outline' },
 ];
 const DURATIONS = [15, 30, 45, 60];
 const SLEEP_HOURS = [6, 7, 8, 9];
@@ -45,12 +46,14 @@ export function LogScreen({
   groups,
   userId,
   pseudo,
+  avatarUrl,
   onDone,
   onCancel,
 }: {
   groups: { id: string; name: string }[];
   userId: string;
   pseudo: string;
+  avatarUrl?: string;
   onDone: () => void;
   onCancel: () => void;
 }) {
@@ -80,7 +83,7 @@ export function LogScreen({
     feed
       .listUserFeed(userId)
       .then((items) => {
-        before.current = { xp: xpFromFeed(items, userId, tz), unlocked: sessionsUnlocked(items, userId, tz) };
+        before.current = progressSnapshot(items, userId, tz);
       })
       .catch(() => {});
     return () => {
@@ -92,8 +95,7 @@ export function LogScreen({
     if (!before.current) return null;
     try {
       const items = await feed.listUserFeed(userId);
-      const after = { xp: xpFromFeed(items, userId, tz), unlocked: sessionsUnlocked(items, userId, tz) };
-      return celebrationFor(before.current, after);
+      return celebrationFor(before.current, progressSnapshot(items, userId, tz));
     } catch {
       return null;
     }
@@ -150,7 +152,14 @@ export function LogScreen({
         onDone();
       }
     } catch (e) {
-      setError((e as Error).message);
+      const message = (e as Error).message;
+      if (message.startsWith('Publication créée')) {
+        // La publication a réussi, seule la photo a échoué : on ne bloque pas.
+        Alert.alert('Publié sans la photo', message);
+        onDone();
+      } else {
+        setError(message);
+      }
     } finally {
       if (mounted.current) setBusy(false);
     }
@@ -167,11 +176,13 @@ export function LogScreen({
           })()
         : mealLabel.trim().length > 0;
   const off = busy || !canPublish;
-  const av = avatarColor(userId);
   const destName = destGroupId ? groups.find((g) => g.id === destGroupId)?.name ?? 'ton groupe' : null;
+  const rewardRatio = before.current ? levelProgress(before.current.xp).ratio : 0;
 
   return (
-    <View style={styles.container}>
+    <View style={styles.root}>
+      <View style={styles.sheet}>
+      <View style={styles.handle} />
       <View style={styles.bar}>
         <Pressable onPress={onCancel} hitSlop={10} accessibilityRole="button" accessibilityLabel="Annuler">
           <Text style={styles.cancel}>Annuler</Text>
@@ -231,7 +242,7 @@ export function LogScreen({
                 accessibilityState={{ selected: on }}
                 accessibilityLabel={t.label}
               >
-                <Text style={styles.chipIcon}>{t.icon}</Text>
+                <Ionicons name={t.icon} size={17} color={on ? colors.accent : colors.textMuted} />
                 <Text style={[styles.chipText, on && styles.chipTextOn]}>{t.label}</Text>
               </Pressable>
             );
@@ -239,9 +250,7 @@ export function LogScreen({
         </View>
 
         <View style={styles.composeRow}>
-          <View style={[styles.avatar, { backgroundColor: av.bg }]}>
-            <Text style={[styles.avatarText, { color: av.fg }]}>{initial(pseudo || 'T')}</Text>
-          </View>
+          <Avatar name={pseudo || 'T'} seed={userId} size={44} url={avatarUrl} />
           {type === 'session' ? (
             <TextInput
               style={styles.compose}
@@ -353,21 +362,18 @@ export function LogScreen({
           </View>
         ) : null}
 
-        <LinearGradient
-          colors={['rgba(255,90,31,0.20)', 'rgba(255,90,31,0.04)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.reward}
-        >
-          <View style={styles.rewardRow}>
-            <View style={styles.rewardLabelRow}>
-              <Ionicons name="flash" size={16} color={colors.accent} />
+        <Surface>
+          <View style={styles.reward}>
+            <Ring ratio={rewardRatio} value={`${Math.round(rewardRatio * 100)}%`} caption="niveau" size={56} stroke={5.5} />
+            <View style={styles.rewardBody}>
               <Text style={styles.rewardLabel}>Récompense</Text>
+              <Text style={styles.rewardXp}>
+                jusqu’à <Text style={styles.rewardXpNum}>+{xpForType(type)}</Text> XP
+              </Text>
+              <Text style={styles.rewardHint}>{REWARD_HINT[type]}</Text>
             </View>
-            <Text style={styles.rewardXp}>jusqu’à +{xpForType(type)} XP</Text>
           </View>
-          <Text style={styles.rewardHint}>{REWARD_HINT[type]}</Text>
-        </LinearGradient>
+        </Surface>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <Text style={styles.foot}>
@@ -376,12 +382,15 @@ export function LogScreen({
       </ScrollView>
 
       <CelebrationOverlay celebration={celebration} onDismiss={onDone} />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
+  root: { flex: 1, backgroundColor: colors.bg, paddingTop: 46 },
+  sheet: { flex: 1, borderTopLeftRadius: 28, borderTopRightRadius: 28, overflow: 'hidden', backgroundColor: '#12151D' },
+  handle: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: colors.track, marginTop: 10, marginBottom: 2 },
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -402,25 +411,23 @@ const styles = StyleSheet.create({
   dest: { gap: 8 },
   destLabel: { ...font.label },
   destChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  destChip: { paddingHorizontal: 14, paddingVertical: 9, minHeight: 40, justifyContent: 'center', borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  destChip: { paddingHorizontal: 14, paddingVertical: 9, minHeight: 40, justifyContent: 'center', borderRadius: radius.pill, backgroundColor: colors.surface },
   destChipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
   destChipText: { color: colors.textMuted, fontWeight: '700', fontSize: 13 },
   destChipTextOn: { color: colors.accent },
   chips: { flexDirection: 'row', gap: 8 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 10, minHeight: 44, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  chipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 10, minHeight: 44, borderRadius: radius.pill, backgroundColor: colors.surface },
+  chipOn: { backgroundColor: colors.accentSoft, borderWidth: 1.5, borderColor: colors.accent },
   chipIcon: { fontSize: 15 },
   chipText: { color: colors.textMuted, fontWeight: '700' },
   chipTextOn: { color: colors.accent },
   composeRow: { flexDirection: 'row', gap: 12 },
-  avatar: { width: 44, height: 44, borderRadius: radius.pill, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 18, fontWeight: '800', color: colors.accent },
   compose: { flex: 1, fontSize: 18, color: colors.text, paddingTop: 8, minHeight: 60 },
   restText: { flex: 1, fontSize: 18, color: colors.text, paddingTop: 8, lineHeight: 26 },
   restSub: { fontSize: 14, color: colors.textMuted },
   durations: { flexDirection: 'row', gap: 8, paddingLeft: 56 },
-  dchip: { paddingHorizontal: 14, paddingVertical: 10, minHeight: 40, justifyContent: 'center', borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  dchipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
+  dchip: { paddingHorizontal: 14, paddingVertical: 10, minHeight: 40, justifyContent: 'center', borderRadius: radius.pill, backgroundColor: colors.surface },
+  dchipOn: { backgroundColor: colors.accentSoft, borderWidth: 1.5, borderColor: colors.accent },
   dchipText: { color: colors.textMuted, fontWeight: '700' },
   dchipTextOn: { color: colors.accent },
   macros: { flexDirection: 'row', gap: 8, paddingLeft: 56 },
@@ -431,11 +438,11 @@ const styles = StyleSheet.create({
   photoWrap: { position: 'relative' },
   photoPreview: { width: 132, height: 74, borderRadius: radius.sm },
   photoRemove: { position: 'absolute', top: -7, right: -7, width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(10,12,16,0.9)', alignItems: 'center', justifyContent: 'center' },
-  reward: { borderRadius: radius.md, padding: 16, gap: 6, borderWidth: 1, borderColor: 'rgba(255,90,31,0.22)' },
-  rewardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  rewardLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  reward: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 18, paddingVertical: 16 },
+  rewardBody: { flex: 1 },
   rewardLabel: { ...font.label },
-  rewardXp: { color: colors.accent, fontWeight: '800', fontSize: 24 },
+  rewardXp: { color: colors.textMuted, fontSize: 13, marginTop: 3 },
+  rewardXpNum: { ...font.stat, fontSize: 28, color: colors.accent },
   rewardHint: { color: colors.textMuted, fontSize: 13, lineHeight: 18 },
   error: { color: colors.danger, fontSize: 14 },
   foot: { color: colors.textMuted, fontSize: 13 },

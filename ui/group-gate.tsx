@@ -10,6 +10,7 @@ import { ScreenHeader } from '@/ui/screen-header';
 import { Surface } from '@/ui/surface';
 import { colors, font, radius } from '@/ui/theme';
 import { useAsyncData } from '@/ui/use-async-data';
+import { useDebounced } from '@/ui/use-debounced';
 
 type Seg = 'mine' | 'discover';
 
@@ -53,6 +54,8 @@ export function GroupGate({
       if (mounted.current) setError((e as Error).message);
     }
   }
+
+  const fireLoadPublics = useDebounced(loadPublics);
 
   function openDiscover() {
     setSeg('discover');
@@ -214,7 +217,7 @@ export function GroupGate({
                 value={search}
                 onChangeText={(t) => {
                   setSearch(t);
-                  loadPublics(t);
+                  fireLoadPublics(t);
                 }}
                 autoCorrect={false}
               />

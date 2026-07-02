@@ -20,4 +20,5 @@ export interface PublicGroup {
 export interface GroupMember {
   id: string;
   pseudo: string;
+  avatarUrl?: string;
 }

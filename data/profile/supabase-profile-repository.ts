@@ -68,17 +68,19 @@ export class SupabaseProfileRepository implements ProfileRepository {
     const { data: session } = await this.client.auth.getSession();
     const uid = session.session?.user.id;
     if (!uid) throw new Error('Non authentifié');
-    const path = `${uid}/avatar-${Date.now()}.jpg`;
+    const path = `${uid}/avatar.jpg`; // chemin fixe + upsert (pas d'accumulation publique)
+    // RN : Blob n'est pas fiable avec storage-js (objets vides) -> ArrayBuffer.
     const response = await fetch(localUri);
-    const blob = await response.blob();
+    const body = await response.arrayBuffer();
     const { error: upErr } = await this.client.storage
       .from('avatars')
-      .upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: true });
+      .upload(path, body, { contentType: 'image/jpeg', upsert: true });
     if (upErr) throw new Error(upErr.message);
     const { data: pub } = this.client.storage.from('avatars').getPublicUrl(path);
+    const bustedUrl = `${pub.publicUrl}?v=${Date.now()}`; // cache-bust (le chemin ne change plus)
     const { data, error } = await this.client
       .from('profiles')
-      .update({ avatar_url: pub.publicUrl })
+      .update({ avatar_url: bustedUrl })
       .eq('id', uid)
       .select(PROFILE_SELECT)
       .single();

@@ -95,6 +95,15 @@ describe('gamification v2 — moteur XP', () => {
     expect(xpFromFeed(items, 'u1')).toBe(6 * 50 + 55 + 50);
   });
 
+  it('le bonus régularité ne se farme PAS au repos (repos borné 2/7 comme le streak affiché)', () => {
+    // 10 jours de repos consécutifs : seuls 2/7 comptent comme satisfaits ->
+    // jamais 7 jours de série -> aucun bonus (10 XP/jour plats).
+    const restOnly = Array.from({ length: 10 }, (_, i) =>
+      item(`r${i}`, 'u1', 'rest', String(10 + i).padStart(2, '0')),
+    );
+    expect(xpFromFeed(restOnly, 'u1')).toBe(10 * 10);
+  });
+
   it('mappe XP <-> niveau de façon cohérente', () => {
     expect(levelForXp(0)).toBe(0);
     expect(levelForXp(50)).toBe(1);

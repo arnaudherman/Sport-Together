@@ -29,9 +29,9 @@ export class InMemoryGroupRepository implements GroupRepository {
     // Membres de démo (les mêmes auteurs que DEMO_FEED) + toi.
     return [
       { id: 'local-user', pseudo: 'Moi' },
-      { id: 'u-lea', pseudo: 'Léa' },
-      { id: 'u-sam', pseudo: 'Sam' },
-      { id: 'u-noa', pseudo: 'Noa' },
+      { id: 'u-lea', pseudo: 'Léa', avatarUrl: 'https://i.pravatar.cc/96?img=47' },
+      { id: 'u-sam', pseudo: 'Sam', avatarUrl: 'https://i.pravatar.cc/96?img=33' },
+      { id: 'u-noa', pseudo: 'Noa', avatarUrl: 'https://i.pravatar.cc/96?img=68' },
     ];
   }
 

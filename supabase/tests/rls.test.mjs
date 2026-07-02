@@ -193,23 +193,22 @@ async function main() {
     assert.equal(groups.length, 0);
   });
 
-  await step('abonnements : suivre expose les posts d\'un non-co-membre, sans ouvrir le groupe', async () => {
-    // dave n'est dans aucun groupe et ne voit rien de A (cf. test précédent).
-    // Il suit alice -> il voit désormais ses publications + leurs détails + son profil.
+  await step('abonnements : suivre expose le SOLO seulement — jamais les groupes privés', async () => {
+    // CORRECTIF DE FUITE (autocritique) : un follow unilatéral n'ouvre PAS les
+    // posts de groupe privé de la cible (macros de repas comprises).
     await asUser(DAVE, `insert into public.follows (follower_id, followee_id) values ($1,$2)`, [DAVE, ALICE]);
-    const seen = (await asUser(DAVE, `select id from public.feed_items where author_id=$1`, [ALICE])).rows;
-    assert.ok(seen.length >= 1, 'dave voit les publications d\'alice qu\'il suit');
-    const sess = (await asUser(DAVE, `select feed_item_id from public.sessions`)).rows;
-    assert.ok(sess.length >= 1, 'dave voit le détail (session) d\'une publication visible');
+    const groupPosts = (await asUser(DAVE, `select id from public.feed_items where author_id=$1 and group_id is not null`, [ALICE])).rows;
+    assert.equal(groupPosts.length, 0, 'les posts de GROUPE d\'alice restent invisibles à un simple abonné');
+    const meals = (await asUser(DAVE, `select feed_item_id from public.meals`)).rows;
+    assert.equal(meals.length, 0, 'les macros de repas de groupe ne fuient pas via le follow');
+    // Le profil (pseudo/bio) d'un suivi reste visible — voulu.
     const prof = (await asUser(DAVE, `select id from public.profiles where id=$1`, [ALICE])).rows;
     assert.equal(prof.length, 1, 'dave voit le profil d\'alice qu\'il suit');
-    // Mais suivre n'ouvre PAS l'accès au groupe (visibilité, pas adhésion).
+    // Suivre n'ouvre pas non plus l'accès au groupe lui-même.
     const grp = (await asUser(DAVE, `select id from public.groups where id=$1`, [A.id])).rows;
     assert.equal(grp.length, 0, 'suivre n\'ouvre pas l\'accès au groupe');
-    // Ne plus suivre retire la visibilité (l'isolation revient).
+    // (La visibilité POSITIVE du solo par un abonné est prouvée au step « timeline perso ».)
     await asUser(DAVE, `delete from public.follows where follower_id=$1 and followee_id=$2`, [DAVE, ALICE]);
-    const after = (await asUser(DAVE, `select id from public.feed_items where author_id=$1`, [ALICE])).rows;
-    assert.equal(after.length, 0, 'ne plus suivre retire la visibilité');
   });
 
   await step('timeline perso : post solo (group_id null) visible par soi + abonnés seulement', async () => {

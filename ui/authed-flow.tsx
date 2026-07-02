@@ -190,8 +190,8 @@ export function AuthedFlow({ userId }: { userId: string }) {
       return (
         <GroupGate
           onBack={isRoot ? undefined : pop}
-          onReady={(id) => {
-            loadGroups();
+          onReady={async (id) => {
+            await loadGroups(); // méta (nom, créateur, visibilité) prêtes avant d'ouvrir
             push({ group: { id } });
           }}
         />
@@ -205,6 +205,7 @@ export function AuthedFlow({ userId }: { userId: string }) {
           groups={groupList}
           userId={userId}
           pseudo={profile ? profile.pseudo : ''}
+          avatarUrl={profile?.avatarUrl}
           onDone={pop}
           onCancel={pop}
         />
@@ -215,6 +216,7 @@ export function AuthedFlow({ userId }: { userId: string }) {
       <FeedView
         userId={userId}
         pseudo={profile ? profile.pseudo : ''}
+        avatarUrl={profile?.avatarUrl}
         onOpenProfile={(id, name) => push({ profile: { id, name } })}
         onOpenLog={() => push('log')}
         onOpenComments={(item) => push({ comments: { item } })}

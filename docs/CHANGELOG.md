@@ -6,6 +6,33 @@ pas encore versionné (pré-MVP) ; entrées par date. Détail des décisions dan
 
 ## [Non publié]
 
+### 2026-07-02 — Grande autocritique finale (28 agents) : 12 findings corrigés dont une fuite RLS
+
+- **FUITE CORRIGÉE (haute)** : suivre quelqu'un (unilatéral) ouvrait TOUS ses posts, y
+  compris ceux de ses **groupes privés** (macros de repas comprises) — et l'annuaire
+  `search_profiles` rendait l'attaque triviale. Le follow n'expose plus que la **timeline
+  perso** (posts solo) ; les posts de groupe restent réservés aux membres (migration
+  `fix_follow_leak`, harnais réécrit qui verrouille le bon sens).
+- **Photos réparées sur device natif** : `fetch().blob()` ne marche pas en RN avec
+  storage-js → **ArrayBuffer** ; échec photo devenu **non-fatal** (le post reste publié,
+  alerte + pas de doublon) ; avatar en **chemin fixe + upsert** (fini l'accumulation
+  publique) ; **limites de bucket** (5 Mo, jpeg/png/webp) ; `attach_photo` met l'ancienne
+  photo en file de purge.
+- **Célébration ressuscitée** : elle mourait à 11 jours (snapshot plafonné par l'ancien
+  arbre Muscu) — snapshots **par domaine de vie** (`progressSnapshot`), tous les paliers
+  célèbrent (« Le pli est pris » à 15 j, « Première nuit suivie »…) ; `skill-graph`
+  supprimé (plus aucun consommateur).
+- **XP cohérent** : le bonus régularité utilise les MÊMES primitives que le streak affiché
+  (repos borné 2/7) — poster uniquement des repos ne construit plus de bonus.
+- **DA** : PrimaryButton en dégradé accent + ombre, composer en look sheet (poignée, coins
+  28, module récompense Surface+Ring+chiffre ultra-light, chips sans bordure au repos,
+  Ionicons), cartes du groupe sans bordure dure, avatars photo partout (en-tête accueil,
+  composer, membres du groupe, suggestions), onglet **Médias** en vraie grille de photos.
+- **UX** : recherches **débouncées** (350 ms) + `list_public_groups` rate-limité ; méta de
+  groupe chargées avant d'ouvrir l'écran (isCreator correct après création) ; la section
+  Groupes du profil n'apparaît que sur SON profil.
+- Reliquat tracé au backlog (worker de purge, DST, prorata pas, vraie modal, realtime).
+
 ### 2026-07-02 — Refonte « Obsidienne » + sprint produit (target redéfinie avec le porteur)
 
 - **Nouvelle DA verrouillée** : sport premium Whoop nocturne (maquette

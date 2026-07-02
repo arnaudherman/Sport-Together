@@ -1,6 +1,7 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
-import { colors, font, radius } from '@/ui/theme';
+import { colors, font, gradients, radius } from '@/ui/theme';
 
 /** CTA principal (DA) : pilule orange pleine. */
 export function PrimaryButton({
@@ -17,14 +18,16 @@ export function PrimaryButton({
   const off = disabled || busy;
   return (
     <Pressable
-      style={({ pressed }) => [styles.primary, off && styles.dim, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.primaryWrap, off && styles.dim, pressed && styles.pressed]}
       onPress={onPress}
       disabled={off}
       accessibilityRole="button"
       accessibilityLabel={title}
       accessibilityState={{ disabled: !!off, busy: !!busy }}
     >
-      {busy ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.primaryText}>{title}</Text>}
+      <LinearGradient colors={gradients.accent} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.primary}>
+        {busy ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.primaryText}>{title}</Text>}
+      </LinearGradient>
     </Pressable>
   );
 }
@@ -54,8 +57,15 @@ export function GhostButton({
 }
 
 const styles = StyleSheet.create({
+  primaryWrap: {
+    borderRadius: radius.pill,
+    shadowColor: colors.accent,
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+  },
   primary: {
-    backgroundColor: colors.accent,
     borderRadius: radius.pill,
     paddingVertical: 14,
     alignItems: 'center',

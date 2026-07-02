@@ -165,17 +165,18 @@ export class SupabaseFeedRepository implements FeedRepository {
   private async uploadAndAttach(groupId: string | null, feedItemId: string, photoUri: string): Promise<void> {
     const uid = await this.viewerId();
     const path = `${groupId ?? 'solo'}/${uid}/${feedItemId}/photo.jpg`;
+    // RN : Blob n'est pas fiable avec storage-js (objets vides) -> ArrayBuffer.
     const response = await fetch(photoUri);
-    const blob = await response.blob();
+    const body = await response.arrayBuffer();
     const { error: upErr } = await this.client.storage
       .from('feed-photos')
-      .upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: true });
+      .upload(path, body, { contentType: 'image/jpeg', upsert: true });
     if (upErr) throw new Error(`Publication créée, mais photo non envoyée : ${upErr.message}`);
     const { error: attErr } = await this.client.rpc('attach_photo', {
       p_feed_item_id: feedItemId,
       p_path: path,
     });
-    if (attErr) throw new Error(attErr.message);
+    if (attErr) throw new Error(`Publication créée, mais photo non rattachée : ${attErr.message}`);
   }
 
   async logSteps(groupId: string | null, steps: number): Promise<void> {

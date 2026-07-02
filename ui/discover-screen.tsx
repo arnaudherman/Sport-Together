@@ -12,6 +12,7 @@ import { ScreenHeader } from '@/ui/screen-header';
 import { ScreenState } from '@/ui/screen-state';
 import { colors, font, radius } from '@/ui/theme';
 import { useAsyncData } from '@/ui/use-async-data';
+import { useDebounced } from '@/ui/use-debounced';
 
 /**
  * Découvrir des gens à suivre : les membres de tes groupes que tu ne suis pas
@@ -33,17 +34,21 @@ export function DiscoverScreen({
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<ProfileSearchResult[]>([]);
 
-  async function runSearch(q: string) {
-    setQuery(q);
-    if (q.trim().length < 2) {
-      setResults([]);
-      return;
-    }
+  const fireSearch = useDebounced(async (q: string) => {
     try {
       setResults(await profileRepo.searchProfiles(q));
     } catch (e) {
       setError((e as Error).message);
     }
+  });
+
+  function runSearch(q: string) {
+    setQuery(q);
+    if (q.trim().length < 2) {
+      setResults([]);
+      return;
+    }
+    fireSearch(q);
   }
 
   const loader = useCallback(async () => {
@@ -107,7 +112,7 @@ export function DiscoverScreen({
             people.map((p, i) => (
               <View key={p.id} style={[styles.row, i === people.length - 1 && styles.rowLast]}>
                 <Pressable style={styles.who} onPress={() => onOpenProfile(p.id, p.pseudo)}>
-                  <Avatar name={p.pseudo} seed={p.id} size={44} />
+                  <Avatar name={p.pseudo} seed={p.id} size={44} url={p.avatarUrl} />
                   <View>
                     <Text style={styles.name}>{p.pseudo}</Text>
                     <Text style={styles.handle}>{handle(p.pseudo)}</Text>

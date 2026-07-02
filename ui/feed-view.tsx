@@ -10,7 +10,7 @@ import { type FeedItem, type ReactionKind } from '@/domain/entities/feed';
 import { xpBreakdown } from '@/domain/usecases/gamification';
 import { withToggledReaction } from '@/domain/usecases/reaction-toggle';
 import { PrimaryButton } from '@/ui/button';
-import { avatarColor, initial } from '@/ui/format';
+import { Avatar } from '@/ui/avatar';
 import { FeedItemCard } from '@/ui/feed-item-card';
 import { filterFeed, type FeedTab } from '@/ui/feed-filter';
 import { LiveNow } from '@/ui/live-now';
@@ -29,6 +29,7 @@ const TABS: { key: FeedTab; label: string }[] = [
 export function FeedView({
   userId,
   pseudo,
+  avatarUrl,
   onOpenProfile,
   onOpenLog,
   onOpenComments,
@@ -38,6 +39,7 @@ export function FeedView({
 }: {
   userId: string;
   pseudo: string;
+  avatarUrl?: string;
   onOpenProfile: (id: string, name: string) => void;
   onOpenLog: () => void;
   onOpenComments: (item: FeedItem) => void;
@@ -183,8 +185,6 @@ export function FeedView({
     }).catch(() => {});
   }
 
-  const av = avatarColor(userId);
-
   return (
     <View style={styles.container}>
       <View style={styles.top}>
@@ -195,9 +195,7 @@ export function FeedView({
           accessibilityRole="button"
           accessibilityLabel="Mon profil"
         >
-          <View style={[styles.avatar, { backgroundColor: av.bg }]}>
-            <Text style={[styles.avatarText, { color: av.fg }]}>{initial(pseudo || 'T')}</Text>
-          </View>
+          <Avatar name={pseudo || 'T'} seed={userId} size={40} url={avatarUrl} />
         </Pressable>
       </View>
 
@@ -307,8 +305,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 16 },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, paddingBottom: 10 },
   brand: { ...font.h1, fontSize: 24 },
-  avatar: { width: 40, height: 40, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 16, fontWeight: '800' },
   seg: { flexDirection: 'row', gap: 22, marginBottom: 10, paddingHorizontal: 4 },
   schip: { paddingVertical: 8, minHeight: 44, justifyContent: 'center' },
   schipText: { color: colors.textFaint, fontWeight: '600', fontSize: 14.5 },

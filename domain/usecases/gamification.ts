@@ -1,5 +1,5 @@
 import type { FeedItem, FeedItemType } from '@/domain/entities/feed';
-import { localDayKey } from '@/domain/usecases/streak';
+import { capRestDays, localDayKey, loggedDaysFor, previousDayKey, restDaysFor, satisfiedDays } from '@/domain/usecases/streak';
 
 /**
  * Moteur de gamification v2 (docs/GAMIFICATION.md) — logique pure, testable.
@@ -69,14 +69,27 @@ export function xpBreakdown(
   const byItem = new Map<string, number>();
   const byDayXp = new Map<string, number>();
   let total = 0;
-  let streak = 0;
-  let previousDay: string | null = null;
+
+  // Série pour le BONUS : mêmes primitives que le streak affiché — jours loggés
+  // OU repos BORNÉ (2/7 glissants). Poster uniquement des repos ne construit pas
+  // de bonus à vie (cohérence affichage <-> calcul, anti-farm).
+  const satisfied = satisfiedDays(
+    loggedDaysFor(mine, userId, tzOffsetMinutes),
+    capRestDays(restDaysFor(mine, userId, tzOffsetMinutes)),
+  );
+  const streakAt = (day: string): number => {
+    let len = 0;
+    let cursor = day;
+    while (satisfied.has(cursor)) {
+      len += 1;
+      cursor = previousDayKey(cursor);
+    }
+    return len;
+  };
 
   const days = [...byDay.keys()].sort();
   for (const day of days) {
-    // Série au fil des jours : consécutif au jour précédent actif = +1, sinon repart à 1.
-    streak = previousDay !== null && isNextDay(previousDay, day) ? streak + 1 : 1;
-    previousDay = day;
+    const streak = streakAt(day);
 
     const posts = byDay.get(day) ?? [];
     const seenOfType = new Map<FeedItemType, number>();
@@ -124,11 +137,6 @@ export function xpBreakdown(
   }
 
   return { total, byItem, byDay: byDayXp };
-}
-
-function isNextDay(prev: string, next: string): boolean {
-  const ms = new Date(`${prev}T00:00:00.000Z`).getTime() + 86_400_000;
-  return new Date(ms).toISOString().slice(0, 10) === next;
 }
 
 /** XP cumulé d'un utilisateur à partir de son feed (moteur v2). */

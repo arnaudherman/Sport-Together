@@ -225,6 +225,7 @@ export function ProfileScreen({
             </View>
           ) : null}
 
+          {isMe ? (
           <View style={styles.grp}>
             <Text style={styles.grpLabel}>Groupes</Text>
             {groups.map((g) => (
@@ -236,6 +237,7 @@ export function ProfileScreen({
               <Text style={styles.gcardAddText}>＋ Rejoindre</Text>
             </Pressable>
           </View>
+          ) : null}
 
           <View style={styles.tabs}>
             {TABS.map((t) => (
@@ -275,7 +277,20 @@ export function ProfileScreen({
               <LifeProgress items={items} userId={targetUserId} />
             </View>
           ) : (
-            <Text style={styles.empty}>Photos-preuves à venir 📷</Text>
+            (() => {
+              const withPhotos = items.filter((it) => it.photoUrl);
+              return withPhotos.length === 0 ? (
+                <Text style={styles.empty}>Pas encore de photos — ajoute-en à ta prochaine séance 📷</Text>
+              ) : (
+                <View style={styles.mediaGrid}>
+                  {withPhotos.map((it) => (
+                    <Pressable key={it.id} style={styles.mediaCell} onPress={() => onOpenComments(it)}>
+                      <Image source={{ uri: it.photoUrl }} style={styles.mediaImg} contentFit="cover" />
+                    </Pressable>
+                  ))}
+                </View>
+              );
+            })()
           )}
         </ScrollView>
       </ScreenState>
@@ -328,6 +343,9 @@ const styles = StyleSheet.create({
   tabUnderline: { position: 'absolute', bottom: -1, height: 3, width: 40, borderRadius: 3, backgroundColor: colors.accent },
   posts: { gap: 12, marginTop: 14 },
   lifeWrap: { marginTop: 14 },
+  mediaGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 14 },
+  mediaCell: { width: '31.5%', aspectRatio: 1, borderRadius: radius.sm, overflow: 'hidden' },
+  mediaImg: { width: '100%', height: '100%' },
   trend: { marginTop: 16 },
   empty: { color: colors.textMuted, textAlign: 'center', marginTop: 30 },
 });

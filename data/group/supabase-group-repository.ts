@@ -29,16 +29,16 @@ export class SupabaseGroupRepository implements GroupRepository {
   async listMembers(groupId: string): Promise<GroupMember[]> {
     const { data, error } = await this.client
       .from('memberships')
-      .select('user_id, profiles(pseudo)')
+      .select('user_id, profiles(pseudo, avatar_url)')
       .eq('group_id', groupId);
     if (error) throw new Error(error.message);
     const rows = (data ?? []) as {
       user_id: string;
-      profiles: { pseudo: string } | { pseudo: string }[] | null;
+      profiles: { pseudo: string; avatar_url: string | null } | { pseudo: string; avatar_url: string | null }[] | null;
     }[];
     return rows.map((row) => {
       const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
-      return { id: row.user_id, pseudo: profile?.pseudo ?? 'Membre' };
+      return { id: row.user_id, pseudo: profile?.pseudo ?? 'Membre', avatarUrl: profile?.avatar_url ?? undefined };
     });
   }
 

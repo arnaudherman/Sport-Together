@@ -13,11 +13,12 @@ import type { FeedItem } from '@/domain/entities/feed';
 import type { GroupMember } from '@/domain/entities/group';
 import { isPerfectDay } from '@/domain/usecases/perfect-day';
 import { currentStreak, localDayKey, perfectDays, previousDayKey } from '@/domain/usecases/streak';
-import { avatarColor, initial, timeAgo } from '@/ui/format';
+import { timeAgo } from '@/ui/format';
+import { Avatar } from '@/ui/avatar';
 import { InviteCodeActions } from '@/ui/invite-code-actions';
 import { ScreenHeader } from '@/ui/screen-header';
 import { ScreenState } from '@/ui/screen-state';
-import { colors, font, gradients, radius } from '@/ui/theme';
+import { cardShadow, colors, font, gradients, radius } from '@/ui/theme';
 import { useAsyncData } from '@/ui/use-async-data';
 
 /** Écran Groupe : présence du jour vivante + entraide + streak collectif. */
@@ -276,7 +277,6 @@ export function GroupScreen({
             {members.map((m, i) => {
               const done = loggedToday.has(m.id);
               const isMe = m.id === userId;
-              const av = avatarColor(m.id);
               const last = lastByAuthor.get(m.id);
               return (
                 <Pressable
@@ -284,9 +284,7 @@ export function GroupScreen({
                   onPress={() => onOpenProfile(m.id, m.pseudo)}
                   style={[styles.member, i === members.length - 1 && styles.memberLast]}
                 >
-                  <View style={[styles.avatar, { backgroundColor: av.bg }]}>
-                    <Text style={[styles.avatarText, { color: av.fg }]}>{initial(m.pseudo)}</Text>
-                  </View>
+                  <Avatar name={m.pseudo} seed={m.id} size={38} url={m.avatarUrl} />
                   <View style={styles.memberInfo}>
                     <Text style={styles.memberName}>{isMe ? 'Moi' : m.pseudo}</Text>
                     {done && last ? (
@@ -374,11 +372,10 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     minHeight: 44,
     borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
+    
   },
   leaveText: { color: colors.danger, fontWeight: '800', fontSize: 15 },
-  inviteCard: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16, gap: 12, marginTop: 18 },
+  inviteCard: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 16, gap: 12, marginTop: 18, ...cardShadow },
   inviteBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, minHeight: 44, borderRadius: radius.pill, backgroundColor: colors.accentSoft },
   inviteBtnText: { color: colors.accent, fontWeight: '800', fontSize: 15 },
   manageLink: { color: colors.textMuted, fontWeight: '700', fontSize: 14, textAlign: 'center', paddingVertical: 10 },
@@ -389,8 +386,8 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.85, transform: [{ scale: 0.98 }] },
   link: { fontSize: 14, color: colors.textMuted, fontWeight: '700', width: 70, textAlign: 'right' },
   scroll: { paddingBottom: 32, gap: 12 },
-  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16 },
-  heroCard: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 18 },
+  card: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 16, ...cardShadow },
+  heroCard: { borderRadius: radius.lg, padding: 18, ...cardShadow },
   streakRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   between: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   alignEnd: { alignItems: 'flex-end' },
@@ -399,8 +396,7 @@ const styles = StyleSheet.create({
   muted: { color: colors.textMuted, fontSize: 18, fontWeight: '700' },
   quest: {
     backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+    
     borderRadius: radius.lg,
     padding: 16,
     gap: 6,
