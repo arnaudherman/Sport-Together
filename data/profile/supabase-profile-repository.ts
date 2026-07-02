@@ -57,6 +57,28 @@ export class SupabaseProfileRepository implements ProfileRepository {
     return data ? mapProfile(data as ProfileRow) : null;
   }
 
+  async updateAvatar(localUri: string): Promise<Profile> {
+    const { data: session } = await this.client.auth.getSession();
+    const uid = session.session?.user.id;
+    if (!uid) throw new Error('Non authentifié');
+    const path = `${uid}/avatar-${Date.now()}.jpg`;
+    const response = await fetch(localUri);
+    const blob = await response.blob();
+    const { error: upErr } = await this.client.storage
+      .from('avatars')
+      .upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: true });
+    if (upErr) throw new Error(upErr.message);
+    const { data: pub } = this.client.storage.from('avatars').getPublicUrl(path);
+    const { data, error } = await this.client
+      .from('profiles')
+      .update({ avatar_url: pub.publicUrl })
+      .eq('id', uid)
+      .select(PROFILE_SELECT)
+      .single();
+    if (error) throw new Error(error.message);
+    return mapProfile(data as ProfileRow);
+  }
+
   async updateMyProfile(input: ProfileInput): Promise<Profile> {
     const id = await this.uid();
     if (!id) throw new Error('Non authentifié');

@@ -21,6 +21,11 @@ export class InMemoryProfileRepository implements ProfileRepository {
     return DEMO_PROFILES[userId] ?? null;
   }
 
+  async updateAvatar(localUri: string): Promise<Profile> {
+    this.profile = { ...this.profile, avatarUrl: localUri };
+    return this.profile;
+  }
+
   async updateMyProfile(input: ProfileInput): Promise<Profile> {
     this.profile = {
       ...this.profile,

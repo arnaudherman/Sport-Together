@@ -243,6 +243,36 @@ async function main() {
     assert.equal(after.length, 0, 'ne plus suivre retire la visibilité du post solo');
   });
 
+  await step('photos : chemin solo + attach_photo strictement contrôlé + bucket avatars', async () => {
+    // Post solo d'alice, photo uploadée sous le chemin imposé, rattachée via RPC.
+    const fid = (await asUser(ALICE, `select public.log_session(null, 'Course photo', 20) as id`)).rows[0].id;
+    const good = `solo/${ALICE}/${fid}/photo.jpg`;
+    await asUser(ALICE, `insert into storage.objects (bucket_id,name,owner) values ('feed-photos',$1,$2)`, [good, ALICE]);
+    await asUser(ALICE, `select public.attach_photo($1,$2)`, [fid, good]);
+    const attached = (await admin(`select photo_path from public.sessions where feed_item_id=$1`, [fid])).rows[0];
+    assert.equal(attached.photo_path, good, 'photo rattachée à la séance');
+    // Chemin forgé (uid d'autrui) : upload refusé par la policy storage.
+    await expectReject(
+      asUser(ALICE, `insert into storage.objects (bucket_id,name,owner) values ('feed-photos',$1,$2)`, [`solo/${BOB}/${fid}/x.jpg`, ALICE]),
+      'chemin solo sous un autre uid',
+    );
+    // attach_photo : mauvais préfixe refusé ; non-auteur refusé ; type sans photo refusé.
+    await expectReject(asUser(ALICE, `select public.attach_photo($1,$2)`, [fid, `solo/${ALICE}/autre/photo.jpg`]), 'chemin non conforme');
+    await expectReject(asUser(BOB, `select public.attach_photo($1,$2)`, [fid, good]), 'attach par un non-auteur');
+    const stepsId = (await asUser(ALICE, `select public.log_steps(null, 1000) as id`)).rows[0].id;
+    await expectReject(asUser(ALICE, `select public.attach_photo($1,$2)`, [stepsId, `solo/${ALICE}/${stepsId}/p.jpg`]), 'les pas ne portent pas de photo');
+    // Purge : supprimer le post met la photo en file d'attente.
+    await asUser(ALICE, `delete from public.feed_items where id=$1`, [fid]);
+    const queued = (await admin(`select 1 from public.photo_purge_queue where path=$1`, [good])).rows;
+    assert.equal(queued.length, 1, 'photo en file de purge après suppression');
+    // Avatars : écrire sous SON uid OK, sous celui d'autrui REFUSÉ.
+    await asUser(ALICE, `insert into storage.objects (bucket_id,name,owner) values ('avatars',$1,$2)`, [`${ALICE}/avatar.jpg`, ALICE]);
+    await expectReject(
+      asUser(ALICE, `insert into storage.objects (bucket_id,name,owner) values ('avatars',$1,$2)`, [`${BOB}/avatar.jpg`, ALICE]),
+      'avatar sous l\'uid d\'autrui',
+    );
+  });
+
   await step('repos & sommeil : log_rest idempotent/jour, log_sleep valide les heures', async () => {
     const r1 = (await asUser(ALICE, `select public.log_rest(null) as id`)).rows[0].id;
     const row = (await admin(`select type, group_id, author_id from public.feed_items where id=$1`, [r1])).rows[0];

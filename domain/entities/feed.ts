@@ -41,6 +41,8 @@ export interface FeedItem {
   groupName?: string;
   /** Photo du post (URL affichable) — la DA v2 met la photo au cœur du fil. */
   photoUrl?: string;
+  /** Avatar de l'auteur (URL affichable) — fallback : initiale colorée. */
+  authorAvatarUrl?: string;
 }
 
 /** Agrégat vide réutilisable. */

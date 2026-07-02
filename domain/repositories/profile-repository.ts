@@ -11,4 +11,6 @@ export interface ProfileRepository {
   /** Profil public d'un autre utilisateur (pseudo, bio…) — visible via RLS. */
   getProfile(userId: string): Promise<Profile | null>;
   updateMyProfile(input: ProfileInput): Promise<Profile>;
+  /** Change la photo de profil depuis une image locale ; renvoie le profil à jour. */
+  updateAvatar(localUri: string): Promise<Profile>;
 }

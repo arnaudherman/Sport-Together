@@ -1,13 +1,34 @@
+import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { avatarColor, initial } from '@/ui/format';
 import { radius } from '@/ui/theme';
 
 /**
- * Avatar déterministe partagé (cercle coloré + initiale). Centralise le rendu jusque-là
- * dupliqué dans ~10 écrans. `seed` fixe la couleur (souvent l'id) ; `name` donne l'initiale.
+ * Avatar partagé : photo si disponible, sinon cercle coloré déterministe + initiale.
+ * `seed` fixe la couleur (souvent l'id) ; `name` donne l'initiale.
  */
-export function Avatar({ name, seed, size = 42 }: { name: string; seed?: string; size?: number }) {
+export function Avatar({
+  name,
+  seed,
+  size = 42,
+  url,
+}: {
+  name: string;
+  seed?: string;
+  size?: number;
+  url?: string;
+}) {
+  if (url) {
+    return (
+      <Image
+        source={{ uri: url }}
+        style={{ width: size, height: size, borderRadius: radius.pill }}
+        contentFit="cover"
+        transition={150}
+      />
+    );
+  }
   const c = avatarColor(seed ?? name);
   return (
     <View

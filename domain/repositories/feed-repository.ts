@@ -16,12 +16,12 @@ export interface FeedRepository {
   listGroupFeed(groupId: string): Promise<FeedItem[]>;
   /** Tous les posts d'un utilisateur (pour son profil), du plus récent au plus ancien. */
   listUserFeed(userId: string): Promise<FeedItem[]>;
-  /** Logge une séance. `groupId` null = post solo (timeline perso, ADR-0010). */
-  logSession(groupId: string | null, activity: string, durationMin?: number): Promise<void>;
+  /** Logge une séance (photo locale optionnelle). `groupId` null = post solo (ADR-0010). */
+  logSession(groupId: string | null, activity: string, durationMin?: number, photoUri?: string): Promise<void>;
   /** Logge un relevé de pas. `groupId` null = post solo. */
   logSteps(groupId: string | null, steps: number): Promise<void>;
-  /** Logge un repas (valider avec validateMeal en amont). `groupId` null = post solo. */
-  logMeal(groupId: string | null, meal: MealInput): Promise<void>;
+  /** Logge un repas (valider avec validateMeal en amont, photo optionnelle). */
+  logMeal(groupId: string | null, meal: MealInput, photoUri?: string): Promise<void>;
   /** Pose un jour de repos (protège le streak — vision §8). `groupId` null = post solo. */
   logRest(groupId: string | null): Promise<void>;
   /** Logge une nuit de sommeil (heures). `groupId` null = post solo. */

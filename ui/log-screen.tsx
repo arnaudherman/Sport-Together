@@ -1,5 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -64,6 +66,7 @@ export function LogScreen({
   const [protein, setProtein] = useState('');
   const [carbs, setCarbs] = useState('');
   const [fat, setFat] = useState('');
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [celebration, setCelebration] = useState<Celebration>(null);
@@ -96,12 +99,22 @@ export function LogScreen({
     }
   }
 
+  async function pickPhoto() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets[0]) setPhotoUri(result.assets[0].uri);
+  }
+
   async function submit() {
     setError(null);
     setBusy(true);
     try {
       if (type === 'session') {
-        await feed.logSession(destGroupId, activity.trim() || 'Séance', duration);
+        await feed.logSession(destGroupId, activity.trim() || 'Séance', duration, photoUri ?? undefined);
       } else if (type === 'rest') {
         await feed.logRest(destGroupId);
       } else if (type === 'sleep') {
@@ -127,7 +140,7 @@ export function LogScreen({
           setError(validation.error);
           return;
         }
-        await feed.logMeal(destGroupId, input);
+        await feed.logMeal(destGroupId, input, photoUri ?? undefined);
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       const c = await computeCelebration();
@@ -311,12 +324,34 @@ export function LogScreen({
           </View>
         ) : null}
 
-        <View style={styles.tools}>
-          <Ionicons name="camera-outline" size={22} color={colors.textMuted} />
-          <Ionicons name="location-outline" size={22} color={colors.textMuted} />
-          <Ionicons name="happy-outline" size={22} color={colors.textMuted} />
-          <Text style={styles.toolsHint}>bientôt</Text>
-        </View>
+        {type === 'session' || type === 'meal' ? (
+          <View style={styles.tools}>
+            {photoUri ? (
+              <View style={styles.photoWrap}>
+                <Image source={{ uri: photoUri }} style={styles.photoPreview} contentFit="cover" />
+                <Pressable
+                  style={styles.photoRemove}
+                  onPress={() => setPhotoUri(null)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Retirer la photo"
+                >
+                  <Ionicons name="close" size={14} color={colors.text} />
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable
+                style={({ pressed }) => [styles.photoBtn, pressed && styles.pressed]}
+                onPress={pickPhoto}
+                accessibilityRole="button"
+                accessibilityLabel="Ajouter une photo"
+              >
+                <Ionicons name="camera-outline" size={19} color={colors.accent} />
+                <Text style={styles.photoBtnText}>Ajouter une photo</Text>
+              </Pressable>
+            )}
+          </View>
+        ) : null}
 
         <LinearGradient
           colors={['rgba(255,90,31,0.20)', 'rgba(255,90,31,0.04)']}
@@ -391,7 +426,11 @@ const styles = StyleSheet.create({
   macros: { flexDirection: 'row', gap: 8, paddingLeft: 56 },
   mInput: { flex: 1, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: 10, paddingVertical: 12, fontSize: 14, color: colors.text, textAlign: 'center' },
   tools: { flexDirection: 'row', gap: 20, alignItems: 'center', paddingLeft: 56, paddingTop: 2 },
-  toolsHint: { color: colors.textMuted, fontSize: 12 },
+  photoBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.accentSoft, borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 10, minHeight: 40 },
+  photoBtnText: { color: colors.accent, fontWeight: '700', fontSize: 13.5 },
+  photoWrap: { position: 'relative' },
+  photoPreview: { width: 132, height: 74, borderRadius: radius.sm },
+  photoRemove: { position: 'absolute', top: -7, right: -7, width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(10,12,16,0.9)', alignItems: 'center', justifyContent: 'center' },
   reward: { borderRadius: radius.md, padding: 16, gap: 6, borderWidth: 1, borderColor: 'rgba(255,90,31,0.22)' },
   rewardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   rewardLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },

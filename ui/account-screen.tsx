@@ -1,11 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { useAuthRepository, useProfileRepository } from '@/core/di/repositories-context';
 import type { Profile } from '@/domain/entities/profile';
+import { Avatar } from '@/ui/avatar';
 import { GhostButton, PrimaryButton } from '@/ui/button';
-import { handle, initial } from '@/ui/format';
+import { handle } from '@/ui/format';
 import { ScreenHeader } from '@/ui/screen-header';
 import { colors, font, radius } from '@/ui/theme';
 
@@ -14,12 +16,14 @@ export function AccountScreen({
   pseudo,
   bio: initialBio,
   isAdult,
+  avatarUrl,
   onBack,
   onSaved,
 }: {
   pseudo: string;
   bio: string;
   isAdult: boolean;
+  avatarUrl?: string;
   onBack: () => void;
   onSaved: (profile: Profile) => void;
 }) {
@@ -29,6 +33,7 @@ export function AccountScreen({
   const [bio, setBio] = useState(initialBio);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [avatar, setAvatar] = useState<string | undefined>(avatarUrl);
   const [error, setError] = useState<string | null>(null);
   const mounted = useRef(true);
 
@@ -53,6 +58,29 @@ export function AccountScreen({
       if (mounted.current) {
         setSaved(true);
         onSaved(updated); // propage au reste de l'app (accueil, profil…)
+      }
+    } catch (e) {
+      if (mounted.current) setError((e as Error).message);
+    } finally {
+      if (mounted.current) setBusy(false);
+    }
+  }
+
+  async function changeAvatar() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets[0]) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const updated = await profileRepo.updateAvatar(result.assets[0].uri);
+      if (mounted.current) {
+        setAvatar(updated.avatarUrl);
+        onSaved(updated);
       }
     } catch (e) {
       if (mounted.current) setError((e as Error).message);
@@ -98,13 +126,19 @@ export function AccountScreen({
 
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.card}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initial(name || 'T')}</Text>
-          </View>
-          <View>
+          <Pressable onPress={changeAvatar} accessibilityRole="button" accessibilityLabel="Changer la photo de profil">
+            <Avatar name={name || 'T'} seed="local-user" size={56} url={avatar} />
+            <View style={styles.camBadge}>
+              <Ionicons name="camera" size={11} color={colors.onAccent} />
+            </View>
+          </Pressable>
+          <View style={styles.flex}>
             <Text style={styles.name}>{name || 'Moi'}</Text>
             <Text style={styles.handle}>{handle(name || 'moi')}</Text>
           </View>
+          <Pressable onPress={changeAvatar} hitSlop={8} accessibilityRole="button" accessibilityLabel="Changer la photo de profil">
+            <Text style={styles.changeLink}>Changer la photo</Text>
+          </Pressable>
         </View>
 
         <Text style={styles.label}>Pseudo</Text>
@@ -155,8 +189,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 16 },
   scroll: { paddingBottom: 32, gap: 10 },
   card: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 16, marginTop: 4, marginBottom: 6 },
-  avatar: { width: 52, height: 52, borderRadius: radius.pill, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 20, fontWeight: '800', color: colors.accent },
+  flex: { flex: 1 },
+  camBadge: { position: 'absolute', bottom: -2, right: -2, width: 20, height: 20, borderRadius: 10, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
+  changeLink: { color: colors.accent, fontWeight: '700', fontSize: 13 },
   name: { ...font.title },
   handle: { fontSize: 13, color: colors.textMuted },
   label: { ...font.label, marginTop: 6 },

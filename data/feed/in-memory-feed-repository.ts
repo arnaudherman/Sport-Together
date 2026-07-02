@@ -51,7 +51,7 @@ export class InMemoryFeedRepository implements FeedRepository {
       }));
   }
 
-  private push(groupId: string | null, type: FeedItemType, summary: string): void {
+  private push(groupId: string | null, type: FeedItemType, summary: string, photoUrl?: string): void {
     // groupId null = post solo (timeline perso) : id de groupe personnel, pas de badge.
     this.items.push({
       id: `local-${this.items.length + 1}`,
@@ -61,20 +61,21 @@ export class InMemoryFeedRepository implements FeedRepository {
       type,
       createdAt: new Date().toISOString(),
       summary,
+      photoUrl,
     });
   }
 
-  async logSession(groupId: string | null, activity: string, durationMin?: number): Promise<void> {
-    this.push(groupId, 'session', durationMin ? `${activity} · ${durationMin} min` : activity);
+  async logSession(groupId: string | null, activity: string, durationMin?: number, photoUri?: string): Promise<void> {
+    this.push(groupId, 'session', durationMin ? `${activity} · ${durationMin} min` : activity, photoUri);
   }
 
   async logSteps(groupId: string | null, steps: number): Promise<void> {
     this.push(groupId, 'steps', `${steps} pas`);
   }
 
-  async logMeal(groupId: string | null, meal: MealInput): Promise<void> {
+  async logMeal(groupId: string | null, meal: MealInput, photoUri?: string): Promise<void> {
     const calories = meal.caloriesKcal != null ? ` · ${meal.caloriesKcal} kcal` : '';
-    this.push(groupId, 'meal', `${meal.label}${calories}`);
+    this.push(groupId, 'meal', `${meal.label}${calories}`, photoUri);
   }
 
   async logRest(groupId: string | null): Promise<void> {
@@ -99,6 +100,12 @@ const demoNow = Date.now();
 const at = (dayOffset: number, mins: number): string =>
   new Date(demoNow - dayOffset * DAY_MS - mins * 60_000).toISOString();
 
+const DEMO_AVATARS: Record<string, string> = {
+  'u-lea': 'https://i.pravatar.cc/96?img=47',
+  'u-sam': 'https://i.pravatar.cc/96?img=33',
+  'u-noa': 'https://i.pravatar.cc/96?img=68',
+};
+
 function demoItem(
   id: string,
   authorId: string,
@@ -109,7 +116,7 @@ function demoItem(
   groupName?: string,
   photoUrl?: string,
 ): FeedItem {
-  return { id, groupId: 'demo-group', authorId, authorName, type, createdAt, summary, groupName, photoUrl };
+  return { id, groupId: 'demo-group', authorId, authorName, type, createdAt, summary, groupName, photoUrl, authorAvatarUrl: DEMO_AVATARS[authorId] };
 }
 
 // Solo-first : Moi = posts perso, Sam = abonnement (pas de groupe), Léa/Noa =

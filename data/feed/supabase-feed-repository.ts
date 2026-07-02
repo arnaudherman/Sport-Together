@@ -17,21 +17,21 @@ interface FeedRow {
   author_id: string | null;
   type: FeedItemType;
   created_at: string;
-  author: OneOrMany<{ pseudo: string }>;
+  author: OneOrMany<{ pseudo: string; avatar_url: string | null }>;
   group: OneOrMany<{ name: string }>;
   comment_count: { count: number }[] | null;
-  sessions: OneOrMany<{ activity: string; duration_min: number | null }>;
+  sessions: OneOrMany<{ activity: string; duration_min: number | null; photo_path: string | null }>;
   sleep_logs: OneOrMany<{ hours: number }>;
   step_logs: OneOrMany<{ steps: number }>;
-  meals: OneOrMany<{ label: string; calories_kcal: number | null }>;
+  meals: OneOrMany<{ label: string; calories_kcal: number | null; photo_path: string | null }>;
   reactions: { kind: ReactionKind; author_id: string | null }[] | null;
 }
 
 const FEED_SELECT =
   'id, group_id, author_id, type, created_at, ' +
-  'author:profiles(pseudo), group:groups(name), comment_count:comments(count), ' +
-  'sessions(activity, duration_min), step_logs(steps), sleep_logs(hours), ' +
-  'meals(label, calories_kcal), reactions(kind, author_id)';
+  'author:profiles(pseudo, avatar_url), group:groups(name), comment_count:comments(count), ' +
+  'sessions(activity, duration_min, photo_path), step_logs(steps), sleep_logs(hours), ' +
+  'meals(label, calories_kcal, photo_path), reactions(kind, author_id)';
 
 function pickOne<T>(value: OneOrMany<T>): T | null {
   if (Array.isArray(value)) return value[0] ?? null;
@@ -72,6 +72,12 @@ function reactionSummary(rows: FeedRow['reactions'], viewerId: string): Reaction
   };
 }
 
+function photoPathOf(row: FeedRow): string | null {
+  if (row.type === 'session') return pickOne(row.sessions)?.photo_path ?? null;
+  if (row.type === 'meal') return pickOne(row.meals)?.photo_path ?? null;
+  return null;
+}
+
 function mapRow(row: FeedRow, viewerId: string): FeedItem {
   return {
     id: row.id,
@@ -83,6 +89,7 @@ function mapRow(row: FeedRow, viewerId: string): FeedItem {
     summary: summarize(row),
     reactions: reactionSummary(row.reactions, viewerId),
     groupName: pickOne(row.group)?.name ?? undefined,
+    authorAvatarUrl: pickOne(row.author)?.avatar_url ?? undefined,
     commentCount: row.comment_count?.[0]?.count ?? 0,
   };
 }
@@ -112,7 +119,22 @@ export class SupabaseFeedRepository implements FeedRepository {
     if (filter) query = query.eq(filter.column, filter.value);
     const { data, error } = await query.order('created_at', { ascending: false });
     if (error) throw new Error(error.message);
-    return ((data ?? []) as unknown as FeedRow[]).map((row) => mapRow(row, viewerId));
+    const rows = (data ?? []) as unknown as FeedRow[];
+    const items = rows.map((row) => mapRow(row, viewerId));
+    // Photos : bucket privé -> URLs signées en lot (1 requête pour tout le fil).
+    const paths = rows.map(photoPathOf);
+    const wanted = paths.filter((path): path is string => path !== null);
+    if (wanted.length > 0) {
+      const { data: signed } = await this.client.storage
+        .from('feed-photos')
+        .createSignedUrls(wanted, 3600);
+      const byPath = new Map((signed ?? []).map((s2) => [s2.path, s2.signedUrl]));
+      rows.forEach((row, i) => {
+        const path = paths[i];
+        if (path) items[i].photoUrl = byPath.get(path) ?? undefined;
+      });
+    }
+    return items;
   }
 
   // Accueil solo-first : pas de filtre groupe, la RLS scope au visible.
@@ -128,14 +150,32 @@ export class SupabaseFeedRepository implements FeedRepository {
     return this.listFeed({ column: 'author_id', value: userId });
   }
 
-  async logSession(groupId: string | null, activity: string, durationMin?: number): Promise<void> {
+  async logSession(groupId: string | null, activity: string, durationMin?: number, photoUri?: string): Promise<void> {
     // groupId null = post SOLO (timeline perso) — supporté par la RPC (migration solo_timeline).
-    const { error } = await this.client.rpc('log_session', {
+    const { data, error } = await this.client.rpc('log_session', {
       p_group_id: groupId,
       p_activity: activity,
       p_duration_min: durationMin ?? null,
     });
     if (error) throw new Error(error.message);
+    if (photoUri) await this.uploadAndAttach(groupId, data as string, photoUri);
+  }
+
+  /** Upload de la photo sous le chemin imposé, puis rattachement validé (RPC). */
+  private async uploadAndAttach(groupId: string | null, feedItemId: string, photoUri: string): Promise<void> {
+    const uid = await this.viewerId();
+    const path = `${groupId ?? 'solo'}/${uid}/${feedItemId}/photo.jpg`;
+    const response = await fetch(photoUri);
+    const blob = await response.blob();
+    const { error: upErr } = await this.client.storage
+      .from('feed-photos')
+      .upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: true });
+    if (upErr) throw new Error(`Publication créée, mais photo non envoyée : ${upErr.message}`);
+    const { error: attErr } = await this.client.rpc('attach_photo', {
+      p_feed_item_id: feedItemId,
+      p_path: path,
+    });
+    if (attErr) throw new Error(attErr.message);
   }
 
   async logSteps(groupId: string | null, steps: number): Promise<void> {
@@ -146,8 +186,8 @@ export class SupabaseFeedRepository implements FeedRepository {
     if (error) throw new Error(error.message);
   }
 
-  async logMeal(groupId: string | null, meal: MealInput): Promise<void> {
-    const { error } = await this.client.rpc('log_meal', {
+  async logMeal(groupId: string | null, meal: MealInput, photoUri?: string): Promise<void> {
+    const { data, error } = await this.client.rpc('log_meal', {
       p_group_id: groupId,
       p_label: meal.label,
       p_moment: meal.moment ?? null,
@@ -157,6 +197,7 @@ export class SupabaseFeedRepository implements FeedRepository {
       p_fat_g: meal.fatG ?? null,
     });
     if (error) throw new Error(error.message);
+    if (photoUri) await this.uploadAndAttach(groupId, data as string, photoUri);
   }
 
   async logRest(groupId: string | null): Promise<void> {

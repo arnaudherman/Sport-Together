@@ -147,6 +147,7 @@ export function AuthedFlow({ userId }: { userId: string }) {
           pseudo={profile ? profile.pseudo : ''}
           bio={profile?.bio ?? ''}
           isAdult={profile?.isAdult ?? true}
+          avatarUrl={profile?.avatarUrl}
           onSaved={applyProfile}
           onBack={pop}
         />

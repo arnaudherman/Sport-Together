@@ -10,6 +10,7 @@ import type { Profile } from '@/domain/entities/profile';
 import { levelForXp, xpBreakdown } from '@/domain/usecases/gamification';
 import { streakFromFeed } from '@/domain/usecases/streak';
 import { avatarColor, handle, initial } from '@/ui/format';
+import { Avatar } from '@/ui/avatar';
 import { FeedItemCard } from '@/ui/feed-item-card';
 import { FollowButton } from '@/ui/follow-button';
 import type { FollowListKind } from '@/ui/follow-list-screen';
@@ -158,8 +159,8 @@ export function ProfileScreen({
             />
           )}
           <View style={styles.headRow}>
-            <View style={[styles.avatar, { backgroundColor: av.bg }]}>
-              <Text style={[styles.avatarText, { color: av.fg }]}>{initial(name)}</Text>
+            <View style={styles.avatarRing}>
+              <Avatar name={name} seed={targetUserId} size={88} url={profile?.avatarUrl} />
             </View>
             {!isMe ? (
               <FollowButton targetId={targetUserId} targetName={name} onError={setError} />
@@ -292,8 +293,7 @@ const styles = StyleSheet.create({
   scroll: { paddingBottom: 40 },
   cover: { height: 116, borderRadius: radius.lg },
   headRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: -32, paddingHorizontal: 4 },
-  avatar: { width: 72, height: 72, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: colors.bg },
-  avatarText: { fontSize: 27, fontWeight: '800' },
+  avatarRing: { borderRadius: radius.pill, borderWidth: 4, borderColor: colors.bg, overflow: 'hidden' },
   settings: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: 16, paddingVertical: 10, minHeight: 44, marginBottom: 4 },
   settingsText: { color: colors.text, fontWeight: '700', fontSize: 14 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, paddingHorizontal: 4 },

@@ -55,7 +55,7 @@ export function FeedItemCard({
       <Surface>
         <View style={[styles.pad, styles.restRow]}>
           <Pressable onPress={onPressAuthor} hitSlop={6}>
-            <Avatar name={item.authorName} seed={item.authorId || item.authorName} size={34} />
+            <Avatar name={item.authorName} seed={item.authorId || item.authorName} size={34} url={item.authorAvatarUrl} />
           </Pressable>
           <View style={styles.flex}>
             <Text style={styles.name}>
@@ -77,7 +77,7 @@ export function FeedItemCard({
       <View style={styles.pad}>
         <View style={styles.head}>
           <Pressable onPress={onPressAuthor} hitSlop={6}>
-            <Avatar name={item.authorName} seed={item.authorId || item.authorName} size={34} />
+            <Avatar name={item.authorName} seed={item.authorId || item.authorName} size={34} url={item.authorAvatarUrl} />
           </Pressable>
           <Pressable style={styles.flex} onPress={onPressAuthor} hitSlop={6}>
             <Text style={styles.name} numberOfLines={1}>
