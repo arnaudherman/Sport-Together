@@ -7,7 +7,7 @@ garde-fous structurels (ADR-0008).
 
 ## Migrations (ordre d'application)
 
-Les 19 migrations s'appliquent **dans l'ordre chronologique** du nom de fichier.
+Les 23 migrations s'appliquent **dans l'ordre chronologique** du nom de fichier.
 
 | Fichier | Contenu |
 |---|---|
@@ -29,6 +29,9 @@ Les 19 migrations s'appliquent **dans l'ordre chronologique** du nom de fichier.
 | `20260702092000_rest_type.sql` | **Jour de repos** : enum `rest` + RPC `log_rest` (idempotente par jour) — le streak est protégé (vision §8) |
 | `20260702092100_group_invite_access.sql` | RPC `get_group_invite` : le code d'invitation redevient consultable par les MEMBRES |
 | `20260702092200_reports_blocks.sql` | **Modération UGC (App Store 1.2)** : `reports` (write-only) + `blocks` (self-only, trigger qui coupe les follows des deux sens) |
+| `20260702092400_sleep_type.sql` | **Sommeil** : type `sleep` + `sleep_logs` (heures) + RPC `log_sleep` |
+| `20260702092500_photo_pipeline.sql` | **Photos** : chemins solo, RPC `attach_photo` anti-forgerie, file de purge, bucket public `avatars` |
+| `20260702092600_public_groups_search.sql` | **Groupes publics** (visibility, annuaire, join sans code) + `search_profiles` (annuaire de pseudos limité) |
 | `20260702092300_rpc_rate_limits.sql` | **Anti-abus** : `check_rate_limit` (bucket atomique) sur `create_group` (10/12h), `join_group_by_code` (20 tentatives/12h, réponse vide pour invalide/expiré — comptée et sans oracle) et `log_*` (30/h) |
 
 ## Appliquer

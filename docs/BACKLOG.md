@@ -27,8 +27,8 @@
 - [ ] **Feed temps réel** : implémenter `FeedRepository.subscribe` via Supabase Realtime
   (aujourd'hui pull + pull-to-refresh).
 - [ ] **Sign in with Apple** : prévu ADR-0005, non implémenté (seul le magic-link e-mail l'est).
-- [ ] **Upload photo-preuve** : bouton « Ajouter une photo (bientôt) » à brancher sur
-  Supabase Storage (bucket RLS par groupe, compression client, URLs signées — cf. vision §10).
+- [x] **Upload photo-preuve** ✓ (pipeline complet : picker + upload + attach_photo
+  anti-forgerie + URLs signées + purge). Reste : compression client (expo-image-manipulator).
 - [x] **Supprimer un post / goal** : bouton sur ses propres posts (feed + profil), confirm,
   `FeedRepository.deletePost` (RLS `feed_items_delete`, cascade détails/réactions/commentaires).
 - [ ] **Câbler/déployer les Edge Functions** : `notify_group` (trigger pg_net), `nudge`

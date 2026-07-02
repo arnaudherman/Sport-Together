@@ -6,6 +6,26 @@ pas encore versionné (pré-MVP) ; entrées par date. Détail des décisions dan
 
 ## [Non publié]
 
+### 2026-07-02 — Refonte « Obsidienne » + sprint produit (target redéfinie avec le porteur)
+
+- **Nouvelle DA verrouillée** : sport premium Whoop nocturne (maquette
+  `docs/mockups/target-a-obsidienne.html` fait foi ; Design Book v2). Tab bar native
+  (Accueil/Découvrir/＋/Groupes/Profil), Surfaces sans bordure, anneaux de données,
+  chiffres ultra-light, photos partout (posts, covers, avatars).
+- **XP v2 anti-facile** : décroissance par type/jour (100/50/20/0 %), plafond 120/jour,
+  bonus variété (+15) et régularité (+10 % à 7 j, +20 % à 30 j), XP réel affiché PAR post.
+- **Sommeil** : type `sleep` (chip 🌙, heures) — 5 domaines de qualité de vie.
+- **Arbre de vie** : Sport/Pas/Sommeil/Nutrition/Rythme, paliers en jours distincts
+  (non farmables), rails + anneaux ; célébration branchée sur les paliers Sport.
+- **Graphiques auto** : TrendChart (XP · 14 jours) alimenté par tout ce qu'on logge.
+- **Photos bout-en-bout** : composer (picker + préview), upload + `attach_photo`
+  anti-forgerie, URLs signées en lot, purge à la suppression ; **photo de profil**
+  (bucket public avatars) et avatars réels dans tout le fil.
+- **Groupes publics/privés** au choix du créateur + **annuaire** + join sans code ;
+  **recherche de gens** (`search_profiles`) ; rail **« En ce moment »** sur l'accueil.
+- Harnais RLS : **23 → 26 tests** (photos, sommeil, groupes publics/recherche — dont une
+  SURCHARGE de `create_group` attrapée) ; front **97 tests** ; **23 migrations**.
+
 ### 2026-07-02 — Analyse d'écarts (19 agents, contre-vérifiée) : 10 manques comblés
 
 - **Timeline perso backend** : publier en SOLO pour de vrai (`group_id` nullable, RPC
