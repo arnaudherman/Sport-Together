@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { Group, GroupMember } from '@/domain/entities/group';
+import type { Group, GroupMember, PublicGroup } from '@/domain/entities/group';
 import type { GroupRepository } from '@/domain/repositories/group-repository';
 
 /**
@@ -14,11 +14,16 @@ export class SupabaseGroupRepository implements GroupRepository {
   async listMyGroups(): Promise<Group[]> {
     const { data, error } = await this.client
       .from('groups')
-      .select('id, name, created_by')
+      .select('id, name, created_by, visibility')
       .order('created_at', { ascending: true });
     if (error) throw new Error(error.message);
-    const rows = (data ?? []) as { id: string; name: string; created_by: string | null }[];
-    return rows.map((row) => ({ id: row.id, name: row.name, createdBy: row.created_by ?? undefined }));
+    const rows = (data ?? []) as { id: string; name: string; created_by: string | null; visibility: 'private' | 'public' }[];
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      createdBy: row.created_by ?? undefined,
+      visibility: row.visibility,
+    }));
   }
 
   async listMembers(groupId: string): Promise<GroupMember[]> {
@@ -37,14 +42,15 @@ export class SupabaseGroupRepository implements GroupRepository {
     });
   }
 
-  async createGroup(name: string): Promise<Group> {
+  async createGroup(name: string, visibility: 'private' | 'public' = 'private'): Promise<Group> {
     // create_group renvoie la ligne groups complète (incl. invite_code à partager).
     const { data, error } = await this.client.rpc('create_group', {
       group_name: name.trim(),
+      p_visibility: visibility,
     });
     if (error) throw new Error(error.message);
     const row = data as { id: string; name: string; invite_code: string };
-    return { id: row.id, name: row.name, inviteCode: row.invite_code };
+    return { id: row.id, name: row.name, inviteCode: row.invite_code, visibility };
   }
 
   async leaveGroup(groupId: string): Promise<void> {
@@ -76,6 +82,29 @@ export class SupabaseGroupRepository implements GroupRepository {
   async deleteGroup(groupId: string): Promise<void> {
     // La RLS (groups_delete: created_by = auth.uid()) borne au créateur ; cascade en base.
     const { error } = await this.client.from('groups').delete().eq('id', groupId);
+    if (error) throw new Error(error.message);
+  }
+
+  async listPublicGroups(query?: string): Promise<PublicGroup[]> {
+    const { data, error } = await this.client.rpc('list_public_groups', { q: query ?? null });
+    if (error) throw new Error(error.message);
+    const rows = (data ?? []) as { id: string; name: string; member_count: number }[];
+    return rows.map((row) => ({ id: row.id, name: row.name, memberCount: Number(row.member_count) }));
+  }
+
+  async joinPublicGroup(groupId: string): Promise<Group> {
+    const { data, error } = await this.client.rpc('join_public_group', { p_group_id: groupId });
+    if (error) throw new Error(error.message);
+    const row = (Array.isArray(data) ? data[0] : data) as
+      | { joined_id: string; joined_name: string }
+      | undefined;
+    if (!row) throw new Error('Groupe introuvable ou privé');
+    return { id: row.joined_id, name: row.joined_name, visibility: 'public' };
+  }
+
+  async setVisibility(groupId: string, visibility: 'private' | 'public'): Promise<void> {
+    // La RLS (groups_update: created_by = auth.uid()) borne au créateur.
+    const { error } = await this.client.from('groups').update({ visibility }).eq('id', groupId);
     if (error) throw new Error(error.message);
   }
 

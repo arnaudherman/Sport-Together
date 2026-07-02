@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useCallback } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { useGroupRepository } from '@/core/di/repositories-context';
+import { useGroupRepository, useProfileRepository } from '@/core/di/repositories-context';
 import type { GroupMember } from '@/domain/entities/group';
+import type { ProfileSearchResult } from '@/domain/repositories/profile-repository';
 import { Avatar } from '@/ui/avatar';
 import { FollowButton } from '@/ui/follow-button';
 import { handle } from '@/ui/format';
@@ -28,6 +29,22 @@ export function DiscoverScreen({
   onJoinGroup: () => void;
 }) {
   const groupRepo = useGroupRepository();
+  const profileRepo = useProfileRepository();
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<ProfileSearchResult[]>([]);
+
+  async function runSearch(q: string) {
+    setQuery(q);
+    if (q.trim().length < 2) {
+      setResults([]);
+      return;
+    }
+    try {
+      setResults(await profileRepo.searchProfiles(q));
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
 
   const loader = useCallback(async () => {
     const groups = await groupRepo.listMyGroups();
@@ -45,7 +62,39 @@ export function DiscoverScreen({
       <ScreenHeader title="Découvrir" onBack={onBack} />
 
       <ScreenState loading={loading} error={error} hasData={people.length > 0} onRetry={reload}>
-        <ScrollView contentContainerStyle={styles.scroll}>
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+          <View style={styles.searchRow}>
+            <Ionicons name="search" size={17} color={colors.textFaint} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Chercher quelqu'un par pseudo…"
+              placeholderTextColor={colors.textFaint}
+              value={query}
+              onChangeText={runSearch}
+              autoCorrect={false}
+              autoCapitalize="none"
+            />
+          </View>
+
+          {results.length > 0 ? (
+            <View style={styles.results}>
+              {results.map((p2, i) => (
+                <View key={p2.id} style={[styles.row, i === results.length - 1 && styles.rowLast]}>
+                  <Pressable style={styles.who} onPress={() => onOpenProfile(p2.id, p2.pseudo)}>
+                    <Avatar name={p2.pseudo} seed={p2.id} size={44} url={p2.avatarUrl} />
+                    <View>
+                      <Text style={styles.name}>{p2.pseudo}</Text>
+                      <Text style={styles.handle}>{handle(p2.pseudo)}</Text>
+                    </View>
+                  </Pressable>
+                  <FollowButton targetId={p2.id} targetName={p2.pseudo} onError={setError} />
+                </View>
+              ))}
+            </View>
+          ) : query.trim().length >= 2 ? (
+            <Text style={styles.hint}>Personne ne correspond à « {query.trim()} ».</Text>
+          ) : null}
+
           <Text style={styles.hint}>Des membres de tes groupes à suivre pour enrichir ton fil.</Text>
           {people.length === 0 ? (
             <Pressable style={styles.emptyCta} onPress={onJoinGroup} accessibilityRole="button" accessibilityLabel="Rejoindre un groupe">
@@ -76,7 +125,10 @@ export function DiscoverScreen({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg, paddingHorizontal: 16 },
-  scroll: { paddingBottom: 32 },
+  scroll: { paddingBottom: 120 },
+  searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.surface, borderRadius: radius.pill, paddingHorizontal: 14, marginTop: 6 },
+  searchInput: { flex: 1, paddingVertical: 12, fontSize: 15, color: colors.text },
+  results: { marginTop: 4 },
   hint: { color: colors.textMuted, fontSize: 14, marginVertical: 12 },
   empty: { color: colors.textMuted, textAlign: 'center', lineHeight: 20 },
   emptyCta: { alignItems: 'center', gap: 8, marginTop: 32, padding: 22, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },

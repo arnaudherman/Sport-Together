@@ -172,6 +172,7 @@ export function AuthedFlow({ userId }: { userId: string }) {
           key={view.group.id}
           groupId={view.group.id}
           groupName={current?.name ?? 'Ton groupe'}
+          visibility={current?.visibility}
           isCreator={current?.createdBy === userId}
           userId={userId}
           onBack={pop}

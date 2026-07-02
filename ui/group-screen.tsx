@@ -24,6 +24,7 @@ import { useAsyncData } from '@/ui/use-async-data';
 export function GroupScreen({
   groupId,
   groupName,
+  visibility,
   isCreator,
   userId,
   onBack,
@@ -33,6 +34,7 @@ export function GroupScreen({
 }: {
   groupId: string;
   groupName: string;
+  visibility?: 'private' | 'public';
   /** Créateur = droits de gestion (renommer, régénérer le code, supprimer). */
   isCreator: boolean;
   userId: string;
@@ -135,6 +137,15 @@ export function GroupScreen({
     try {
       setInvite(await groupRepo.rotateInviteCode(groupId));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    } catch (e) {
+      if (mounted.current) setError((e as Error).message);
+    }
+  }
+
+  async function toggleVisibility() {
+    try {
+      await groupRepo.setVisibility(groupId, visibility === 'public' ? 'private' : 'public');
+      onChanged();
     } catch (e) {
       if (mounted.current) setError((e as Error).message);
     }
@@ -325,9 +336,16 @@ export function GroupScreen({
           </View>
 
           {isCreator ? (
-            <Pressable onPress={promptRename} hitSlop={8} accessibilityRole="button" accessibilityLabel="Renommer le groupe">
-              <Text style={styles.manageLink}>✏️ Renommer le groupe</Text>
-            </Pressable>
+            <>
+              <Pressable onPress={promptRename} hitSlop={8} accessibilityRole="button" accessibilityLabel="Renommer le groupe">
+                <Text style={styles.manageLink}>✏️ Renommer le groupe</Text>
+              </Pressable>
+              <Pressable onPress={toggleVisibility} hitSlop={8} accessibilityRole="button" accessibilityLabel="Changer la visibilité du groupe">
+                <Text style={styles.manageLink}>
+                  {visibility === 'public' ? '🔒 Repasser le groupe en privé' : '🌍 Rendre le groupe public (annuaire)'}
+                </Text>
+              </Pressable>
+            </>
           ) : null}
 
           <Pressable

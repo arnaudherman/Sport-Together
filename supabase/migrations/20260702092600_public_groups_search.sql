@@ -71,7 +71,10 @@ $$;
 revoke all on function public.join_public_group(uuid) from public;
 grant execute on function public.join_public_group(uuid) to authenticated;
 
--- 4. Visibilité au choix à la création (privé par défaut). Remplace create_group.
+-- 4. Visibilité au choix à la création (privé par défaut). REMPLACE create_group :
+-- l'ancienne signature (text) doit être supprimée, sinon la nouvelle (text, text
+-- default) la SURCHARGE et tout appel à un argument devient ambigu.
+drop function if exists public.create_group(text);
 create or replace function public.create_group(group_name text, p_visibility text default 'private')
 returns public.groups
 language plpgsql

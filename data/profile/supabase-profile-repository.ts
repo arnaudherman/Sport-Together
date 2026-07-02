@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Profile, ProfileInput } from '@/domain/entities/profile';
-import type { ProfileRepository } from '@/domain/repositories/profile-repository';
+import type { ProfileRepository, ProfileSearchResult } from '@/domain/repositories/profile-repository';
 
 interface ProfileRow {
   id: string;
@@ -55,6 +55,13 @@ export class SupabaseProfileRepository implements ProfileRepository {
       .maybeSingle();
     if (error) throw new Error(error.message);
     return data ? mapProfile(data as ProfileRow) : null;
+  }
+
+  async searchProfiles(query: string): Promise<ProfileSearchResult[]> {
+    const { data, error } = await this.client.rpc('search_profiles', { q: query });
+    if (error) throw new Error(error.message);
+    const rows = (data ?? []) as { id: string; pseudo: string; avatar_url: string | null }[];
+    return rows.map((row) => ({ id: row.id, pseudo: row.pseudo, avatarUrl: row.avatar_url ?? undefined }));
   }
 
   async updateAvatar(localUri: string): Promise<Profile> {

@@ -1,4 +1,4 @@
-import type { Group, GroupMember } from '@/domain/entities/group';
+import type { Group, GroupMember, PublicGroup } from '@/domain/entities/group';
 
 /**
  * Port des groupes (ADR-0004 / ADR-0007). Création et adhésion passent par les
@@ -8,7 +8,7 @@ import type { Group, GroupMember } from '@/domain/entities/group';
 export interface GroupRepository {
   listMyGroups(): Promise<Group[]>;
   listMembers(groupId: string): Promise<GroupMember[]>;
-  createGroup(name: string): Promise<Group>;
+  createGroup(name: string, visibility?: 'private' | 'public'): Promise<Group>;
   joinByCode(code: string): Promise<Group>;
   /** Quitter un groupe (supprime SA propre appartenance — politique memberships_delete). */
   leaveGroup(groupId: string): Promise<void>;
@@ -20,4 +20,10 @@ export interface GroupRepository {
   renameGroup(groupId: string, name: string): Promise<void>;
   /** Supprime le groupe (créateur seulement — RLS groups_delete, cascade). */
   deleteGroup(groupId: string): Promise<void>;
+  /** Annuaire des groupes PUBLICS (nom + nb de membres), filtrable par nom. */
+  listPublicGroups(query?: string): Promise<PublicGroup[]>;
+  /** Rejoint un groupe public sans code (rate-limité côté serveur). */
+  joinPublicGroup(groupId: string): Promise<Group>;
+  /** Change la visibilité (créateur seulement — RLS groups_update). */
+  setVisibility(groupId: string, visibility: 'private' | 'public'): Promise<void>;
 }

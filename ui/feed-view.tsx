@@ -13,6 +13,7 @@ import { PrimaryButton } from '@/ui/button';
 import { avatarColor, initial } from '@/ui/format';
 import { FeedItemCard } from '@/ui/feed-item-card';
 import { filterFeed, type FeedTab } from '@/ui/feed-filter';
+import { LiveNow } from '@/ui/live-now';
 import { YouStrip } from '@/ui/you-strip';
 import { ScreenState } from '@/ui/screen-state';
 import { colors, font, gradients, radius } from '@/ui/theme';
@@ -199,6 +200,8 @@ export function FeedView({
           </View>
         </Pressable>
       </View>
+
+      <LiveNow items={items} userId={userId} onOpenProfile={onOpenProfile} />
 
       <View style={styles.seg}>
         {TABS.map((t) => (

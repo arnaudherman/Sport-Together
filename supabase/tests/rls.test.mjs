@@ -396,6 +396,31 @@ async function main() {
     assert.equal(rest.length, 0, 'memberships supprimés en cascade');
   });
 
+  await step('groupes publics + recherche : annuaire, join sans code, privés invisibles', async () => {
+    // alice crée un groupe PUBLIC ; il apparaît dans l'annuaire, pas les privés.
+    const pub = (await asUser(ALICE, `select * from public.create_group('Course du matin', 'public')`)).rows[0];
+    const listed = (await asUser(DAVE, `select * from public.list_public_groups(null)`)).rows;
+    assert.ok(listed.some((g) => g.id === pub.id), 'le groupe public est dans l\'annuaire');
+    assert.ok(!listed.some((g) => g.id === A.id), 'les groupes privés ne sont JAMAIS listés');
+    // dave (étranger) rejoint SANS code ; un groupe privé via join_public_group = vide.
+    const joined = (await asUser(DAVE, `select * from public.join_public_group($1)`, [pub.id])).rows;
+    assert.equal(joined.length, 1, 'join public sans code');
+    const isMember = (await admin(`select 1 from public.memberships where group_id=$1 and user_id=$2`, [pub.id, DAVE])).rows;
+    assert.equal(isMember.length, 1);
+    const privTry = (await asUser(DAVE, `select * from public.join_public_group($1)`, [A.id])).rows;
+    assert.equal(privTry.length, 0, 'un groupe privé n\'est pas rejoignable sans code');
+    // recherche de gens : trouve par pseudo, exclut soi, exige >= 2 caractères.
+    await admin(`update public.profiles set pseudo='Alice' where id=$1`, [ALICE]);
+    const found = (await asUser(DAVE, `select * from public.search_profiles('ali')`)).rows;
+    assert.ok(found.some((r) => r.id === ALICE), 'alice trouvée par pseudo');
+    const self = (await asUser(ALICE, `select * from public.search_profiles('ali')`)).rows;
+    assert.ok(!self.some((r) => r.id === ALICE), 'la recherche exclut soi-même');
+    const tooShort = (await asUser(DAVE, `select * from public.search_profiles('a')`)).rows;
+    assert.equal(tooShort.length, 0, 'moins de 2 caractères = pas de dump');
+    // nettoyage : alice supprime son groupe public (créatrice).
+    await asUser(ALICE, `delete from public.groups where id=$1`, [pub.id]);
+  });
+
   await step('rate limits : create_group et join_group_by_code plafonnés (anti-abus)', async () => {
     // Créations en boucle : les premières passent, le spam finit refusé (cap 10/12h).
     let created = 0;

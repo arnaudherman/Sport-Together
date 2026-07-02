@@ -44,7 +44,7 @@ const SCREENS: { label: string; node: ReactNode }[] = [
   },
   {
     label: 'Groupe',
-    node: <GroupScreen groupId="demo-group" groupName="The Crew" isCreator userId="local-user" onBack={noop} onOpenProfile={noop} onLeft={noop} onChanged={noop} />,
+    node: <GroupScreen groupId="demo-group" groupName="The Crew" visibility="private" isCreator userId="local-user" onBack={noop} onOpenProfile={noop} onLeft={noop} onChanged={noop} />,
   },
   {
     label: 'Profil',

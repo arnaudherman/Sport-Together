@@ -1,5 +1,5 @@
 import type { Profile, ProfileInput } from '@/domain/entities/profile';
-import type { ProfileRepository } from '@/domain/repositories/profile-repository';
+import type { ProfileRepository, ProfileSearchResult } from '@/domain/repositories/profile-repository';
 
 /** Profils de démonstration (mode hors-ligne) — pour afficher de vraies bios. */
 const DEMO_PROFILES: Record<string, Profile> = {
@@ -19,6 +19,20 @@ export class InMemoryProfileRepository implements ProfileRepository {
   async getProfile(userId: string): Promise<Profile | null> {
     if (userId === this.profile.id) return this.profile;
     return DEMO_PROFILES[userId] ?? null;
+  }
+
+  async searchProfiles(query: string): Promise<ProfileSearchResult[]> {
+    const q = query.trim().toLowerCase();
+    if (q.length < 2) return [];
+    const extras: ProfileSearchResult[] = [
+      { id: 'u-emma', pseudo: 'Emma', avatarUrl: 'https://i.pravatar.cc/96?img=25' },
+      { id: 'u-marc', pseudo: 'Marco', avatarUrl: 'https://i.pravatar.cc/96?img=59' },
+    ];
+    const all: ProfileSearchResult[] = [
+      ...Object.values(DEMO_PROFILES).map((p2) => ({ id: p2.id, pseudo: p2.pseudo })),
+      ...extras,
+    ];
+    return all.filter((p2) => p2.pseudo.toLowerCase().includes(q));
   }
 
   async updateAvatar(localUri: string): Promise<Profile> {
