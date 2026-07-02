@@ -24,7 +24,7 @@ pas encore versionné (pré-MVP) ; entrées par date. Détail des décisions dan
 - **Groupes publics/privés** au choix du créateur + **annuaire** + join sans code ;
   **recherche de gens** (`search_profiles`) ; rail **« En ce moment »** sur l'accueil.
 - Harnais RLS : **23 → 26 tests** (photos, sommeil, groupes publics/recherche — dont une
-  SURCHARGE de `create_group` attrapée) ; front **97 tests** ; **23 migrations**.
+  SURCHARGE de `create_group` attrapée) ; front **97 tests** ; **22 migrations**.
 
 ### 2026-07-02 — Analyse d'écarts (19 agents, contre-vérifiée) : 10 manques comblés
 

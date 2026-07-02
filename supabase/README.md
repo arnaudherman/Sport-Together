@@ -7,7 +7,7 @@ garde-fous structurels (ADR-0008).
 
 ## Migrations (ordre d'application)
 
-Les 23 migrations s'appliquent **dans l'ordre chronologique** du nom de fichier.
+Les 22 migrations s'appliquent **dans l'ordre chronologique** du nom de fichier.
 
 | Fichier | Contenu |
 |---|---|
