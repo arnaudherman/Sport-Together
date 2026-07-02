@@ -14,7 +14,7 @@ describe('celebrationFor', () => {
     // Même XP (pas de level-up) mais un palier de plus.
     const xp = xpForLevel(2);
     const res = celebrationFor({ xp, unlocked: 0 }, { xp, unlocked: 1 });
-    expect(res).toEqual({ kind: 'node', label: 'Base' });
+    expect(res).toEqual({ kind: 'node', label: 'Première séance' });
   });
 
   it('donne la priorité au level-up sur le palier', () => {

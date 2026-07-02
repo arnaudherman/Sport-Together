@@ -6,8 +6,8 @@
  * (séance, repas…) vivent dans des types/tables dédiés reliés à l'entrée.
  */
 
-/** `rest` = jour de repos posé (vision §8 : la récup fait partie de la progression). */
-export type FeedItemType = 'session' | 'steps' | 'meal' | 'rest';
+/** `rest` = jour de repos (protège la série) ; `sleep` = nuit de sommeil loggée. */
+export type FeedItemType = 'session' | 'steps' | 'meal' | 'rest' | 'sleep';
 
 /** Réactions positives uniquement (vision §8 : jamais punitif). */
 export type ReactionKind = 'kudos' | 'encouragement';

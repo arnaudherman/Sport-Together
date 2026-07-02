@@ -21,6 +21,7 @@ interface FeedRow {
   group: OneOrMany<{ name: string }>;
   comment_count: { count: number }[] | null;
   sessions: OneOrMany<{ activity: string; duration_min: number | null }>;
+  sleep_logs: OneOrMany<{ hours: number }>;
   step_logs: OneOrMany<{ steps: number }>;
   meals: OneOrMany<{ label: string; calories_kcal: number | null }>;
   reactions: { kind: ReactionKind; author_id: string | null }[] | null;
@@ -29,7 +30,7 @@ interface FeedRow {
 const FEED_SELECT =
   'id, group_id, author_id, type, created_at, ' +
   'author:profiles(pseudo), group:groups(name), comment_count:comments(count), ' +
-  'sessions(activity, duration_min), step_logs(steps), ' +
+  'sessions(activity, duration_min), step_logs(steps), sleep_logs(hours), ' +
   'meals(label, calories_kcal), reactions(kind, author_id)';
 
 function pickOne<T>(value: OneOrMany<T>): T | null {
@@ -48,6 +49,10 @@ function summarize(row: FeedRow): string {
     return s ? `${s.steps} pas` : 'Pas';
   }
   if (row.type === 'rest') return 'Jour de repos 😴'; // pas de table de détail
+  if (row.type === 'sleep') {
+    const sl = pickOne(row.sleep_logs);
+    return sl ? `${sl.hours} h de sommeil 🌙` : 'Sommeil 🌙';
+  }
   const m = pickOne(row.meals);
   if (!m) return 'Repas';
   return m.calories_kcal != null ? `${m.label} · ${m.calories_kcal} kcal` : m.label;
@@ -156,6 +161,11 @@ export class SupabaseFeedRepository implements FeedRepository {
 
   async logRest(groupId: string | null): Promise<void> {
     const { error } = await this.client.rpc('log_rest', { p_group_id: groupId });
+    if (error) throw new Error(error.message);
+  }
+
+  async logSleep(groupId: string | null, hours: number): Promise<void> {
+    const { error } = await this.client.rpc('log_sleep', { p_group_id: groupId, p_hours: hours });
     if (error) throw new Error(error.message);
   }
 

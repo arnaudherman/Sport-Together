@@ -1,5 +1,5 @@
 import { levelForXp } from '@/domain/usecases/gamification';
-import { graphState, MUSCU_GRAPH } from '@/domain/usecases/skill-graph';
+import { LIFE_DOMAINS } from '@/domain/usecases/life-domains';
 
 /** Progression capturée avant/après un log (XP total + paliers d'arbre débloqués). */
 export interface ProgressSnapshot {
@@ -22,13 +22,13 @@ export function celebrationFor(before: ProgressSnapshot, after: ProgressSnapshot
   if (levelAfter > levelForXp(before.xp)) return { kind: 'level', level: levelAfter };
 
   if (after.unlocked > before.unlocked) {
-    const doneBefore = new Set(
-      graphState(MUSCU_GRAPH, before.unlocked).nodes.filter((n) => n.state === 'done').map((n) => n.node.id),
+    // Paliers du domaine Sport (arbre de vie) : on célèbre le plus haut franchi.
+    const sport = LIFE_DOMAINS.find((d) => d.key === 'sport');
+    const crossed = (sport?.milestones ?? []).filter(
+      (m) => after.unlocked >= m.target && before.unlocked < m.target,
     );
-    const newly = graphState(MUSCU_GRAPH, after.unlocked).nodes.find(
-      (n) => n.state === 'done' && !doneBefore.has(n.node.id),
-    );
-    if (newly) return { kind: 'node', label: newly.node.label };
+    const top = crossed[crossed.length - 1];
+    if (top) return { kind: 'node', label: top.label };
   }
   return null;
 }

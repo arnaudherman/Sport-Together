@@ -21,6 +21,7 @@ const XP_BY_TYPE: Record<FeedItemType, number> = {
   steps: 30,
   meal: 20,
   rest: 10, // la récup fait partie de la progression (vision §8, jamais punitif)
+  sleep: 20, // bien dormir est un goal de qualité de vie à part entière
 };
 
 /** Décroissance du n-ième post d'un MÊME type dans la MÊME journée. */
@@ -39,6 +40,8 @@ export interface XpBreakdown {
   total: number;
   /** XP réellement gagné par post (après décroissance / plafond / bonus du jour). */
   byItem: Map<string, number>;
+  /** XP gagné par jour local `YYYY-MM-DD` — alimente les graphiques de tendance. */
+  byDay: Map<string, number>;
 }
 
 /**
@@ -64,6 +67,7 @@ export function xpBreakdown(
   }
 
   const byItem = new Map<string, number>();
+  const byDayXp = new Map<string, number>();
   let total = 0;
   let streak = 0;
   let previousDay: string | null = null;
@@ -115,10 +119,11 @@ export function xpBreakdown(
     }
 
     for (const entry of raw) byItem.set(entry.id, entry.xp);
+    byDayXp.set(day, dayTotal);
     total += dayTotal;
   }
 
-  return { total, byItem };
+  return { total, byItem, byDay: byDayXp };
 }
 
 function isNextDay(prev: string, next: string): boolean {

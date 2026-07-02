@@ -51,6 +51,24 @@ export function currentStreak(
   return streak;
 }
 
+/** Plus longue série de jours consécutifs dans un ensemble de jours satisfaits. */
+export function longestStreak(satisfied: ReadonlySet<string>): number {
+  let best = 0;
+  for (const day of satisfied) {
+    // Ne compter qu'à partir des débuts de série (pas de prédécesseur).
+    if (satisfied.has(previousDayKey(day))) continue;
+    let len = 0;
+    let cursor = day;
+    while (satisfied.has(cursor)) {
+      len += 1;
+      const ms = new Date(`${cursor}T00:00:00.000Z`).getTime() + 86_400_000;
+      cursor = new Date(ms).toISOString().slice(0, 10);
+    }
+    if (len > best) best = len;
+  }
+  return best;
+}
+
 /** Jours (clés locales) où un utilisateur a loggé au moins un goal (hors repos). */
 export function loggedDaysFor(
   items: readonly FeedItem[],

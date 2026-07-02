@@ -81,6 +81,10 @@ export class InMemoryFeedRepository implements FeedRepository {
     this.push(groupId, 'rest', 'Jour de repos 😴');
   }
 
+  async logSleep(groupId: string | null, hours: number): Promise<void> {
+    this.push(groupId, 'sleep', `${hours} h de sommeil 🌙`);
+  }
+
   async deletePost(feedItemId: string): Promise<void> {
     this.items = this.items.filter((item) => item.id !== feedItemId);
   }
@@ -119,6 +123,7 @@ export const DEMO_FEED: readonly FeedItem[] = [
   demoItem('d0-noa-r', 'u-noa', 'Noa', 'rest', at(0, 65), 'Jour de repos 😴'),
   // Hier
   demoItem('d1-moi-s', 'local-user', 'Moi', 'session', at(1, 60), 'Muscu haut du corps'),
+  demoItem('d1-moi-sl', 'local-user', 'Moi', 'sleep', at(1, 480), '8 h de sommeil 🌙'),
   demoItem('d1-moi-m', 'local-user', 'Moi', 'meal', at(1, 200), 'Poulet-riz · 640 kcal'),
   demoItem('d1-lea-s', 'u-lea', 'Léa', 'session', at(1, 30), 'Course 5 km', 'The Crew', 'https://picsum.photos/id/1018/680/360'),
   demoItem('d1-sam-s', 'u-sam', 'Sam', 'session', at(1, 90), 'Vélo 40 min', undefined, 'https://picsum.photos/id/1015/680/360'),

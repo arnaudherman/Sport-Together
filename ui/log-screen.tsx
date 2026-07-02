@@ -19,14 +19,17 @@ const TABS: { type: FeedItemType; label: string; icon: string }[] = [
   { type: 'steps', label: 'Pas', icon: '👟' },
   { type: 'meal', label: 'Repas', icon: '🥗' },
   { type: 'rest', label: 'Repos', icon: '😴' },
+  { type: 'sleep', label: 'Sommeil', icon: '🌙' },
 ];
 const DURATIONS = [15, 30, 45, 60];
+const SLEEP_HOURS = [6, 7, 8, 9];
 
 const REWARD_HINT: Record<FeedItemType, string> = {
   session: 'Ta série 🔥 continue et tu approches un palier de ton arbre.',
   steps: 'Ta série 🔥 continue.',
   meal: 'Ta série 🔥 continue. Suivi bienveillant, jamais d\'objectif de poids.',
   rest: 'Ta série 🔥 est protégée : la récupération fait partie de la progression.',
+  sleep: 'Bien dormir compte autant qu\'une séance — ta série 🔥 continue.',
 };
 
 function toNumber(value: string): number | undefined {
@@ -54,6 +57,7 @@ export function LogScreen({
   const [destGroupId, setDestGroupId] = useState<string | null>(null); // null = Mon fil (solo)
   const [activity, setActivity] = useState('');
   const [duration, setDuration] = useState(45);
+  const [sleepHours, setSleepHours] = useState(8);
   const [steps, setSteps] = useState('');
   const [mealLabel, setMealLabel] = useState('');
   const [calories, setCalories] = useState('');
@@ -100,6 +104,8 @@ export function LogScreen({
         await feed.logSession(destGroupId, activity.trim() || 'Séance', duration);
       } else if (type === 'rest') {
         await feed.logRest(destGroupId);
+      } else if (type === 'sleep') {
+        await feed.logSleep(destGroupId, sleepHours);
       } else if (type === 'steps') {
         const n = toNumber(steps);
         if (n == null || n < 0) {
@@ -139,7 +145,7 @@ export function LogScreen({
 
   // Publier n'est actif que si l'entrée requise du type est renseignée (guide vs erreur).
   const canPublish =
-    type === 'session' || type === 'rest'
+    type === 'session' || type === 'rest' || type === 'sleep'
       ? true
       : type === 'steps'
         ? (() => {
@@ -237,6 +243,11 @@ export function LogScreen({
               Aujourd&apos;hui, c&apos;est repos 😴{'\n'}
               <Text style={styles.restSub}>Ton streak est protégé — reviens en forme demain.</Text>
             </Text>
+          ) : type === 'sleep' ? (
+            <Text style={styles.restText}>
+              Combien d&apos;heures cette nuit ? 🌙{'\n'}
+              <Text style={styles.restSub}>Le sommeil est un pilier de ta progression.</Text>
+            </Text>
           ) : type === 'steps' ? (
             <TextInput
               style={styles.compose}
@@ -256,6 +267,23 @@ export function LogScreen({
             />
           )}
         </View>
+
+        {type === 'sleep' ? (
+          <View style={styles.durations}>
+            {SLEEP_HOURS.map((h) => (
+              <Pressable
+                key={h}
+                onPress={() => setSleepHours(h)}
+                style={[styles.dchip, sleepHours === h && styles.dchipOn]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: sleepHours === h }}
+                accessibilityLabel={`${h} heures`}
+              >
+                <Text style={[styles.dchipText, sleepHours === h && styles.dchipTextOn]}>{h} h</Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
 
         {type === 'session' ? (
           <View style={styles.durations}>

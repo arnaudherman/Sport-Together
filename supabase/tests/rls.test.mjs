@@ -57,7 +57,7 @@ async function step(name, fn) {
 
 async function reset() {
   await admin(`truncate auth.users, public.profiles, public.groups, public.memberships,
-    public.feed_items, public.sessions, public.step_logs, public.meals, public.reactions,
+    public.feed_items, public.sessions, public.step_logs, public.meals, public.reactions, public.sleep_logs,
     public.follows, public.comments, public.nudges, public.reports, public.blocks, public.rpc_attempts
     restart identity cascade`);
 }
@@ -243,7 +243,7 @@ async function main() {
     assert.equal(after.length, 0, 'ne plus suivre retire la visibilité du post solo');
   });
 
-  await step('jour de repos : log_rest crée un post rest, idempotent sur la journée', async () => {
+  await step('repos & sommeil : log_rest idempotent/jour, log_sleep valide les heures', async () => {
     const r1 = (await asUser(ALICE, `select public.log_rest(null) as id`)).rows[0].id;
     const row = (await admin(`select type, group_id, author_id from public.feed_items where id=$1`, [r1])).rows[0];
     assert.equal(row.type, 'rest');
@@ -255,6 +255,14 @@ async function main() {
     // Dans un groupe : membre OK, non-membre refusé.
     await asUser(ALICE, `select public.log_rest($1)`, [A.id]);
     await expectReject(asUser(DAVE, `select public.log_rest($1)`, [A.id]), 'repos dans un groupe non-membre');
+    // Sommeil : nuit solo enregistrée avec ses heures ; durée invalide refusée.
+    const sid = (await asUser(ALICE, `select public.log_sleep(null, 7.5) as id`)).rows[0].id;
+    const srow = (await admin(`select type from public.feed_items where id=$1`, [sid])).rows[0];
+    assert.equal(srow.type, 'sleep');
+    const hours = (await admin(`select hours from public.sleep_logs where feed_item_id=$1`, [sid])).rows[0].hours;
+    assert.equal(Number(hours), 7.5, 'les heures de sommeil sont enregistrées');
+    await expectReject(asUser(ALICE, `select public.log_sleep(null, 0)`), 'durée de sommeil invalide');
+    await expectReject(asUser(ALICE, `select public.log_sleep(null, 30)`), 'durée de sommeil > 24 h');
   });
 
   await step('throttle nudge : l\'index unique (émetteur, cible, bucket 12h) bloque le doublon', async () => {

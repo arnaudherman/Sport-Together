@@ -2,12 +2,12 @@ import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { FeedItem } from '@/domain/entities/feed';
-import { MUSCU_GRAPH } from '@/domain/usecases/skill-graph';
+import { DEMO_FEED } from '@/data/feed/in-memory-feed-repository';
 import { CommentsScreen } from '@/ui/comments-screen';
 import { DiscoverScreen } from '@/ui/discover-screen';
 import { FeedView } from '@/ui/feed-view';
 import { GroupScreen } from '@/ui/group-screen';
-import { HolyGraph } from '@/ui/holy-graph';
+import { LifeProgress } from '@/ui/life-progress';
 import { LogScreen } from '@/ui/log-screen';
 import { ProfileScreen } from '@/ui/profile-screen';
 import { TabBar } from '@/ui/tab-bar';
@@ -64,11 +64,11 @@ const SCREENS: { label: string; node: ReactNode }[] = [
     ),
   },
   {
-    label: 'Compétences',
+    label: 'Arbre de vie',
     node: (
-      <View style={{ flex: 1, backgroundColor: '#0B0B0D' }}>
-        <ScrollView contentContainerStyle={{ alignItems: 'center', paddingVertical: 16 }}>
-          <HolyGraph graph={MUSCU_GRAPH} unlocked={3} />
+      <View style={{ flex: 1, backgroundColor: '#0A0C10' }}>
+        <ScrollView contentContainerStyle={{ padding: 16 }}>
+          <LifeProgress items={[...DEMO_FEED]} userId="u-lea" />
         </ScrollView>
       </View>
     ),

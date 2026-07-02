@@ -3,6 +3,7 @@ import { describe, expect, it } from '@jest/globals';
 import type { FeedItem } from '@/domain/entities/feed';
 import {
   capRestDays,
+  longestStreak,
   currentStreak,
   loggedDaysFor,
   localDayKey,
@@ -140,6 +141,15 @@ describe('streakFromFeed', () => {
     ];
     // La chaîne casse au 29 (repos non compté) : streak = 1 (aujourd'hui seulement).
     expect(streakFromFeed(items, 'u1', 0, now)).toBe(1);
+  });
+});
+
+describe('longestStreak', () => {
+  it('trouve la plus longue série consécutive', () => {
+    const days = new Set(['2026-07-01', '2026-07-02', '2026-07-04', '2026-07-05', '2026-07-06']);
+    expect(longestStreak(days)).toBe(3);
+    expect(longestStreak(new Set())).toBe(0);
+    expect(longestStreak(new Set(['2026-07-10']))).toBe(1);
   });
 });
 

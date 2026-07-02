@@ -8,13 +8,13 @@ import { useFeedRepository, useFollowRepository, useProfileRepository } from '@/
 import { EMPTY_REACTIONS, type FeedItem } from '@/domain/entities/feed';
 import type { Profile } from '@/domain/entities/profile';
 import { levelForXp, xpBreakdown } from '@/domain/usecases/gamification';
-import { MUSCU_GRAPH, sessionsUnlocked } from '@/domain/usecases/skill-graph';
 import { streakFromFeed } from '@/domain/usecases/streak';
 import { avatarColor, handle, initial } from '@/ui/format';
 import { FeedItemCard } from '@/ui/feed-item-card';
 import { FollowButton } from '@/ui/follow-button';
 import type { FollowListKind } from '@/ui/follow-list-screen';
-import { HolyGraph } from '@/ui/holy-graph';
+import { LifeProgress } from '@/ui/life-progress';
+import { TrendChart } from '@/ui/trend-chart';
 import { ScreenState } from '@/ui/screen-state';
 import { colors, font, gradients, radius } from '@/ui/theme';
 import { useAsyncData } from '@/ui/use-async-data';
@@ -82,7 +82,6 @@ export function ProfileScreen({
     () => streakFromFeed(items, targetUserId, tz, new Date().toISOString()),
     [items, targetUserId, tz],
   );
-  const unlocked = useMemo(() => sessionsUnlocked(items, targetUserId, tz), [items, targetUserId, tz]);
   const bravos = useMemo(() => {
     let n = 0;
     for (const it of items) {
@@ -210,6 +209,10 @@ export function ProfileScreen({
             </View>
           </View>
 
+          <View style={styles.trend}>
+            <TrendChart items={items} userId={targetUserId} />
+          </View>
+
           {isMe ? (
             <View style={styles.stats}>
               <Pressable onPress={() => onOpenFollowList('following')} hitSlop={8} accessibilityRole="button" accessibilityLabel="Voir mes abonnements">
@@ -267,12 +270,8 @@ export function ProfileScreen({
               </View>
             )
           ) : tab === 'competences' ? (
-            <View style={styles.graphWrap}>
-              <Text style={styles.graphSum}>
-                <Text style={styles.accent}>{unlocked}</Text>
-                <Text style={styles.muted}>/{MUSCU_GRAPH.nodes.length}</Text> paliers · arbre Corps
-              </Text>
-              <HolyGraph graph={MUSCU_GRAPH} unlocked={unlocked} />
+            <View style={styles.lifeWrap}>
+              <LifeProgress items={items} userId={targetUserId} />
             </View>
           ) : (
             <Text style={styles.empty}>Photos-preuves à venir 📷</Text>
@@ -328,9 +327,7 @@ const styles = StyleSheet.create({
   tabTextOn: { color: colors.text },
   tabUnderline: { position: 'absolute', bottom: -1, height: 3, width: 40, borderRadius: 3, backgroundColor: colors.accent },
   posts: { gap: 12, marginTop: 14 },
-  graphWrap: { alignItems: 'center', marginTop: 14 },
-  graphSum: { ...font.body, color: colors.textMuted, marginBottom: 6 },
-  accent: { color: colors.accent, fontWeight: '800' },
-  muted: { color: colors.textMuted },
+  lifeWrap: { marginTop: 14 },
+  trend: { marginTop: 16 },
   empty: { color: colors.textMuted, textAlign: 'center', marginTop: 30 },
 });

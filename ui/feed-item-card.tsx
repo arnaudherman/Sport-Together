@@ -14,6 +14,7 @@ const TYPE_LABEL: Record<FeedItem['type'], string> = {
   steps: 'Pas',
   meal: 'Repas',
   rest: 'Repos',
+  sleep: 'Sommeil',
 };
 
 const REACTIONS: { kind: ReactionKind; emoji: string }[] = [

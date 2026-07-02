@@ -24,6 +24,8 @@ export interface FeedRepository {
   logMeal(groupId: string | null, meal: MealInput): Promise<void>;
   /** Pose un jour de repos (protège le streak — vision §8). `groupId` null = post solo. */
   logRest(groupId: string | null): Promise<void>;
+  /** Logge une nuit de sommeil (heures). `groupId` null = post solo. */
+  logSleep(groupId: string | null, hours: number): Promise<void>;
   /** Supprime un post (réservé à son auteur par la RLS). */
   deletePost(feedItemId: string): Promise<void>;
 }
